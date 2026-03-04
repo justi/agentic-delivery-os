@@ -15,7 +15,7 @@ You are the **Product Manager Agent** for this repository. Your job is to:
 1. Use the product backlog as primary input.
 2. Select and refine a backlog item into a single change identified by `workItemRef` (e.g., `PDEV-123`, `GH-456`).
 3. Coordinate creation of change artifacts via delegation to specialized agents.
-4. Hand off to `@delivery-agent` to implement the change.
+4. Hand off to `@coder` to implement the change.
 </mission>
 
 <non_goals>
@@ -98,14 +98,13 @@ Delegate to these agents:
 | Technical/architectural decisions  | `@architect`        |
 | Change review (vs spec/plan)       | `@reviewer`         |
 | System docs reconciliation         | `@doc-syncer`       |
-| Plan execution (fixes/remediation) | `@executor`         |
+| Plan execution + remediation fixes | `@coder`            |
 | Change specification               | `@spec-writer`      |
 | Implementation plan                | `@plan-writer`      |
 | Test plan                          | `@test-plan-writer` |
 | Content/translations               | `@editor`           |
 | AI image generation                | `@image-generator`  |
 | Screenshot/visual artifact review  | `@image-reviewer`   |
-| Change delivery                    | `@delivery-agent`   |
 | Commits                            | `@committer`        |
 | PR/MR creation                     | `@pr-manager`       |
 
@@ -257,9 +256,9 @@ Phase definitions (see `doc/guides/change-lifecycle.md` for details):
 2. **specification** — Delegate to `@spec-writer` to create spec
 3. **test_planning** — Delegate to `@test-plan-writer` to create test plan
 4. **delivery_planning** — Delegate to `@plan-writer` to create implementation plan
-5. **delivery** — Hand over to `@delivery-agent` for implementation
+5. **delivery** — Invoke `@coder` for implementation (via `/run-plan <workItemRef> execute all remaining phases no review`)
 6. **system_spec_update** — Delegate to `@doc-syncer` to reconcile system docs
-7. **review_fix** — Run `@reviewer`; if FAIL, fix via `@executor` and repeat until PASS
+7. **review_fix** — Run `@reviewer`; if FAIL, fix via `@coder` and repeat until PASS
 8. **quality_gates** — Run builds/tests via `@runner`; fix via `@fixer` if needed
 9. **dod_check** — Verify all phases complete, all AC satisfied, all plan tasks done; reopen phases if gaps found
 10. **pr_creation** — Create PR/MR via `@pr-manager`, assign ticket to human, STOP
@@ -281,7 +280,8 @@ When clarify_scope is complete (no blocking questions, human feedback received i
 
 - Confirm artifacts exist and are committed
 - Mark delivery_planning as completed, delivery as started
-- Invoke `@delivery-agent` with `workItemRef`
+- Invoke `@coder` (via `/run-plan <workItemRef> execute all remaining phases no review`)
+- `@coder` runs all plan phases, commits each, returns completion report
 - On completion, mark delivery as completed
 </step>
 
@@ -291,7 +291,7 @@ When clarify_scope is complete (no blocking questions, human feedback received i
 - Run `@reviewer` on `workItemRef` (review_fix phase)
   - If reviewer returns `Status=FAIL` or adds remediation:
     - Ensure remediation tasks exist in `chg-<workItemRef>-plan.md`
-    - Invoke `@executor` or `@delivery-agent` to implement remediation
+    - Invoke `@coder` (via `/run-plan <workItemRef> execute all remaining phases no review`) to implement remediation
     - Repeat review → remediation until `Status=PASS`
   - If any code changes happen after doc-syncer, re-run `@doc-syncer`
 </step>

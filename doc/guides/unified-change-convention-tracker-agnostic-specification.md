@@ -236,7 +236,7 @@ The PM agent (`@pm`) orchestrates these phases:
 2. **specification** — Create `chg-<workItemRef>-spec.md` via `@spec-writer`
 3. **test_planning** — Create `chg-<workItemRef>-test-plan.md` via `@test-plan-writer`
 4. **delivery_planning** — Create `chg-<workItemRef>-plan.md` via `@plan-writer`
-5. **delivery** — Hand over to `@delivery-agent` for implementation
+5. **delivery** — Invoke `@coder` for implementation (via `/run-plan`)
 6. **system_spec_update** — Reconcile system docs via `@doc-syncer`
 7. **review_fix** — Review and fix cycle via `@reviewer`
 8. **quality_gates** — Run builds/tests via `@runner`

@@ -97,7 +97,7 @@ Return structured report:
     <field>Plan Status: `ALL_TASKS_DONE` | `INCOMPLETE` | `MISMATCH`</field>
     <field>Plan Gaps: OPEN_TASKS, DONE_BUT_UNCHECKED, CHECKED_BUT_MISSING</field>
     <field>Test Coverage Gaps: missing tests vs plan scenarios</field>
-    <field>Next Step: `PROCEED` | `CALL_EXECUTOR` | `EXECUTE_REMEDIATION_PHASE`</field>
+    <field>Next Step: `PROCEED` | `CALL_CODER` | `EXECUTE_REMEDIATION_PHASE`</field>
   </fields>
 </reporting>
 

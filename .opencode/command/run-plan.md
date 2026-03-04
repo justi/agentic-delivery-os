@@ -4,7 +4,7 @@
 # Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/run-plan.md
 #
 description: Execute implementation plan phases for a change.
-agent: executor
+agent: coder
 subtask: true
 ---
 

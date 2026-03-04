@@ -83,4 +83,4 @@ When you finish, return a concise structured report:
   - Files changed/added
   - Key component variants or class patterns introduced
 - **Accessibility checks**: focus, contrast, keyboard, touch targets.
-- **Next Step**: what the caller (delivery-agent/executor) should do next.
+- **Next Step**: what the caller (`@coder` or `@pm`) should do next.

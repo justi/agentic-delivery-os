@@ -59,11 +59,13 @@ Use these when you want to trigger a specific step in the process.
 | `/write-spec <ref>`      | Generates the canonical `chg-<ref>-spec.md` file.             | **Step 2**: After planning is complete.    |
 | `/write-test-plan <ref>` | Generates the test strategy `chg-<ref>-test-plan.md`.         | **Step 3**: After the spec is approved.    |
 | `/write-plan <ref>`      | Generates the phased `chg-<ref>-plan.md`.                     | **Step 4**: After the test plan.           |
-| `/run-plan <ref>`        | Launches the **Executor** to code the active phase.           | **Step 5**: To write code.                 |
+| `/run-plan <ref>`        | Launches the **Coder** to code the active phase.              | **Step 5**: To write code.                 |
 | `/review <ref>`          | Launches the **Reviewer** to critique work.                   | **Step 6**: After coding a phase.          |
+| `/review-deep <ref>`     | Deep review with a stronger reasoning model.                  | When thorough analysis is needed.          |
 | `/sync-docs <ref>`       | Reconciles `doc/spec` with the implemented change.            | **Step 7**: Before merging.                |
 | `/commit`                | Creates one Conventional Commit.                              | When saving progress.                      |
 | `/pr`                    | Creates/updates a PR/MR and syncs title + description.        | When preparing for review/merge.           |
+| `/design`                | Generate/update visual identity and UX assets.                | When working on UI/brand assets.           |
 | `/plan-decision`         | Interactive session for architectural decisions.              | When a complex trade-off needs an ADR.     |
 | `/write-adr`             | Generates the formal ADR document.                            | After the decision session.                |
 | `/check`                 | Runs quality gates and summarizes logs to files.              | When you need clean, shareable results.    |
@@ -76,15 +78,22 @@ Use these when you need intelligent analysis or orchestration.
 | Agent             | Role                                                                                       | Usage                                           |
 | :---------------- | :----------------------------------------------------------------------------------------- | :---------------------------------------------- |
 | `@pm`             | **Orchestrator**. Manages tickets (Jira/GitHub) and turns backlog into accepted artifacts. | Use for **Autopilot** (see Section 4).          |
-| `@delivery-agent` | **Executor**. Delivers a specified change end-to-end.                                      | Invoked by PM or User to run the delivery loop. |
+| `@coder`          | **Implementer**. Writes code per implementation plan phases.                               | Invoked by PM or via `/run-plan`.               |
 | `@architect`      | **Advisor**. CTO-level sparring partner.                                                   | Use for complex design decisions or ADRs.       |
+| `@spec-writer`    | **Spec Author**. Generates canonical change specifications.                                | Invoked by PM or via `/write-spec`.             |
+| `@plan-writer`    | **Plan Author**. Generates phased implementation plans.                                    | Invoked by PM or via `/write-plan`.             |
+| `@test-plan-writer` | **Test Plan Author**. Generates test plans with traceable coverage.                      | Invoked by PM or via `/write-test-plan`.        |
+| `@reviewer`       | **Reviewer**. Reviews code against spec/plan (read-only).                                  | Invoked by PM or via `/review`.                 |
 | `@fixer`          | **Troubleshooter**. Fixes broken tests or quality gates.                                   | Use when tests fail or bugs arise.              |
 | `@designer`       | **Designer**. Implements UI/UX per design system.                                          | Use for frontend work.                          |
-| `@image-reviewer` | **Reviewer**. Analyzes screenshots for visual bugs.                                        | Use to check UI artifacts or report glitches.   |
+| `@doc-syncer`     | **Doc Syncer**. Reconciles system docs with implemented change.                            | Invoked by PM or via `/sync-docs`.              |
+| `@image-reviewer` | **Visual Reviewer**. Analyzes screenshots for visual bugs.                                 | Use to check UI artifacts or report glitches.   |
 | `@runner`         | **Runner**. Executes commands and summarizes logs to artifacts.                            | Use for log-heavy builds/tests/gates.           |
 | `@editor`         | **Writer**. Reviews, rewrites, and translates content per guidelines.                      | Use for docs/articles/i18n/UI copy.             |
 | `@committer`      | **Scribe**. Creates standardized commits.                                                  | Helper used by other agents/commands.           |
+| `@image-generator` | **Image Generator**. Generates AI images via text-to-image CLI.                            | Use when agents need generated images.          |
 | `@pr-manager`     | **PR/MR Manager**. Creates/updates PR/MR for current branch.                               | Use at the end of delivery; never merges.       |
+| `@toolsmith`      | **Toolsmith**. Creates and tunes OpenCode agents/commands/skills.                          | Use to create or improve tooling.               |
 
 ---
 
@@ -204,7 +213,7 @@ The `@pm` orchestrates these phases (see `doc/guides/change-lifecycle.md` for de
 2. **specification** — Delegate to `@spec-writer` to create `chg-<ref>-spec.md`
 3. **test_planning** — Delegate to `@test-plan-writer` to create `chg-<ref>-test-plan.md`
 4. **delivery_planning** — Delegate to `@plan-writer` to create `chg-<ref>-plan.md`
-5. **delivery** — Hand over to `@delivery-agent` for implementation
+5. **delivery** — Invoke `@coder` for implementation (via `/run-plan`)
 6. **system_spec_update** — Delegate to `@doc-syncer` to reconcile system docs
 7. **review_fix** — Run `@reviewer`; if FAIL, fix and repeat until PASS
 8. **quality_gates** — Run builds/tests via `@runner`; fix via `@fixer` if needed
