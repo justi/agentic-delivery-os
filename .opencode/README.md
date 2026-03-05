@@ -29,13 +29,14 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 ## Agents
 
 - `architect`: architecture decisions and ADR authoring
+- `coder`: implement plan phases by writing code for a change
 - `committer`: create one Conventional Commit
-- `delivery-agent`: orchestrate change delivery end-to-end
 - `designer`: apply visual design system
 - `doc-syncer`: reconcile system docs with change
 - `editor`: rewrite/translate content per repo guidelines
-- `executor`: execute implementation plan phases
+- `external-researcher`: research external sources via MCP (context7, deepwiki, perplexity)
 - `fixer`: reproduce and fix failures
+- `image-generator`: generate AI images via text-to-image CLI
 - `image-reviewer`: analyze screenshots and visual artifacts
 - `plan-writer`: author change implementation plans
 - `pm`: orchestrate changes; manage tickets via MCP (reads `.ai/agent/pm-instructions.md`)
@@ -74,7 +75,7 @@ Reference for the rename from old to new names. Rationale: shorter names, consis
 
 | Old Name                       | New Name           | Rationale                                |
 | ------------------------------ | ------------------ | ---------------------------------------- |
-| `change-delivery-orchestrator` | `delivery-agent`   | Shorter; "orchestrator" implied          |
+| `change-delivery-orchestrator` | ~~`delivery-agent`~~ | Removed in 2026-02 refactor (redundant sub-orchestrator; `@pm` delegates directly to `@coder`) |
 | `change-reviewer`              | `reviewer`         | Drop redundant `change-` prefix          |
 | `change-spec-writer`           | `spec-writer`      | Drop redundant `change-` prefix          |
 | `change-test-plan-writer`      | `test-plan-writer` | Drop redundant `change-` prefix          |
@@ -84,7 +85,7 @@ Reference for the rename from old to new names. Rationale: shorter names, consis
 | `image-critique-agent`         | `image-reviewer`   | Drop redundant `-agent` suffix           |
 | `implementation-plan-writer`   | `plan-writer`      | Shorter; "implementation" implied        |
 | `opencode-toolsmith`           | `toolsmith`        | Drop redundant `opencode-` prefix        |
-| `plan-executor`                | `executor`         | Shorter                                  |
+| `plan-executor`                | `coder`            | Renamed from `executor` in 2026-02; "coder" is unambiguous — writes code |
 | `product-manager`              | `pm`               | Shorter; universally understood          |
 | `run-logs-runner`              | `runner`           | Cleaner                                  |
 | `system-spec-updater`          | `doc-syncer`       | Aligns with `/sync-docs` command         |
@@ -116,7 +117,7 @@ Reference for the rename from old to new names. Rationale: shorter names, consis
 1. **Verb-first for commands**: `/plan-*`, `/write-*`, `/run-*`, `/check`, `/review`, `/sync-*`
 2. **Short role names for agents**: Drop prefixes (`change-`, `opencode-`) and suffixes (`-agent`)
 3. **Consistent families**: `/write-spec`, `/write-plan`, `/write-test-plan`, `/write-adr`
-4. **Align command ↔ agent names**: `/run-plan` → `executor`, `/sync-docs` → `doc-syncer`
+4. **Align command ↔ agent names**: `/run-plan` → `coder`, `/sync-docs` → `doc-syncer`
 
 ---
 
@@ -143,12 +144,12 @@ This plan aligns all agents and commands with:
 
 | Agent              | Priority | Status  | Changes Required                                                                                                                                                                                                                            |
 | ------------------ | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pm`               | HIGH     | ✅ DONE | Add MCP ticket operations (read/write issues); update discovery to use `workItemRef`; update delegation references to new agent names (`@spec-writer`, `@plan-writer`, `@test-plan-writer`, `@delivery-agent`); remove `CHG-###` references |
-| `delivery-agent`   | HIGH     | ✅ DONE | Update all delegation references to new agent names; update path discovery for new folder convention; accept `workItemRef` instead of numeric ID                                                                                            |
+| `pm`               | HIGH     | ✅ DONE | Add MCP ticket operations (read/write issues); update discovery to use `workItemRef`; update delegation references to new agent names (`@spec-writer`, `@plan-writer`, `@test-plan-writer`, `@coder`); remove `CHG-###` references |
+| ~~`delivery-agent`~~ | —      | ❌ REMOVED | Removed in 2026-02 refactor. Redundant sub-orchestrator; `@pm` delegates directly to `@coder`. |
 | `spec-writer`      | HIGH     | ✅ DONE | Update `<directory_rules>` and `<branch_rules>` for new convention; accept `workItemRef`; update `<front_matter_rules>` to use `workItemRef`; remove slug from filenames                                                                    |
 | `plan-writer`      | HIGH     | ✅ DONE | Same as `spec-writer`; update cross-references                                                                                                                                                                                              |
 | `test-plan-writer` | HIGH     | ✅ DONE | Same as `spec-writer`; update cross-references                                                                                                                                                                                              |
-| `executor`         | HIGH     | ✅ DONE | Update path discovery; update agent references (`@runner`, `@fixer`); accept `workItemRef`                                                                                                                                                  |
+| `coder` (was `executor`) | HIGH | ✅ DONE | Renamed from `executor` to `coder` in 2026-02. Updated for batch execution, stack-agnostic runner delegation. |
 | `reviewer`         | MEDIUM   | ✅ DONE | Update path discovery; update agent references                                                                                                                                                                                              |
 | `doc-syncer`       | MEDIUM   | ✅ DONE | Update path discovery; accept `workItemRef`                                                                                                                                                                                                 |
 | `architect`        | MEDIUM   | ✅ DONE | Update references to new command names (`/write-adr`)                                                                                                                                                                                       |
@@ -168,7 +169,7 @@ This plan aligns all agents and commands with:
 | `/write-spec`      | HIGH     | ✅ DONE | Update `<directory_rules>`, `<branch_rules>`, `<front_matter_rules>` for new convention; accept `workItemRef`; remove slug from filename                                 |
 | `/write-plan`      | HIGH     | ✅ DONE | Same as `/write-spec`                                                                                                                                                    |
 | `/write-test-plan` | HIGH     | ✅ DONE | Same as `/write-spec`                                                                                                                                                    |
-| `/run-plan`        | HIGH     | ✅ DONE | Update path discovery; accept `workItemRef`; update agent reference (`agent: executor`)                                                                                  |
+| `/run-plan`        | HIGH     | ✅ DONE | Update path discovery; accept `workItemRef`; update agent reference (`agent: coder`)                                                                                     |
 | `/review`          | MEDIUM   | ✅ DONE | Update path discovery; accept `workItemRef`                                                                                                                              |
 | `/review-deep`     | MEDIUM   | ✅ DONE | Same as `/review`                                                                                                                                                        |
 | `/sync-docs`       | MEDIUM   | ✅ DONE | Update path discovery; accept `workItemRef`                                                                                                                              |
@@ -205,11 +206,11 @@ For each HIGH-priority agent/command:
 
 4. **Update agent cross-references**:
    - `@product-manager` → `@pm`
-   - `@change-delivery-orchestrator` → `@delivery-agent`
+   - `@change-delivery-orchestrator` → ~~`@delivery-agent`~~ → removed (2026-02)
    - `@change-spec-writer` → `@spec-writer`
    - `@implementation-plan-writer` → `@plan-writer`
    - `@change-test-plan-writer` → `@test-plan-writer`
-   - `@plan-executor` → `@executor`
+   - `@plan-executor` → ~~`@executor`~~ → `@coder` (2026-02)
    - `@change-reviewer` → `@reviewer`
    - `@system-spec-updater` → `@doc-syncer`
    - `@run-logs-runner` → `@runner`
@@ -258,11 +259,10 @@ For all agents/commands:
 ### Execution Order
 
 1. `pm` (orchestrator; sets the pattern)
-2. `delivery-agent` (main coordinator)
+2. `coder` + `/run-plan` (together)
 3. `spec-writer` + `/write-spec` (together)
 4. `plan-writer` + `/write-plan` (together)
 5. `test-plan-writer` + `/write-test-plan` (together)
-6. `executor` + `/run-plan` (together)
 7. `/plan-change` (standalone command)
 8. `reviewer` + `/review` + `/review-deep`
 9. `doc-syncer` + `/sync-docs`

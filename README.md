@@ -39,7 +39,7 @@ Agentic Delivery OS codifies a predictable pipeline where quality and traceabili
 
 ## What this gives you
 
-- A small "virtual team" of repo-local OpenCode agents aligned to SDLC roles (PM, spec writer, planner, executor, reviewer).
+- A small "virtual team" of repo-local OpenCode agents aligned to SDLC roles (PM, spec writer, planner, coder, reviewer).
 - A standard artifact set (spec, implementation plan, test plan) stored under `doc/changes/` using stable, tracker-linked names.
 - A versioned, human-readable system spec under `doc/spec/**` that acts as the baseline input for planning the next change (kept up to date via [`/sync-docs`](.opencode/command/sync-docs.md)).
 - Commands that compose those agents into repeatable workflows (manual or autopilot).
@@ -72,7 +72,7 @@ I use this repo to evolve and validate an AI-native delivery operating model on 
 OpenCode tooling (see [.opencode/README.md](.opencode/README.md) for the authoritative list):
 
 - Agents for common SDLC roles:
-  - [@pm](.opencode/agent/pm.md), [@delivery-agent](.opencode/agent/delivery-agent.md), [@spec-writer](.opencode/agent/spec-writer.md), [@plan-writer](.opencode/agent/plan-writer.md), [@test-plan-writer](.opencode/agent/test-plan-writer.md), [@executor](.opencode/agent/executor.md), [@reviewer](.opencode/agent/reviewer.md), [@doc-syncer](.opencode/agent/doc-syncer.md), [@pr-manager](.opencode/agent/pr-manager.md), [@runner](.opencode/agent/runner.md), [@fixer](.opencode/agent/fixer.md), [@committer](.opencode/agent/committer.md), [@architect](.opencode/agent/architect.md), [@editor](.opencode/agent/editor.md), [@designer](.opencode/agent/designer.md), [@image-reviewer](.opencode/agent/image-reviewer.md).
+  - [@pm](.opencode/agent/pm.md), [@coder](.opencode/agent/coder.md), [@spec-writer](.opencode/agent/spec-writer.md), [@plan-writer](.opencode/agent/plan-writer.md), [@test-plan-writer](.opencode/agent/test-plan-writer.md), [@reviewer](.opencode/agent/reviewer.md), [@doc-syncer](.opencode/agent/doc-syncer.md), [@pr-manager](.opencode/agent/pr-manager.md), [@runner](.opencode/agent/runner.md), [@fixer](.opencode/agent/fixer.md), [@committer](.opencode/agent/committer.md), [@architect](.opencode/agent/architect.md), [@editor](.opencode/agent/editor.md), [@designer](.opencode/agent/designer.md), [@image-generator](.opencode/agent/image-generator.md), [@image-reviewer](.opencode/agent/image-reviewer.md).
 - Commands that compose them into a repeatable workflow:
   - [/plan-change](.opencode/command/plan-change.md), [/write-spec](.opencode/command/write-spec.md), [/write-plan](.opencode/command/write-plan.md), [/write-test-plan](.opencode/command/write-test-plan.md), [/run-plan](.opencode/command/run-plan.md), [/review](.opencode/command/review.md), [/review-deep](.opencode/command/review-deep.md), [/sync-docs](.opencode/command/sync-docs.md), [/check](.opencode/command/check.md), [/check-fix](.opencode/command/check-fix.md), [/pr](.opencode/command/pr.md), [/commit](.opencode/command/commit.md), [/plan-decision](.opencode/command/plan-decision.md), [/write-adr](.opencode/command/write-adr.md).
 

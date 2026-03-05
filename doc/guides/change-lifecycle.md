@@ -49,7 +49,7 @@ flowchart TD
     end
     
     subgraph "Implementation"
-        D --> E[5. delivery<br/>@delivery-agent]
+        D --> E[5. delivery<br/>@coder]
         E --> F[6. system_spec_update<br/>@doc-syncer]
     end
     
@@ -165,20 +165,18 @@ flowchart TD
 
 ### 5) delivery
 
-**Owner**: `@pm` hands over to `@delivery-agent`
+**Owner**: `@pm` delegates to `@coder`
 
 **Goal**: Implement the change in code according to the plan.
 
 **Actions**:
 
-- `@pm` invokes `@delivery-agent` with `workItemRef`.
-- `@delivery-agent` executes the plan in phases, delegating to:
-  - `@executor` for implementation tasks
+- `@pm` invokes `@coder` (via `/run-plan <workItemRef> execute all remaining phases no review`).
+- `@coder` executes all plan phases, delegating to:
   - `@designer` for UI/UX work
-  - `@runner` for running commands and capturing logs
-  - `@fixer` for debugging and fixing failures
   - `@architect` for technical/architectural decisions
   - `@committer` for checkpointing progress
+  - `@runner` for heavy command execution (full builds, full test suites)
 
 **Outcome**: All implementation phases in the plan are complete with code changes committed.
 
@@ -207,7 +205,7 @@ flowchart TD
 
 ### 7) review_fix
 
-**Owner**: `@pm` delegates to `@reviewer`, then `@delivery-agent`/`@executor` for fixes
+**Owner**: `@pm` delegates to `@reviewer`, then `@coder` for fixes
 
 **Goal**: Ensure the implementation matches the spec and plan.
 
@@ -217,7 +215,7 @@ flowchart TD
 - `@reviewer` audits code vs. spec/plan, checks test coverage, identifies gaps.
 - If reviewer returns `Status=FAIL` or adds remediation tasks:
   - Remediation phase is appended to `chg-<workItemRef>-plan.md`.
-  - `@pm` invokes `@delivery-agent` or `@executor` to address remediation.
+  - `@pm` invokes `@coder` (via `/run-plan <workItemRef> execute all remaining phases no review`) to address remediation.
   - Re-run `@reviewer` until `Status=PASS`.
 
 **Outcome**: All review findings addressed; implementation verified against spec.
@@ -263,7 +261,7 @@ flowchart TD
   - All acceptance criteria satisfied (verify against `chg-<workItemRef>-spec.md`).
   - No pending TODOs without an explicit follow-up ticket.
 - **If any gap is found**: reopen the appropriate phase and delegate to the relevant agent.
-  - Example: if a delivery plan task is incomplete, reopen `delivery` and delegate to `@delivery-agent`.
+  - Example: if a delivery plan task is incomplete, reopen `delivery` and delegate to `@coder`.
 
 **Outcome**: Full verification that the change meets the Definition of Done.
 
@@ -300,9 +298,9 @@ Phases are not strictly linear. If PM discovers incomplete work in a later phase
 
 | Discovery in... | Gap found | Action |
 |-----------------|-----------|--------|
-| `dod_check` | Delivery plan task incomplete | Reopen `delivery`, delegate to `@delivery-agent` |
+| `dod_check` | Delivery plan task incomplete | Reopen `delivery`, delegate to `@coder` |
 | `dod_check` | AC not satisfied | Reopen `delivery` or `specification` as needed |
-| `quality_gates` | Test failure reveals missing implementation | Reopen `delivery`, delegate to `@fixer` or `@executor` |
+| `quality_gates` | Test failure reveals missing implementation | Reopen `delivery`, delegate to `@fixer` or `@coder` |
 | `review_fix` | Spec ambiguity discovered | Reopen `clarify_scope` or `specification` |
 
 After addressing the gap, PM continues from the reopened phase through the remaining phases.
@@ -346,9 +344,9 @@ notes: ""
 | 2. specification | `@spec-writer` | — |
 | 3. test_planning | `@test-plan-writer` | — |
 | 4. delivery_planning | `@plan-writer` | — |
-| 5. delivery | `@delivery-agent` | `@executor`, `@designer`, `@runner`, `@fixer`, `@architect`, `@committer` |
+| 5. delivery | `@coder` | `@designer`, `@architect`, `@committer`, `@runner` |
 | 6. system_spec_update | `@doc-syncer` | — |
-| 7. review_fix | `@reviewer` | `@delivery-agent`, `@executor` |
+| 7. review_fix | `@reviewer` | `@coder` |
 | 8. quality_gates | `@runner` | `@fixer` |
 | 9. dod_check | `@pm` | — |
 | 10. pr_creation | `@pr-manager` | — |
