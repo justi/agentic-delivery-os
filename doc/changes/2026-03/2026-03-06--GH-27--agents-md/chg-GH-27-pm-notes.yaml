@@ -1,24 +1,32 @@
 change_id: GH-27
 title: "Create AGENTS.md with repository development guidelines and tool conventions"
 phases:
-  clarify_scope: { started: "2026-03-06", completed: "2026-03-06" }
-  specification: { started: "2026-03-07", completed: "2026-03-07" }
+  clarify_scope: { started: "2026-03-06", completed: "2026-03-07" }
+  specification: { started: "2026-03-07", completed: null }
   test_planning: { started: null, completed: null }
-  delivery_planning: { started: "2026-03-07", completed: "2026-03-07" }
-  delivery: { started: "2026-03-07", completed: "2026-03-07" }
-  system_spec_update: { started: "2026-03-07", completed: "2026-03-07" }
-  review_fix: { started: "2026-03-07", completed: "2026-03-07" }
-  quality_gates: { started: "2026-03-07", completed: "2026-03-07" }
-  dod_check: { started: "2026-03-07", completed: "2026-03-07" }
-  pr_creation: { started: null, completed: null, url: null }
+  delivery_planning: { started: "2026-03-07", completed: null }
+  delivery: { started: "2026-03-07", completed: null }
+  system_spec_update: { started: null, completed: null }
+  review_fix: { started: null, completed: null }
+  quality_gates: { started: null, completed: null }
+  dod_check: { started: null, completed: null }
+  pr_creation: { started: "2026-03-07", completed: null, url: "https://github.com/juliusz-cwiakalski/agentic-delivery-os/pull/28" }
 decisions:
   - text: "Documentation-only change — streamline lifecycle: lightweight spec+plan, then deliver AGENTS.md directly"
     date: "2026-03-06"
   - text: "No test plan needed — AGENTS.md is a markdown file; quality verified by review and AC check"
     date: "2026-03-06"
+  - text: "Scope expansion: AGENTS.md must lead with the delivery system (process, agents, commands) not repo conventions. Agent prompts ARE the product. Include 'Extending the system' section with @toolsmith delegation requirement."
+    date: "2026-03-07"
 open_questions: []
 blockers: []
 notes:
   - text: "Clarify scope: ticket AC is clear and complete. Cross-checked against repo structure (scripts/, .opencode/, doc/guides/). No gaps or contradictions found."
     type: info
     date: "2026-03-06"
+  - text: "Scope change requested by user: current AGENTS.md treats repo as generic code project. Must foreground delivery system, agent team, process. Reopened specification, delivery_planning, delivery phases."
+    type: retro
+    date: "2026-03-07"
+  - text: "Key user requirement: all agent/command/skill modifications MUST delegate to @toolsmith. This must be prominent in the 'Extending the system' section."
+    type: decision
+    date: "2026-03-07"
