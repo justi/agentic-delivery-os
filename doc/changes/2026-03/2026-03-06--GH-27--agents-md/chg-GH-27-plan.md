@@ -105,12 +105,31 @@ Create `AGENTS.md` at the repository root as the canonical bootstrap for AI agen
 
 **Completion signal**: `docs(GH-27): rewrite AGENTS.md with delivery-system-first structure`
 
+### Phase 4: Remediation — Trim AGENTS.md to ≤200 lines
+
+**Goal**: Satisfy AC-NFR1-1 (≤200 lines). Phase 3 produced 225 lines; condense lower sections without removing any section.
+
+**Tasks**:
+
+- [x] Merge `tools/` and `scripts/` convention sections into a single combined table (Aspect | `tools/` | `scripts/`)
+- [x] Compress "Running tests" section — replace bash code block with 1-2 line description
+- [x] Compress "License headers" section — collapse example code block into compact paragraph
+- [x] Verify final line count ≤ 200
+
+**Acceptance Criteria**:
+
+- Must: ≤ 200 lines (AC-NFR1-1) — re-validated
+- Must: All sections from Phase 3 still present (AC-F1-1 through AC-F11-1 unaffected)
+
+**Completion signal**: `docs(GH-27): trim AGENTS.md to ≤200 lines (AC-NFR1-1)`
+
 ## Plan Revision Log
 
 | Date | Change |
 |------|--------|
 | 2026-03-07 | Initial plan created (3 phases: create, update README, finalize) |
 | 2026-03-07 | Added Phase 3 for delivery-system-first rewrite per scope expansion |
+| 2026-03-07 | Added Phase 4: Remediation — trim AGENTS.md to ≤200 lines (AC-NFR1-1 failed at 225 lines) |
 
 ## Execution Log
 
@@ -119,3 +138,4 @@ Create `AGENTS.md` at the repository root as the canonical bootstrap for AI agen
 | 2026-03-07 | Phase 1: Create AGENTS.md | Created AGENTS.md (93 lines) with repo-conventions focus. Commit `d56df3a`. |
 | 2026-03-07 | Phase 2: Update README.md | Added AGENTS.md to "Docs at a glance" and "Repo structure". Commit `5f7b9da`. |
 | 2026-03-07 | Phase 3: Rewrite AGENTS.md | Complete rewrite with delivery-system-first structure. Commit `a0de1c4`. |
+| 2026-03-07 | Phase 4: Remediation | Trimmed AGENTS.md from 225 → 183 lines. Merged tools/scripts into one table, compressed Running tests and License headers sections. AC-NFR1-1 now PASSED. |
