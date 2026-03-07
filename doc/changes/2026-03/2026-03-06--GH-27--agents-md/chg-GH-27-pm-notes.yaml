@@ -1,0 +1,24 @@
+change_id: GH-27
+title: "Create AGENTS.md with repository development guidelines and tool conventions"
+phases:
+  clarify_scope: { started: "2026-03-06", completed: "2026-03-06" }
+  specification: { started: "2026-03-07", completed: "2026-03-07" }
+  test_planning: { started: null, completed: null }
+  delivery_planning: { started: "2026-03-07", completed: "2026-03-07" }
+  delivery: { started: "2026-03-07", completed: "2026-03-07" }
+  system_spec_update: { started: "2026-03-07", completed: "2026-03-07" }
+  review_fix: { started: "2026-03-07", completed: "2026-03-07" }
+  quality_gates: { started: "2026-03-07", completed: "2026-03-07" }
+  dod_check: { started: "2026-03-07", completed: "2026-03-07" }
+  pr_creation: { started: null, completed: null, url: null }
+decisions:
+  - text: "Documentation-only change — streamline lifecycle: lightweight spec+plan, then deliver AGENTS.md directly"
+    date: "2026-03-06"
+  - text: "No test plan needed — AGENTS.md is a markdown file; quality verified by review and AC check"
+    date: "2026-03-06"
+open_questions: []
+blockers: []
+notes:
+  - text: "Clarify scope: ticket AC is clear and complete. Cross-checked against repo structure (scripts/, .opencode/, doc/guides/). No gaps or contradictions found."
+    type: info
+    date: "2026-03-06"
