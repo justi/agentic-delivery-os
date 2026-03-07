@@ -9,7 +9,7 @@ description: >-
   navigation chrome, and widget styling.
 mode: all
 #model: github-copilot/grok-code-fast-1
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
 ---
 
 # Role

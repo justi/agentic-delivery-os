@@ -7,7 +7,7 @@ description: >-
   Reproduce failures and apply targeted fixes.
 mode: all
 #model: github-copilot/grok-code-fast-1
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
 ---
 
 You are an expert debugging, testing, and issue-resolution agent.

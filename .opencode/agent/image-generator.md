@@ -5,7 +5,7 @@
 #
 description: Generate AI images via text-to-image CLI
 mode: all
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
 tools:
   read: true
   glob: true

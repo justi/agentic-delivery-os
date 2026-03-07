@@ -6,7 +6,7 @@
 description: Create OpenCode agents/commands/skills.
 mode: all
 #model: openai/gpt-5.2
-model: github-copilot/claude-opus-4.5
+model: anthropic/claude-opus-4-6
 #model: anthropic/claude-opus-4-5
 temperature: 0.2
 reasoningEffort: high

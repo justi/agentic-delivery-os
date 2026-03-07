@@ -8,7 +8,7 @@ description: >-
   Discovers context from docs/config/code, drives Archie-style decision-making,
   and (when appropriate) writes & commits canonical ADRs under doc/adr/.
 mode: all
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
 ---
 
 # Role

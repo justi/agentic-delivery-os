@@ -5,7 +5,7 @@
 #
 description: Author change implementation plans
 mode: all
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
 ---
 
 <role>

@@ -5,7 +5,9 @@
 #
 description: Orchestrate changes; manage tickets via MCP (Jira/GitHub)
 mode: all
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
+tools:
+  "github*": true
 ---
 
 <role>
@@ -195,10 +197,17 @@ Planning sessions structure (for multi-change planning):
 - Record in `.ai/local/pm-context.yaml` as active_change
 </step>
 
-<step id="3">Clarify scope (phase 1: clarify_scope)
+<step id="3">Clarify scope and initialize PM notes (phase 1: clarify_scope)
 
-Goal: Fully understand the change intention and ensure all information is complete to minimize late-discovered gaps that would require returning to earlier phases.
+**3a. Create PM notes file (mandatory — do this FIRST):**
+- Ensure the change folder exists under `doc/changes/YYYY-MM/YYYY-MM-DD--<workItemRef>--<slug>/`
+- Create `chg-<workItemRef>-pm-notes.yaml` in that folder
+- This file is PM's durable memory for the change, committed to git. It serves two purposes:
+  1. **Live coordination**: track phases, decisions, open questions, blockers during delivery
+  2. **Retrospective record**: capture delivery inefficiencies, issues faced, process observations, and lessons learned so the team can improve the delivery process over time
+- Mark `clarify_scope` as started
 
+**3b. Clarify scope:**
 - Read the ticket from tracker via MCP
 - **Review current system specification** (`doc/spec/**`) to understand existing behavior, contracts, and constraints relevant to this change
 - Cross-check ticket requirements against system specification:
@@ -213,18 +222,8 @@ Goal: Fully understand the change intention and ensure all information is comple
   4. **STOP and wait** for human feedback
   5. Resume only after feedback is provided
 - If requirements are complete and consistent with system spec: proceed to artifact generation
-- Mark phase as started in `chg-<workItemRef>-pm-notes.yaml`
-</step>
 
-<step id="3.5">Initialize change-scoped PM notes (mandatory)
-
-- Ensure the change folder exists under `doc/changes/YYYY-MM/YYYY-MM-DD--<workItemRef>--<slug>/`
-- Create `chg-<workItemRef>-pm-notes.yaml` in that folder (this file is **mandatory** for every change)
-- This file is PM's long-term memory for the change, committed to git for traceability
-- Track lifecycle phases, decisions, open questions, blockers, and notes
-- Phases can be reopened if gaps are discovered in later phases
-
-YAML structure (embedded in prompt for portability):
+PM notes YAML structure:
 
 ```yaml
 change_id: GH-5
@@ -239,17 +238,21 @@ phases:
   review_fix: { started: null, completed: null }
   quality_gates: { started: null, completed: null }
   dod_check: { started: null, completed: null }
-  pr_creation: { started: null, completed: null, url: null }  # url populated when PR/MR is created
-decisions: []
-open_questions: []
-blockers: []
-notes: []  # list of { text: "...", type: "info|decision|blocker|risk|question|resolved", date: "YYYY-MM-DD" }
+  pr_creation: { started: null, completed: null, url: null }
+decisions: []       # { text, date }
+open_questions: []  # { text, date }
+blockers: []        # { text, date, resolved_date? }
+notes: []           # { text, type, date } — type: info|decision|blocker|risk|question|resolved|retro
 ```
 
-Notes structure (same as global notes, minus `workItemRef` which is implicit from the change):
-- `text` (required): the note content
-- `type` (optional): one of `info`, `decision`, `blocker`, `risk`, `question`, `resolved`; defaults to `info` if omitted
-- `date` (required): ISO date when note was recorded (YYYY-MM-DD)
+**Note-writing discipline:**
+- Record decisions as they happen (not retroactively in bulk)
+- When something goes wrong, is inefficient, or requires rework: add a `retro` note immediately — capture what happened, why, and what could improve it
+- `retro` notes are the primary input for delivery retrospectives; be specific and honest
+- Examples of good retro notes:
+  - "Spec missed edge case X; discovered during delivery; caused rework in phase 5"
+  - "Quality gates failed 3 times due to flaky test Y; wasted ~20 min"
+  - "Streamlined spec+plan+deliver delegation worked well; no rework needed"
 
 Phase definitions (see `doc/guides/change-lifecycle.md` for details):
 1. **clarify_scope** — Review ticket AND system spec (`doc/spec/**`); cross-check for gaps/contradictions; if issues found, ask human via ticket comment, assign back, STOP and wait
@@ -266,6 +269,9 @@ Phase definitions (see `doc/guides/change-lifecycle.md` for details):
 
 <step id="4">Delegate artifact generation (phases 2-4)
 When clarify_scope is complete (no blocking questions, human feedback received if needed):
+
+**Pre-delegation gate (HARD REQUIREMENT):**
+Before delegating ANY work to ANY agent, verify `chg-<workItemRef>-pm-notes.yaml` exists in the change folder. If it does not exist, create it NOW. Do NOT proceed with delegation until this file exists and `clarify_scope` is marked as completed in it. This gate applies even when the user requests streamlined/batched delivery (e.g., "delegate spec+plan+deliver to @coder in one call"). PM notes creation and phase tracking are PM responsibilities that cannot be delegated or skipped.
 
 - Mark `clarify_scope` as completed in `chg-<workItemRef>-pm-notes.yaml`
 - Produce `<change_planning_summary>` block with: problem, goals, scope, AC, risks, dependencies
@@ -306,6 +312,7 @@ When clarify_scope is complete (no blocking questions, human feedback received i
 
 <step id="8">DoD check (phase 9)
 
+- Verify `chg-<workItemRef>-pm-notes.yaml` exists and all phases are recorded with completion timestamps
 - Verify ALL previous phases are completed in `chg-<workItemRef>-pm-notes.yaml`
 - Verify all tasks in `chg-<workItemRef>-plan.md` are checked
 - Verify all acceptance criteria in `chg-<workItemRef>-spec.md` are satisfied

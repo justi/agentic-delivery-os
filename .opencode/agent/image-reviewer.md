@@ -74,7 +74,7 @@ description: >-
 
   </example>
 mode: subagent
-model: opencode/gpt-5-nano
+model: anthropic/claude-opus-4-6
 #model: google/gemini-2.5-flash-lite
 ---
 
