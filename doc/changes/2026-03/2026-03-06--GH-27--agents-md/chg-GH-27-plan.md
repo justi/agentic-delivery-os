@@ -1,6 +1,6 @@
 ---
 id: chg-GH-27-agents-md
-status: Proposed
+status: Completed
 created: 2026-03-07T00:00:00Z
 last_updated: 2026-03-07T00:00:00Z
 owners: [juliusz-cwiakalski]
@@ -63,15 +63,9 @@ Create `AGENTS.md` at the repository root as the canonical quick-reference for A
 
 **Tasks**:
 
-- [ ] Create `AGENTS.md` at repo root covering all required sections:
-  - Repo structure overview (F-1)
-  - `tools/` convention: PATH-able, no `.sh` extension, MIT licensed, tests in `tools/.tests/` (F-2)
-  - `scripts/` convention: repo-internal, `.sh` extension, tests in `scripts/.tests/` (F-3)
-  - Running tests: `test-*.sh` pattern and test directory locations (F-4)
-  - License header convention: three-line frontmatter + `scripts/add-header-location.sh` reference (F-5)
-  - Key references section linking to `.opencode/README.md`, `.ai/rules/bash.md`, `doc/guides/change-lifecycle.md`, `doc/guides/unified-change-convention-tracker-agnostic-specification.md` (F-6)
-- [ ] Run `scripts/add-header-location.sh AGENTS.md` to add license header frontmatter
-- [ ] Verify file is ≤ 200 lines (NFR-1)
+- [x] Create `AGENTS.md` at repo root covering all required sections (all 6 sections: repo structure, tools/ convention, scripts/ convention, running tests, license headers, key references)
+- [x] Run `scripts/add-header-location.sh AGENTS.md` to add license header frontmatter (header added successfully)
+- [x] Verify file is ≤ 200 lines (NFR-1) — 93 lines
 
 **Acceptance Criteria**:
 
@@ -100,8 +94,8 @@ Create `AGENTS.md` at the repository root as the canonical quick-reference for A
 
 **Tasks**:
 
-- [ ] Add `AGENTS.md` entry to "Docs at a glance" section in README.md
-- [ ] Add `AGENTS.md` entry to "Repo structure" tree in README.md
+- [x] Add `AGENTS.md` entry to "Docs at a glance" section in README.md (added as first item with description)
+- [x] Add `AGENTS.md` entry to "Repo structure" tree in README.md (added to tree with comment)
 
 **Acceptance Criteria**:
 
@@ -124,9 +118,9 @@ Create `AGENTS.md` at the repository root as the canonical quick-reference for A
 
 **Tasks**:
 
-- [ ] Validate all spec acceptance criteria (AC-F1-1 through AC-NFR1-1) with evidence
-- [ ] Verify no content duplication from linked docs (NFR-2)
-- [ ] Confirm valid GitHub-flavored Markdown (NFR-3)
+- [x] Validate all spec acceptance criteria (AC-F1-1 through AC-NFR1-1) with evidence — all PASSED
+- [x] Verify no content duplication from linked docs (NFR-2) — PASSED, all deep-topic sections link only
+- [x] Confirm valid GitHub-flavored Markdown (NFR-3) — PASSED, valid GFM with tables, code blocks, links
 
 **Acceptance Criteria**:
 
@@ -174,4 +168,21 @@ Create `AGENTS.md` at the repository root as the canonical quick-reference for A
 
 ## Execution Log
 
-_(populated during `/run-plan`)_
+| Date | Phase | Summary |
+|------|-------|---------|
+| 2026-03-07 | Phase 1: Create AGENTS.md | Created AGENTS.md (93 lines) with all 6 required sections. License header added via add-header-location.sh. Commit `d56df3a`. |
+| 2026-03-07 | Phase 2: Update README.md | Added AGENTS.md to "Docs at a glance" and "Repo structure" tree. Commit `5f7b9da`. |
+| 2026-03-07 | Phase 3: Finalize and Release | All AC validated: AC-F1-1 through AC-NFR1-1 PASSED. No TODOs/placeholders. No content duplication. All 4 linked files exist. |
+
+### Acceptance Criteria Evidence
+
+| AC | Status | Evidence |
+|----|--------|----------|
+| AC-F1-1 | PASSED | `AGENTS.md` exists at repo root, 93 lines, valid GFM |
+| AC-F2-1 | PASSED | `tools/` convention section documents PATH-able, no `.sh`, MIT licensed, `tools/.tests/` |
+| AC-F3-1 | PASSED | `scripts/` convention section documents repo-internal, `.sh` extension, `scripts/.tests/` |
+| AC-F4-1 | PASSED | Running tests section documents `test-*.sh` pattern and test directory locations |
+| AC-F5-1 | PASSED | License headers section documents three-line convention + `add-header-location.sh` reference |
+| AC-F6-1 | PASSED | Key references links to all 4 docs; no content duplication (link-only pattern) |
+| AC-NFR1-1 | PASSED | `wc -l AGENTS.md` = 93 (≤ 200) |
+| DEC-3 | PASSED | License header frontmatter present (lines 1-5) |
