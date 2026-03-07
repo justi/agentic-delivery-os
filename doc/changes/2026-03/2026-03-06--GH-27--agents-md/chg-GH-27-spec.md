@@ -19,11 +19,11 @@ change:
 
 # CHANGE SPECIFICATION
 
-> **PURPOSE**: Define the `AGENTS.md` file — a single, scannable entry point at the repo root that tells AI coding agents and human contributors how to work with this codebase (structure, conventions, build/test/lint commands, license headers, and pointers to detailed docs).
+> **PURPOSE**: Define the `AGENTS.md` file — the bootstrap file at the repo root that orients AI coding agents on the delivery system (process, agent team, commands), how to extend it (via `@toolsmith`), and repo conventions (structure, tools, scripts, testing, license headers).
 
 ## 1. SUMMARY
 
-Create `AGENTS.md` at the repository root as the canonical quick-reference for AI agents and contributors. The file documents repo structure, the `tools/` vs `scripts/` convention, how to run tests, license header requirements, and links to deeper guides — without duplicating their content.
+Create `AGENTS.md` at the repository root as the canonical bootstrap for AI agents and contributors. The file leads with the delivery system (10-phase process, 18 agents, 15 commands, autopilot + manual usage), provides extension guidance (delegate to `@toolsmith`, tune agents together, test through the process), and documents repo conventions (tools/, scripts/, testing, license headers) — all without duplicating detailed docs.
 
 ## 2. CONTEXT
 
@@ -39,21 +39,23 @@ Create `AGENTS.md` at the repository root as the canonical quick-reference for A
 
 ### 2.2 Pain Points / Gaps
 
-- **No single entry point**: agents must discover conventions across multiple files scattered in `.ai/rules/`, `.opencode/`, and `doc/guides/`.
-- **Undocumented `tools/` convention**: the intended `tools/` directory (PATH-able CLI utilities, no `.sh` extension, MIT licensed) is not documented anywhere yet. Upcoming work (GH-26) will create the first tool there.
-- **Undocumented `scripts/` convention**: while `scripts/` exists with `add-header-location.sh`, the convention (repo-internal automation, `.sh` extension, tests in `.tests/`) is implicit.
-- **License header convention is only embedded in script logic**: the three-line frontmatter pattern (copyright, MIT, latest-version URL) is enforced by `scripts/add-header-location.sh` but not documented as a human-readable convention.
+- **No single entry point**: agents must discover the delivery system, agent team, and conventions across multiple files scattered in `.opencode/`, `.ai/rules/`, and `doc/guides/`.
+- **Core value undiscoverable**: the 10-phase delivery process, 18-agent team, and 15 commands are documented in detail but have no concise bootstrap summary at the repo root.
+- **No extension guidance**: agents modifying the OS have no documented principles (delegate to `@toolsmith`, tune agents together, check contracts, test through the process).
+- **Undocumented `tools/` convention**: the intended `tools/` directory (PATH-able CLI utilities, no `.sh` extension, MIT licensed) is not documented anywhere yet.
+- **Undocumented `scripts/` convention**: while `scripts/` exists with `add-header-location.sh`, the convention is implicit.
 
 ## 3. PROBLEM STATEMENT
 
-Without `AGENTS.md`, AI agents lack a fast, authoritative bootstrap file and must infer conventions from scattered sources — leading to inconsistent outputs and repeated discovery overhead.
+Without `AGENTS.md`, AI agents lack a fast, authoritative bootstrap file that conveys what this repo IS (an autonomous delivery OS), how the delivery process works, and how to extend the system correctly — leading to inconsistent outputs, missed quality bars, and agents treating the repo as a generic code project rather than a delivery system whose prompts are production artifacts.
 
 ## 4. GOALS
 
-- **G-1**: Provide a single-file bootstrap for AI agents and contributors at the repo root.
-- **G-2**: Document the `tools/` and `scripts/` directory conventions so future tools (starting with GH-26) follow a documented standard.
-- **G-3**: Document the license header convention and the `add-header-location.sh` script.
-- **G-4**: Link to detailed docs without duplicating content.
+- **G-1**: Provide a single-file bootstrap that orients agents on the delivery system (process, team, commands).
+- **G-2**: Convey the quality bar: agent prompts ARE the product; modifications require `@toolsmith`.
+- **G-3**: Provide extension guidance so agents evolve the OS in the right direction.
+- **G-4**: Document repo conventions (tools/, scripts/, testing, license headers) as secondary content.
+- **G-5**: Link to detailed docs without duplicating content.
 
 ### 4.1 Success Metrics / KPIs
 
@@ -73,12 +75,17 @@ Without `AGENTS.md`, AI agents lack a fast, authoritative bootstrap file and mus
 
 | ID | Capability | Rationale |
 |----|------------|-----------|
-| F-1 | `AGENTS.md` at repo root documents repo structure overview | Gives agents immediate orientation |
-| F-2 | Documents `tools/` directory convention (PATH-able, no `.sh`, MIT licensed) | Establishes standard before first tool is created |
-| F-3 | Documents `scripts/` directory convention (repo-internal, `.sh` extension, `.tests/` subfolder) | Makes implicit convention explicit |
-| F-4 | Documents how to run tests (`scripts/.tests/test-*.sh`, `tools/.tests/test-*.sh`) | Agents know how to validate changes |
-| F-5 | Documents license header requirements (copyright, MIT, latest-version URL) and `add-header-location.sh` | Agents apply correct frontmatter |
-| F-6 | References key docs (`.opencode/README.md`, `.ai/rules/bash.md`, change lifecycle, change convention) without duplicating their content | Keeps AGENTS.md concise and maintainable |
+| F-1 | Mission statement: agent prompts ARE the product, quality compounds | Sets quality bar for every agent working here |
+| F-2 | 10-phase delivery process table (phase → agent → what happens) | Core product — agents understand the pipeline they're part of |
+| F-3 | Full agent roster (18 agents) grouped by delivery role | Agents know who does what and how they collaborate |
+| F-4 | Full command inventory (15 commands) in workflow order | Agents know the interface to the delivery process |
+| F-5 | Usage guide: autopilot (`@pm`) and manual workflow modes | Agents know how to drive the system |
+| F-6 | Extension guidance: delegate to `@toolsmith`, tune agents together, test through process | Agents evolve the OS correctly |
+| F-7 | Change artifact conventions (workItemRef, folders, files, branches) | Agents follow naming standards |
+| F-8 | Repo structure with annotated directory tree | Gives agents immediate orientation |
+| F-9 | `tools/` and `scripts/` directory conventions | Establishes coding conventions |
+| F-10 | Testing and license header conventions | Agents validate changes and apply correct frontmatter |
+| F-11 | Key references table linking to all detailed docs | Link-not-duplicate for deep topics |
 
 ### 5.1 Capability Details
 
@@ -209,9 +216,11 @@ No open questions.
 
 | ID | Decision | Rationale | Date |
 |----|----------|-----------|------|
-| DEC-1 | Document `tools/` convention before the directory exists | Establishes standard so GH-26 can follow it from day one | 2026-03-07 |
+| DEC-1 | Lead with delivery system (process, agents, commands) not repo conventions | AGENTS.md must convey what this repo IS; conventions are secondary | 2026-03-07 |
 | DEC-2 | Use link-not-duplicate pattern for detailed docs | Keeps AGENTS.md small and avoids sync burden | 2026-03-07 |
 | DEC-3 | Include ADOS markdown frontmatter (copyright header) on AGENTS.md itself | Dogfooding the convention the file documents | 2026-03-07 |
+| DEC-4 | Require `@toolsmith` delegation for agent/command modifications | Quality bar: prompt engineering is specialized work; hand-editing degrades the system | 2026-03-07 |
+| DEC-5 | Include "Extending the system" section with design principles | Agents need a compass (not just a map) to evolve the OS correctly | 2026-03-07 |
 
 ## 16. AFFECTED COMPONENTS (HIGH-LEVEL)
 
@@ -223,13 +232,18 @@ No open questions.
 
 | ID | Criterion | Linked |
 |----|-----------|--------|
-| AC-F1-1 | Given the repo root, when an agent or contributor reads `AGENTS.md`, then it exists and is valid Markdown | F-1 |
-| AC-F2-1 | Given `AGENTS.md`, when the reader looks for `tools/` convention, then the file documents: PATH-able CLI utilities, no `.sh` extension, MIT licensed, tests in `tools/.tests/` | F-2 |
-| AC-F3-1 | Given `AGENTS.md`, when the reader looks for `scripts/` convention, then the file documents: repo-internal automation, `.sh` extension, tests in `scripts/.tests/` | F-3 |
-| AC-F4-1 | Given `AGENTS.md`, when the reader needs to run tests, then the file documents the test file pattern (`test-*.sh`) and test directory locations | F-4 |
-| AC-F5-1 | Given `AGENTS.md`, when the reader needs to add a license header, then the file documents the three-line convention (copyright, MIT, latest-version URL) and references `scripts/add-header-location.sh` | F-5 |
-| AC-F6-1 | Given `AGENTS.md`, when the reader needs deeper information, then the file links to `.opencode/README.md`, `.ai/rules/bash.md`, `doc/guides/change-lifecycle.md`, and `doc/guides/unified-change-convention-tracker-agnostic-specification.md` without duplicating their content | F-6 |
-| AC-NFR1-1 | Given `AGENTS.md`, when its line count is measured, then it is ≤ 200 lines | NFR-1 |
+| AC-F1-1 | AGENTS.md opens with mission statement conveying: agent prompts ARE the product, quality compounds, delivery process is self-referential | F-1 |
+| AC-F2-1 | Documents the 10-phase delivery process with agent-per-phase table | F-2 |
+| AC-F3-1 | Lists all 18 agents with roles, grouped by delivery phase | F-3 |
+| AC-F4-1 | Lists all 15 commands with purposes | F-4 |
+| AC-F5-1 | Documents both autopilot (`@pm deliver GH-456`) and manual workflow modes | F-5 |
+| AC-F6-1 | Includes "Extending the system" section with: delegate to `@toolsmith`, tune agents together, check upstream/downstream contracts, test through the delivery process, keep prompts tight | F-6 |
+| AC-F7-1 | Documents change artifact conventions: workItemRef format, folder/file naming, branch naming | F-7 |
+| AC-F8-1 | Contains annotated repo structure tree showing `.opencode/`, `.ai/`, `scripts/`, `tools/`, `doc/` | F-8 |
+| AC-F9-1 | Documents `tools/` convention (PATH-able, no `.sh`, MIT) and `scripts/` convention (repo-internal, `.sh`, `.tests/`) | F-9 |
+| AC-F10-1 | Documents test pattern (`test-*.sh`) and license header convention with `add-header-location.sh` | F-10 |
+| AC-F11-1 | Key references table links to all detailed docs without duplicating content | F-11 |
+| AC-NFR1-1 | File is ≤ 200 lines | NFR-1 |
 
 ## 18. ROLLOUT & CHANGE MANAGEMENT (HIGH-LEVEL)
 
@@ -286,7 +300,8 @@ N/A — documentation-only change, no code execution.
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-03-07 | spec-writer | Initial spec |
+| 1.0 | 2026-03-07 | spec-writer | Initial spec (repo-conventions focus) |
+| 2.0 | 2026-03-07 | pm | Scope expansion: delivery-system-first structure, agent team, commands, extension guidance, @toolsmith requirement |
 
 ---
 

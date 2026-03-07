@@ -8,7 +8,7 @@ service: repo-root
 labels: [documentation, developer-experience]
 links:
   change_spec: ./chg-GH-27-spec.md
-summary: "Create AGENTS.md — canonical guide for AI agents and contributors"
+summary: "Create AGENTS.md — delivery system bootstrap for AI agents and contributors"
 version_impact: none
 ---
 
@@ -16,20 +16,21 @@ version_impact: none
 
 ## Context and Goals
 
-Create `AGENTS.md` at the repository root as the canonical quick-reference for AI agents and contributors. The file documents repo structure, `tools/` vs `scripts/` conventions, how to run tests, license header requirements, and links to deeper guides — without duplicating their content.
+Create `AGENTS.md` at the repository root as the canonical bootstrap for AI agents and contributors. The file leads with the delivery system (10-phase process, 18 agents, 15 commands), provides extension guidance (`@toolsmith` delegation, agent contracts, testing through the process), and documents repo conventions.
 
-**Goals** (from spec):
+**Goals** (from spec v2.0):
 
-- **G-1**: Single-file bootstrap for AI agents and contributors at repo root.
-- **G-2**: Document `tools/` and `scripts/` directory conventions.
-- **G-3**: Document license header convention and `add-header-location.sh`.
-- **G-4**: Link to detailed docs without duplicating content.
+- **G-1**: Single-file bootstrap that orients agents on the delivery system.
+- **G-2**: Convey quality bar: agent prompts ARE the product; modifications require `@toolsmith`.
+- **G-3**: Provide extension guidance so agents evolve the OS correctly.
+- **G-4**: Document repo conventions (tools/, scripts/, testing, license headers).
+- **G-5**: Link to detailed docs without duplicating content.
 
 ## Scope
 
 **In Scope**:
 
-- New file: `AGENTS.md` at repo root
+- New file: `AGENTS.md` at repo root (delivery-system-first structure)
 - License header frontmatter on `AGENTS.md` (via `scripts/add-header-location.sh`)
 - Update `README.md` to reference `AGENTS.md` in "Docs at a glance" and "Repo structure"
 
@@ -45,144 +46,76 @@ Create `AGENTS.md` at the repository root as the canonical quick-reference for A
 - No duplicated content from linked docs (NFR-2)
 - Valid GitHub-flavored Markdown (NFR-3)
 
-**Risks**:
-
-- RSK-1: AGENTS.md may become stale — mitigated by link-not-duplicate pattern and small surface area.
-
-**Success Metrics**:
-
-- File exists at repo root and is valid Markdown
-- All acceptance criteria (AC-F1-1 through AC-NFR1-1) pass
-- No content duplication from linked docs
-
 ## Phases
 
-### Phase 1: Create AGENTS.md
+### Phase 1: Create AGENTS.md (initial version)
 
-**Goal**: Author the `AGENTS.md` file at the repo root with all required sections per the spec.
+**Goal**: Author the initial `AGENTS.md` file with repo-conventions focus.
 
 **Tasks**:
 
-- [x] Create `AGENTS.md` at repo root covering all required sections (all 6 sections: repo structure, tools/ convention, scripts/ convention, running tests, license headers, key references)
-- [x] Run `scripts/add-header-location.sh AGENTS.md` to add license header frontmatter (header added successfully)
-- [x] Verify file is ≤ 200 lines (NFR-1) — 93 lines
-
-**Acceptance Criteria**:
-
-- Must: `AGENTS.md` exists at repo root and is valid GFM Markdown (AC-F1-1)
-- Must: Documents `tools/` convention — PATH-able, no `.sh`, MIT licensed, tests in `tools/.tests/` (AC-F2-1)
-- Must: Documents `scripts/` convention — repo-internal, `.sh` extension, tests in `scripts/.tests/` (AC-F3-1)
-- Must: Documents test file pattern `test-*.sh` and test directory locations (AC-F4-1)
-- Must: Documents license header convention (copyright, MIT, latest-version URL) and references `add-header-location.sh` (AC-F5-1)
-- Must: Links to `.opencode/README.md`, `.ai/rules/bash.md`, `doc/guides/change-lifecycle.md`, `doc/guides/unified-change-convention-tracker-agnostic-specification.md` without duplicating their content (AC-F6-1)
-- Must: File is ≤ 200 lines (AC-NFR1-1)
-- Must: License header frontmatter present (DEC-3)
-
-**Files and modules**:
-
-- `AGENTS.md` (new)
-
-**Tests**:
-
-- Manual: verify Markdown renders on GitHub, line count ≤ 200, all links valid
+- [x] Create `AGENTS.md` at repo root with initial sections (repo structure, tools/, scripts/, tests, license headers, key references)
+- [x] Run `scripts/add-header-location.sh AGENTS.md` to add license header frontmatter
 
 **Completion signal**: `docs(GH-27): add AGENTS.md`
 
 ### Phase 2: Update README.md
 
-**Goal**: Add `AGENTS.md` reference to README's "Docs at a glance" section and "Repo structure" tree.
+**Goal**: Add `AGENTS.md` reference to README.
 
 **Tasks**:
 
-- [x] Add `AGENTS.md` entry to "Docs at a glance" section in README.md (added as first item with description)
-- [x] Add `AGENTS.md` entry to "Repo structure" tree in README.md (added to tree with comment)
-
-**Acceptance Criteria**:
-
-- Must: README "Docs at a glance" lists `AGENTS.md` with a brief description
-- Must: README "Repo structure" tree includes `AGENTS.md`
-
-**Files and modules**:
-
-- `README.md` (update)
-
-**Tests**:
-
-- Manual: verify links resolve correctly
+- [x] Add `AGENTS.md` entry to "Docs at a glance" section
+- [x] Add `AGENTS.md` entry to "Repo structure" tree
 
 **Completion signal**: `docs(GH-27): update README to reference AGENTS.md`
 
-### Phase 3: Finalize and Release
+### Phase 3: Rewrite AGENTS.md with delivery-system-first structure
 
-**Goal**: Final validation of all acceptance criteria and commit.
+**Goal**: Expand AGENTS.md scope per user feedback — lead with delivery system, agent team, commands, extension guidance.
 
 **Tasks**:
 
-- [x] Validate all spec acceptance criteria (AC-F1-1 through AC-NFR1-1) with evidence — all PASSED
-- [x] Verify no content duplication from linked docs (NFR-2) — PASSED, all deep-topic sections link only
-- [x] Confirm valid GitHub-flavored Markdown (NFR-3) — PASSED, valid GFM with tables, code blocks, links
+- [x] Rewrite with mission statement (agent prompts ARE the product)
+- [x] Add 10-phase delivery process table with agent-per-phase mapping
+- [x] Add full agent roster (18 agents) grouped by delivery role
+- [x] Add full command inventory (15 commands) in workflow order
+- [x] Add usage section (autopilot + manual workflow)
+- [x] Add "Extending the system" section with `@toolsmith` delegation, contract awareness, testing guidance
+- [x] Add change artifact conventions section
+- [x] Expand repo structure tree (show .opencode/, .ai/ internals)
+- [x] Keep tools/, scripts/, testing, license header sections (condensed)
+- [x] Expand key references table (7 docs)
+- [x] Verify ≤ 200 lines
 
 **Acceptance Criteria**:
 
-- Must: All spec AC pass with documented evidence
-- Must: No leftover TODOs or placeholders in AGENTS.md
+- Must: Mission statement conveys agent prompts ARE the product (AC-F1-1)
+- Must: 10-phase delivery process table present (AC-F2-1)
+- Must: All 18 agents listed with roles (AC-F3-1)
+- Must: All 15 commands listed (AC-F4-1)
+- Must: Autopilot and manual modes documented (AC-F5-1)
+- Must: "Extending the system" section with @toolsmith delegation (AC-F6-1)
+- Must: Change artifact conventions documented (AC-F7-1)
+- Must: Annotated repo structure tree (AC-F8-1)
+- Must: tools/ and scripts/ conventions documented (AC-F9-1)
+- Must: Testing and license header conventions documented (AC-F10-1)
+- Must: Key references table (AC-F11-1)
+- Must: ≤ 200 lines (AC-NFR1-1)
 
-**Files and modules**:
-
-- (no new files — validation only)
-
-**Tests**:
-
-- Line count check: `wc -l AGENTS.md` ≤ 200
-- Link validity: all referenced files exist in the repo
-
-**Completion signal**: `docs(GH-27): finalize AGENTS.md delivery`
-
-## Test Scenarios
-
-| ID | Scenario | Expected | AC |
-|----|----------|----------|----|
-| TS-1 | `AGENTS.md` exists at repo root | File present | AC-F1-1 |
-| TS-2 | `tools/` convention section present | Documents PATH-able, no `.sh`, MIT, `tools/.tests/` | AC-F2-1 |
-| TS-3 | `scripts/` convention section present | Documents repo-internal, `.sh`, `scripts/.tests/` | AC-F3-1 |
-| TS-4 | Test running section present | Documents `test-*.sh` pattern, test dirs | AC-F4-1 |
-| TS-5 | License header section present | Documents three-line convention + `add-header-location.sh` | AC-F5-1 |
-| TS-6 | Key references section present | Links to 4 docs, no duplicated content | AC-F6-1 |
-| TS-7 | Line count ≤ 200 | `wc -l AGENTS.md` ≤ 200 | AC-NFR1-1 |
-| TS-8 | License header frontmatter | `---` block with copyright, MIT, latest-version | DEC-3 |
-
-## Artifacts and Links
-
-| Artifact | Path |
-|----------|------|
-| Spec | `doc/changes/2026-03/2026-03-06--GH-27--agents-md/chg-GH-27-spec.md` |
-| Plan | `doc/changes/2026-03/2026-03-06--GH-27--agents-md/chg-GH-27-plan.md` |
-| AGENTS.md | `AGENTS.md` |
-| README.md | `README.md` |
+**Completion signal**: `docs(GH-27): rewrite AGENTS.md with delivery-system-first structure`
 
 ## Plan Revision Log
 
 | Date | Change |
 |------|--------|
-| 2026-03-07 | Initial plan created |
+| 2026-03-07 | Initial plan created (3 phases: create, update README, finalize) |
+| 2026-03-07 | Added Phase 3 for delivery-system-first rewrite per scope expansion |
 
 ## Execution Log
 
 | Date | Phase | Summary |
 |------|-------|---------|
-| 2026-03-07 | Phase 1: Create AGENTS.md | Created AGENTS.md (93 lines) with all 6 required sections. License header added via add-header-location.sh. Commit `d56df3a`. |
-| 2026-03-07 | Phase 2: Update README.md | Added AGENTS.md to "Docs at a glance" and "Repo structure" tree. Commit `5f7b9da`. |
-| 2026-03-07 | Phase 3: Finalize and Release | All AC validated: AC-F1-1 through AC-NFR1-1 PASSED. No TODOs/placeholders. No content duplication. All 4 linked files exist. |
-
-### Acceptance Criteria Evidence
-
-| AC | Status | Evidence |
-|----|--------|----------|
-| AC-F1-1 | PASSED | `AGENTS.md` exists at repo root, 93 lines, valid GFM |
-| AC-F2-1 | PASSED | `tools/` convention section documents PATH-able, no `.sh`, MIT licensed, `tools/.tests/` |
-| AC-F3-1 | PASSED | `scripts/` convention section documents repo-internal, `.sh` extension, `scripts/.tests/` |
-| AC-F4-1 | PASSED | Running tests section documents `test-*.sh` pattern and test directory locations |
-| AC-F5-1 | PASSED | License headers section documents three-line convention + `add-header-location.sh` reference |
-| AC-F6-1 | PASSED | Key references links to all 4 docs; no content duplication (link-only pattern) |
-| AC-NFR1-1 | PASSED | `wc -l AGENTS.md` = 93 (≤ 200) |
-| DEC-3 | PASSED | License header frontmatter present (lines 1-5) |
+| 2026-03-07 | Phase 1: Create AGENTS.md | Created AGENTS.md (93 lines) with repo-conventions focus. Commit `d56df3a`. |
+| 2026-03-07 | Phase 2: Update README.md | Added AGENTS.md to "Docs at a glance" and "Repo structure". Commit `5f7b9da`. |
+| 2026-03-07 | Phase 3: Rewrite AGENTS.md | Complete rewrite with delivery-system-first structure. Commit `a0de1c4`. |
