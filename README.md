@@ -60,6 +60,7 @@ I use this repo to evolve and validate an AI-native delivery operating model on 
 
 ## Docs at a glance
 
+- AI agent & contributor quick-reference: [AGENTS.md](AGENTS.md)
 - How to use the agents/commands: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md)
 - Change delivery lifecycle (10-phase workflow): [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 - Change folder + naming convention (workItemRef, branches, files): [doc/guides/unified-change-convention-tracker-agnostic-specification.md](doc/guides/unified-change-convention-tracker-agnostic-specification.md)
@@ -130,6 +131,7 @@ Branches follow conventional-commit-aligned types:
 
 ```
 .
+├── AGENTS.md         # AI agent & contributor quick-reference
 ├── .opencode/        # OpenCode agents and commands (repo-local tooling)
 └── doc/
     ├── guides/       # how-to guides (OpenCode workflow, naming conventions)
