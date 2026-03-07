@@ -60,6 +60,7 @@ I use this repo to evolve and validate an AI-native delivery operating model on 
 
 ## Docs at a glance
 
+- AI agent & contributor quick-reference: [AGENTS.md](AGENTS.md)
 - How to use the agents/commands: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md)
 - Change delivery lifecycle (10-phase workflow): [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 - Change folder + naming convention (workItemRef, branches, files): [doc/guides/unified-change-convention-tracker-agnostic-specification.md](doc/guides/unified-change-convention-tracker-agnostic-specification.md)
@@ -130,10 +131,19 @@ Branches follow conventional-commit-aligned types:
 
 ```
 .
-├── .opencode/        # OpenCode agents and commands (repo-local tooling)
+├── AGENTS.md             # delivery system bootstrap (start here)
+├── .opencode/            # agent and command definitions (THE product)
+│   ├── agent/            # 18 agents (one .md each)
+│   └── command/          # 15 commands (one .md each)
+├── .ai/
+│   ├── agent/            # PM tracker config (pm-instructions.md)
+│   └── rules/            # language/tool rules (bash.md)
+├── scripts/              # repo-internal automation (.sh extension)
+│   └── .tests/           # test files for scripts (test-*.sh)
 └── doc/
-    ├── guides/       # how-to guides (OpenCode workflow, naming conventions)
-    ├── spec/         # current system spec (reconciled after each accepted change)
+    ├── changes/          # change artifacts (spec, plan, test-plan per workItemRef)
+    ├── guides/           # how-to guides (OpenCode workflow, naming conventions)
+    ├── spec/             # current system spec (reconciled after each accepted change)
     └── documentation-handbook.md
 ```
 

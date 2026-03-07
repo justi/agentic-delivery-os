@@ -8,7 +8,7 @@ description: >-
   translates content to match project-specific copywriting guidelines.
 mode: all
 #model: google/gemini-3-pro-preview
-model: github-copilot/gpt-5.2
+model: anthropic/claude-opus-4-6
 #model: github-copilot/gemini-3-pro-preview
 ---
 

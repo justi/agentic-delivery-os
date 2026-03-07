@@ -5,7 +5,7 @@
 #
 description: Reconcile system specs and docs with a completed change.
 mode: all
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
 ---
 
 <role>

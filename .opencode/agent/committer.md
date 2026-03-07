@@ -5,7 +5,7 @@
 #
 description: Create one Conventional Commit.
 mode: all
-model: github-copilot/gpt-4.1
+model: anthropic/claude-sonnet-4-6
 #model: github-copilot/grok-code-fast-1
 ---
 

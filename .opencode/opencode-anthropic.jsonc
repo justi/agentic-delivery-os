@@ -17,15 +17,15 @@
     "plan-writer":      { "model": "anthropic/claude-opus-4-6" },
     "spec-writer":      { "model": "anthropic/claude-opus-4-6" },
     "test-plan-writer": { "model": "anthropic/claude-opus-4-6" },
+    "image-generator":  { "model": "anthropic/claude-opus-4-6" },
+    "image-reviewer":   { "model": "anthropic/claude-opus-4-6" },
+    "designer":         { "model": "anthropic/claude-opus-4-6" },
+    "doc-syncer":       { "model": "anthropic/claude-opus-4-6" },
+    "editor":           { "model": "anthropic/claude-opus-4-6" },
 
     // --- Sonnet: well-scoped / formatting / execution / descriptions ---
     "committer":           { "model": "anthropic/claude-sonnet-4-6" },
-    "designer":            { "model": "anthropic/claude-sonnet-4-6" },
-    "doc-syncer":          { "model": "anthropic/claude-sonnet-4-6" },
-    "editor":              { "model": "anthropic/claude-sonnet-4-6" },
     "external-researcher": { "model": "anthropic/claude-sonnet-4-6" },
-    "image-generator":     { "model": "anthropic/claude-sonnet-4-6" },
-    "image-reviewer":      { "model": "anthropic/claude-sonnet-4-6" },
     "pr-manager":          { "model": "anthropic/claude-sonnet-4-6" },
     "runner":              { "model": "anthropic/claude-sonnet-4-6" }
   }

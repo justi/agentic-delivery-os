@@ -5,7 +5,7 @@
 #
 description: Implement plan phases by writing code for a change.
 mode: all
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
 #model: github-copilot/gpt-4.1
 #model: github-copilot/grok-code-fast-1
 ---

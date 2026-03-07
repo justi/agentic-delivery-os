@@ -5,7 +5,7 @@
 #
 description: Review change implementation against spec and plan; append remediation if needed.
 mode: all
-model: deepseek/deepseek-reasoner
+model: anthropic/claude-opus-4-6
 ---
 
 <role>
