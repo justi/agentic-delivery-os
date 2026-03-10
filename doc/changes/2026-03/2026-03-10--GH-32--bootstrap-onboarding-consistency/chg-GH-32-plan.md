@@ -1,6 +1,6 @@
 ---
 id: chg-GH-32-bootstrap-onboarding-consistency
-status: Proposed
+status: Delivered
 created: 2026-03-10T00:00:00Z
 last_updated: 2026-03-10T00:00:00Z
 owners: [juliusz-cwiakalski]
@@ -385,9 +385,9 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 **Tasks**:
 
-- [ ] **6.1** Create `doc/guides/copywriting.md` as a minimal stub (per OQ-2 resolution). Content: front-matter + title + brief description stating this is a placeholder for future copywriting guidelines, linking to `@editor` agent for current copy conventions.
-- [ ] **6.2** Create `doc/planning/product-decisions/README.md` as a directory stub (referenced in spec Appendix A). If `doc/planning/` does not exist, create it with a README.md explaining its purpose.
-- [ ] **6.3** Run `scripts/add-header-location.sh` on all new files to add license headers:
+- [x] **6.1** Create `doc/guides/copywriting.md` — minimal stub linking to @editor agent as a minimal stub (per OQ-2 resolution). Content: front-matter + title + brief description stating this is a placeholder for future copywriting guidelines, linking to `@editor` agent for current copy conventions.
+- [x] **6.2** Create `doc/planning/product-decisions/README.md` — with doc/planning/README.md parent as a directory stub (referenced in spec Appendix A). If `doc/planning/` does not exist, create it with a README.md explaining its purpose.
+- [x] **6.3** Run `scripts/add-header-location.sh` — all 18 new files got license headers on all new files to add license headers:
   - `doc/00-index.md`
   - `doc/overview/README.md`
   - `doc/templates/README.md` and all 6 templates
@@ -398,7 +398,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
   - `doc/planning/product-decisions/README.md` (if created)
   - `.opencode/agent/bootstrapper.md`
   - `.opencode/command/bootstrap.md`
-- [ ] **6.4** Final validation — run comprehensive grep checks:
+- [x] **6.4** Final validation — all grep checks pass: zero ghost references outside GH-32 artifacts
   - `rg "doc/adr/" --glob "*.md"` → zero matches (excluding GH-32 spec)
   - `rg "/.ai/agents/" --glob "*.md"` → zero matches (excluding GH-32 spec)
   - `rg "context-maps|coding-agent-index" --glob "*.md"` → zero matches (excluding GH-32 spec)
@@ -406,7 +406,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
   - Verify all 6 templates exist
   - Verify `doc/00-index.md`, `doc/guides/decision-records-management.md`, `doc/guides/onboarding-existing-project.md`, `doc/guides/copywriting.md` exist
   - Verify `.opencode/agent/bootstrapper.md` and `.opencode/command/bootstrap.md` exist
-- [ ] **6.5** Reconcile this plan's spec — verify all 16 functional capabilities (F-1 through F-16) are addressed by at least one task, and all acceptance criteria (AC-*) are covered.
+- [x] **6.5** Reconcile this plan's spec — all 16 functional capabilities (F-1 through F-16) verified as addressed: F-1→1.1, F-2→1.2, F-3→1.5, F-4→1.6, F-5→1.3/1.7, F-6→1.3, F-7→2.1, F-8→2.2, F-9→1.7/2.4-2.6, F-10→3.1-3.6, F-11→3.8-3.11, F-12→4.1, F-13→5.1, F-14→5.2, F-15→5.1, F-16→5.3-5.4. All AC-* criteria covered.
 
 **Acceptance Criteria**:
 
@@ -495,4 +495,4 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 | 3 | Complete | 2026-03-10 | 2026-03-10 | | 5 templates created, 4 agents updated for template reading |
 | 4 | Complete | 2026-03-10 | 2026-03-10 | | Onboarding guide with all mandatory/optional artifacts |
 | 5 | Complete | 2026-03-10 | 2026-03-10 | | @bootstrapper agent + /bootstrap command + inventory updates |
-| 6 | Pending | | | | |
+| 6 | Complete | 2026-03-10 | 2026-03-10 | | License headers on 18 files, copywriting stub, planning stubs, final validation passed, spec reconciliation complete |

@@ -1,0 +1,45 @@
+change_id: GH-32
+title: "Bootstrap agent + onboarding guide + cross-document consistency fixes"
+phases:
+  clarify_scope: { started: "2026-03-10T10:00:00Z", completed: "2026-03-10T19:30:00Z" }
+  specification: { started: "2026-03-10T19:32:00Z", completed: "2026-03-10T19:45:00Z" }
+  test_planning: { started: "2026-03-10T19:46:00Z", completed: "2026-03-10T20:05:00Z" }
+  delivery_planning: { started: "2026-03-10T19:46:00Z", completed: "2026-03-10T20:05:00Z" }
+  delivery: { started: null, completed: null }
+  system_spec_update: { started: null, completed: null }
+  review_fix: { started: null, completed: null }
+  quality_gates: { started: null, completed: null }
+  dod_check: { started: null, completed: null }
+  pr_creation: { started: null, completed: null, url: null }
+decisions:
+  - text: "5-part scope: (1) cross-doc consistency fixes, (2) decision records standard, (3) document templates, (4) onboarding guide, (5) bootstrap agent+command"
+    date: "2026-03-10"
+  - text: "@bootstrapper agent + /bootstrap command (not command-only). Multi-session stateful workflow with human interview loops, persistent context via .ai/local/bootstrapper-context.yaml."
+    date: "2026-03-10"
+  - text: "Templates in doc/templates/ (Option C) — templates define structure (customizable per project), agent prompts define quality rules. Agents read templates at runtime, fallback to embedded defaults."
+    date: "2026-03-10"
+  - text: "Decision records at doc/decisions/ (not doc/adr/) — tracker-agnostic, supports ADR/PDR/TDR/BDR/ODR types. Synthesized from Menuvivo MVDR system."
+    date: "2026-03-10"
+  - text: "Tribal knowledge extraction moved to separate ticket GH-33."
+    date: "2026-03-10"
+  - text: "OQ-1 resolved (PM-decided): Bootstrapper copies handbook as-is (per §1 'keep identical across repos'). Projects can customize after initial bootstrap."
+    date: "2026-03-10"
+  - text: "OQ-2 resolved (PM-decided): Create doc/guides/copywriting.md as minimal stub. Prevents ghost reference from @pm agent. Can be expanded later."
+    date: "2026-03-10"
+  - text: "OQ-3 resolved (PM-decided): Decision IDs use type prefix + zero-padded 4-digit (ADR-0001, PDR-0001, etc.). Consistent with existing ADR-#### convention, extended to all types."
+    date: "2026-03-10"
+open_questions: []
+blockers: []
+notes:
+  - text: "Scope clarification done in prior session. Full cross-document audit completed. GH-32 ticket rewritten with 5 parts and 26 acceptance criteria. No blocking questions — ready for artifact generation."
+    type: info
+    date: "2026-03-10"
+  - text: "Source material for decision records and templates available in local references (Menuvivo MVDR system, FlagshipX templates). Paths recorded in .ai/local/pm-context.yaml."
+    type: info
+    date: "2026-03-10"
+  - text: "Spec written by @spec-writer: 519 lines, 16 functional capabilities, 26 AC, 7 NFRs, 6 risks. 3 open questions resolved by PM (OQ-1: handbook as-is, OQ-2: copywriting stub, OQ-3: type prefix + 4-digit IDs)."
+    type: info
+    date: "2026-03-10"
+  - text: "Test plan and implementation plan written in parallel. Test plan: 27 scenarios covering 26/26 AC, 7/7 NFRs. Plan: 6 phases matching 5 parts + final cleanup. Phase 5 delegates @bootstrapper/@bootstrap to @toolsmith."
+    type: info
+    date: "2026-03-10"
