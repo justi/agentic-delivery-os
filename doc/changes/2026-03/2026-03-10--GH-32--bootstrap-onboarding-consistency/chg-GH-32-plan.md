@@ -279,7 +279,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 **Tasks**:
 
-- [ ] **4.1** Create `doc/guides/onboarding-existing-project.md` — the ADOS adoption guide. Must cover:
+- [x] **4.1** Create `doc/guides/onboarding-existing-project.md` — comprehensive guide with mandatory/optional artifacts, GitHub+Jira config, first change walkthrough — the ADOS adoption guide. Must cover:
   - **Prerequisites**: what the target project needs before starting (a git repo, basic familiarity with ADOS concepts)
   - **Mandatory artifacts** with setup instructions:
     - `AGENTS.md` — what to include, how to customize for the project
@@ -493,6 +493,6 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 | 1 | Complete | 2026-03-10 | 2026-03-10 | | Ghost refs, stale paths, missing dirs fixed |
 | 2 | Complete | 2026-03-10 | 2026-03-10 | | Guide, template, index, agent/command updates |
 | 3 | Complete | 2026-03-10 | 2026-03-10 | | 5 templates created, 4 agents updated for template reading |
-| 4 | Pending | | | | |
+| 4 | Complete | 2026-03-10 | 2026-03-10 | | Onboarding guide with all mandatory/optional artifacts |
 | 5 | Pending | | | | |
 | 6 | Pending | | | | |
