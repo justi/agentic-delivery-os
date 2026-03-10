@@ -195,10 +195,20 @@ Updates: `docs(test-plan): refine test plan for <workItemRef>`
 Only stage the test plan file.
 </commit_rules>
 
+<template_reading>
+Before generating the test plan, attempt to read the structural template:
+
+1. Try to read `doc/templates/test-plan-template.md`
+2. If the template exists: use it as the structural guide for sections, front-matter skeleton, and ordering
+3. If the template does NOT exist: fall back to the embedded `<test_plan_structure>` defined in this prompt
+4. Template defines structure; this prompt defines quality rules and domain logic
+</template_reading>
+
 <process>
 1. Parse `workItemRef` from input
-2. Locate change folder, spec, and plan per <discovery_rules>
-3. Read `.ai/rules/testing-strategy.mdc`; FAIL if missing
+2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
+3. Locate change folder, spec, and plan per <discovery_rules>
+4. Read `.ai/rules/testing-strategy.mdc`; FAIL if missing
 4. Extract fields per <field_extraction>
 5. Checkout/create branch
 6. If test plan exists → apply <update_behavior>

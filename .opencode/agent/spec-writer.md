@@ -170,10 +170,20 @@ MUST NOT appear: Implementation tasks, file paths, code-level instructions, merg
 - If an architectural decision is needed but unresolved, capture under OPEN QUESTIONS with note: "Decision needed: consult `@architect`"
   </authoring_rules>
 
+<template_reading>
+Before generating the spec, attempt to read the structural template:
+
+1. Try to read `doc/templates/change-spec-template.md`
+2. If the template exists: use it as the structural guide for sections, front-matter skeleton, and ordering
+3. If the template does NOT exist: fall back to the embedded `<spec_structure>` defined in this prompt
+4. Template defines structure; this prompt defines quality rules and domain logic
+</template_reading>
+
 <process>
 1. Parse `workItemRef` from input
-2. Gather planning-session context
-3. Compute slug from title (lowercase kebab-case, ≤60 chars)
+2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
+3. Gather planning-session context
+4. Compute slug from title (lowercase kebab-case, ≤60 chars)
 4. Determine change folder path per <discovery_rules>
 5. Determine `change.type` from context
 6. Assemble front matter per <front_matter_rules>

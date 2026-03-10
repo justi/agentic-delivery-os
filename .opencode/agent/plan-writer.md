@@ -172,9 +172,19 @@ Updates: `docs(plan): refine plan for <workItemRef>`
 Only stage the plan file.
 </commit_rules>
 
+<template_reading>
+Before generating the plan, attempt to read the structural template:
+
+1. Try to read `doc/templates/implementation-plan-template.md`
+2. If the template exists: use it as the structural guide for sections, front-matter skeleton, and ordering
+3. If the template does NOT exist: fall back to the embedded `<plan_structure>` defined in this prompt
+4. Template defines structure; this prompt defines quality rules and domain logic
+</template_reading>
+
 <process>
 1. Parse `workItemRef` from input
-2. Locate change folder and spec file per <discovery_rules>
+2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
+3. Locate change folder and spec file per <discovery_rules>
 3. Extract fields per <field_extraction>
 4. Validate required fields
 5. Checkout/create branch `<changeType>/<workItemRef>/<slug>`

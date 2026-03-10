@@ -226,17 +226,17 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 **Tasks**:
 
-- [ ] **3.1** Create `doc/templates/change-spec-template.md` — adapt from FlagshipX change-spec-template. Must include front-matter skeleton, all spec sections (Summary through Appendices), and inline HTML comment guidance. Align with `@spec-writer` embedded structure.
-- [ ] **3.2** Create `doc/templates/feature-spec-template.md` — adapt from FlagshipX feature-specification-template. For use in `doc/spec/features/`. Must include front-matter and all required sections with inline guidance.
-- [ ] **3.3** Create `doc/templates/test-spec-template.md` — adapt from Menuvivo test-spec-template. For use in `doc/quality/test-specs/`. Must include front-matter and all required sections with inline guidance.
-- [ ] **3.4** Create `doc/templates/test-plan-template.md` — adapt from FlagshipX test-plan-template. Per-change test plan template. Must include front-matter, coverage matrix, test scenarios, and inline guidance. Align with `@test-plan-writer` embedded structure.
-- [ ] **3.5** Create `doc/templates/implementation-plan-template.md` — derive from `@plan-writer` embedded structure. Must include front-matter, Context and Goals, Scope, Phases, Test Scenarios, Artifacts, Plan Revision Log, Execution Log, and inline guidance.
-- [ ] **3.6** Verify `doc/templates/decision-record-template.md` already exists (created in Phase 2). No action needed — this completes the set of 6 templates.
-- [ ] **3.7** Update `doc/templates/README.md` (created in Phase 1) to list all 6 templates with brief descriptions.
-- [ ] **3.8** Update `@spec-writer` agent (`.opencode/agent/spec-writer.md`) to read `doc/templates/change-spec-template.md` at runtime for structural guidance, with fallback to embedded default if template is absent. Add a template-reading step early in the process (before generating the spec). Template defines structure; agent prompt defines quality rules and domain logic.
-- [ ] **3.9** Update `@plan-writer` agent (`.opencode/agent/plan-writer.md`) to read `doc/templates/implementation-plan-template.md` at runtime for structural guidance, with same fallback pattern.
-- [ ] **3.10** Update `@test-plan-writer` agent (`.opencode/agent/test-plan-writer.md`) to read `doc/templates/test-plan-template.md` at runtime for structural guidance, with same fallback pattern.
-- [ ] **3.11** Update `@doc-syncer` agent (`.opencode/agent/doc-syncer.md`) to be aware of `doc/templates/` as a location containing structural templates. When reconciling docs, the doc-syncer should know templates exist for feature specs and test specs. Add a note about `doc/templates/feature-spec-template.md` and `doc/templates/test-spec-template.md` as structural references, with same fallback pattern.
+- [x] **3.1** Create `doc/templates/change-spec-template.md` — adapt from FlagshipX change-spec-template. Must include front-matter skeleton, all spec sections (Summary through Appendices), and inline HTML comment guidance. Align with `@spec-writer` embedded structure.
+- [x] **3.2** Create `doc/templates/feature-spec-template.md` — adapt from FlagshipX feature-specification-template. For use in `doc/spec/features/`. Must include front-matter and all required sections with inline guidance.
+- [x] **3.3** Create `doc/templates/test-spec-template.md` — adapt from Menuvivo test-spec-template. For use in `doc/quality/test-specs/`. Must include front-matter and all required sections with inline guidance.
+- [x] **3.4** Create `doc/templates/test-plan-template.md` — adapt from FlagshipX test-plan-template. Per-change test plan template. Must include front-matter, coverage matrix, test scenarios, and inline guidance. Align with `@test-plan-writer` embedded structure.
+- [x] **3.5** Create `doc/templates/implementation-plan-template.md` — derive from `@plan-writer` embedded structure. Must include front-matter, Context and Goals, Scope, Phases, Test Scenarios, Artifacts, Plan Revision Log, Execution Log, and inline guidance.
+- [x] **3.6** Verify `doc/templates/decision-record-template.md` — exists from Phase 2 already exists (created in Phase 2). No action needed — this completes the set of 6 templates.
+- [x] **3.7** Update `doc/templates/README.md` — already lists all 6 from Phase 1 (created in Phase 1) to list all 6 templates with brief descriptions.
+- [x] **3.8** Update `@spec-writer` agent — template_reading section added (`.opencode/agent/spec-writer.md`) to read `doc/templates/change-spec-template.md` at runtime for structural guidance, with fallback to embedded default if template is absent. Add a template-reading step early in the process (before generating the spec). Template defines structure; agent prompt defines quality rules and domain logic.
+- [x] **3.9** Update `@plan-writer` agent — template_reading section added (`.opencode/agent/plan-writer.md`) to read `doc/templates/implementation-plan-template.md` at runtime for structural guidance, with same fallback pattern.
+- [x] **3.10** Update `@test-plan-writer` agent — template_reading section added (`.opencode/agent/test-plan-writer.md`) to read `doc/templates/test-plan-template.md` at runtime for structural guidance, with same fallback pattern.
+- [x] **3.11** Update `@doc-syncer` agent — template search step updated with specific filenames and fallback (`.opencode/agent/doc-syncer.md`) to be aware of `doc/templates/` as a location containing structural templates. When reconciling docs, the doc-syncer should know templates exist for feature specs and test specs. Add a note about `doc/templates/feature-spec-template.md` and `doc/templates/test-spec-template.md` as structural references, with same fallback pattern.
 
 **Acceptance Criteria**:
 
@@ -492,7 +492,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 |-------|--------|---------|-----------|--------|-------|
 | 1 | Complete | 2026-03-10 | 2026-03-10 | | Ghost refs, stale paths, missing dirs fixed |
 | 2 | Complete | 2026-03-10 | 2026-03-10 | | Guide, template, index, agent/command updates |
-| 3 | Pending | | | | |
+| 3 | Complete | 2026-03-10 | 2026-03-10 | | 5 templates created, 4 agents updated for template reading |
 | 4 | Pending | | | | |
 | 5 | Pending | | | | |
 | 6 | Pending | | | | |
