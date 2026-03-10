@@ -10,7 +10,7 @@ agent: architect
 <purpose>
 Guide the user through a structured, interactive technical-decision conversation that transforms an initial architectural question or proposal into a complete, implementation-agnostic planning context for a single numbered Architecture Decision Record (ADR). The command:
 
-- Discovers or confirms the ADR number (e.g. 0007) by scanning existing ADRs in doc/adr/.
+- Discovers or confirms the ADR number (e.g. 0007) by scanning existing ADRs in doc/decisions/.
 - Orients itself in the current repository and high-level documentation under doc/spec/, doc/overview/, doc/changes/, and doc/contracts/.
 - Systematically elicits and refines all information needed by /write-adr (context, problem framing, decision drivers, alternatives, trade-offs, assumptions, verification criteria, etc.), without generating the ADR file itself.
 - Applies Archie-style decision-making discipline (clarify problem → confirm drivers → explore options → recommend) without exposing internal mechanics unless asked.
@@ -27,7 +27,7 @@ User invocation (natural-language friendly):
 Examples:
 
 - `/plan-decision`  
-  → Auto-discover next ADR number from doc/adr/, then ask what decision we are shaping.
+  → Auto-discover next ADR number from doc/decisions/, then ask what decision we are shaping.
 
 - `/plan-decision 12`  
   → Treat 12 as the intended ADR number (normalized internally to 0012), then start refinement questions.
@@ -64,7 +64,7 @@ Resolution rules:
    - Treat this as the proposed ADR number; ask the user to confirm or override.
 
 2. If no adrNumberHint:
-   - Discover existing ADRs by scanning for files matching: `doc/adr/ADR-*-*.md`.
+   - Discover existing ADRs by scanning for files matching: `doc/decisions/ADR-*-*.md`.
    - For each match, parse the numeric segment immediately after `ADR-` up to the next `-` or `.md` (e.g. ADR-0001-short-title.md → 1, ADR-0042-something.md → 42).
    - If no existing ADRs are found, propose `0001` as the first ADR number.
    - Otherwise, let maxExisting be the highest parsed number; propose candidate = maxExisting + 1.
@@ -77,7 +77,7 @@ Resolution rules:
 
 4. Use zeroPad4 consistently when referencing this ADR in summaries, e.g. `ADR-<zeroPad4>` and `/write-adr <zeroPad4>`.
 
-This command MUST NOT create folders or files in doc/adr/; it only proposes and confirms the numeric identifier for use by downstream commands.
+This command MUST NOT create folders or files in doc/decisions/; it only proposes and confirms the numeric identifier for use by downstream commands.
 </adr_number_resolution>
 
 <context_sources>
@@ -88,7 +88,7 @@ Primary context sources:
 - `doc/spec/**`: current system and feature-level specifications.
 - `doc/overview/**`: domain and product overviews (north star, architecture overviews, glossary/ubiquitous language).
 - `doc/changes/**/*--*--*/chg-*-spec.md`: change specifications that may have motivated or be impacted by this decision.
-- `doc/adr/**`: existing ADRs for precedent or constraints.
+- `doc/decisions/**`: existing ADRs for precedent or constraints.
 - `doc/contracts/**`: REST, events, and data contracts relevant to the decision.
 - `doc/domain/**`, `doc/diagrams/**`, and other documentation under `doc/` that inform architecture, flows, and constraints.
 
@@ -285,7 +285,7 @@ references:
 
 - "doc/changes/2026-01/2026-01-15--PDEV-123--new-billing-model/chg-PDEV-123-spec.md"
 - "doc/spec/features/billing/tenants.md"
-- "doc/adr/ADR-0003-database-vendor-choice.md"
+- "doc/decisions/ADR-0003-database-vendor-choice.md"
 
 </technical_decision_planning_summary>
 ```
@@ -328,7 +328,7 @@ Example 1 — New architectural decision (no number provided):
 
 - User runs: `/plan-decision` and says: "We need to decide our long-term message broker strategy (Kafka vs. managed queues)."
 - Agent:
-  - Scans doc/adr/, finds existing max ADR number 0003, proposes ADR-0004.
+  - Scans doc/decisions/, finds existing max ADR number 0003, proposes ADR-0004.
   - Clarifies current messaging usage, pain points, and constraints.
   - Identifies decision drivers (operational burden, reliability, ecosystem fit, cost).
   - Shapes alternatives (stay on current queue, adopt Kafka, adopt managed cloud messaging) including do-nothing.

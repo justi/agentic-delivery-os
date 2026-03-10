@@ -40,7 +40,7 @@ summary: "Repository documentation structure, conventions, and workflow."
    - Local agent context lives under `/.ai/local` and is git-ignored.
 2. **Single Source of Truth:** Contracts (OpenAPI/AsyncAPI/schemas) are canonical under `/doc/contracts` in the **owning
    ** repo; consumers pull them as versioned artifacts.
-3. **Evolution is Trackable:** New behavior starts as a **Change** (`/doc/changes/YYYY-MM/YYYY-MM-DD--<workItemRef>--<slug>/`), settles with an **ADR**, and
+3. **Evolution is Trackable:** New behavior starts as a **Change** (`/doc/changes/YYYY-MM/YYYY-MM-DD--<workItemRef>--<slug>/`), settles with a **Decision Record**, and
    updates the **Spec** (`/doc/spec`).
 4. **Predictable Conventions:** Numbering, front-matter, and naming are consistent and enforced by lightweight checks.
 
@@ -83,8 +83,8 @@ summary: "Repository documentation structure, conventions, and workflow."
         chg-<workItemRef>-plan.md       # Implementation plan (phases/tasks)
         chg-<workItemRef>-pm-notes.yaml # PM progress + decisions + open questions
         chg-<workItemRef>-notes.md      # Optional free-form notes
-  /adr/                            # Architecture Decision Records
-    ADR-0001-short-title.md
+  /decisions/                      # Decision Records (ADR/PDR/TDR/BDR/ODR)
+    ADR-0001-short-title.md        # Type-prefixed, zero-padded 4-digit number
   /contracts/
     rest/
       openapi.yaml                 # Can be generated; is canonical in owning repo
@@ -113,7 +113,7 @@ summary: "Repository documentation structure, conventions, and workflow."
   /tools/                          # User guides for CLI tools in tools/ (one per tool)
   /diagrams/                       # Mermaid/PlantUML sources; exported PNG/SVG
   /examples/                       # Payloads, fixtures, UI mocks (shared samples)
-  /templates/                      # ADR, change, feature, test, MR templates
+  /templates/                      # Authoring templates (change spec, decision record, feature, test, plan)
   /prompts/                        # Human-facing generation prompts (copy/UX)
 
 /scripts/
@@ -137,22 +137,7 @@ summary: "Repository documentation structure, conventions, and workflow."
 - **`/agent/`**: Agent prompts.
 - **`/command/`**: CLI commands that compose agents.
 
-  ```md
-  # coding-agent-index.md (excerpt)
-
-  ## Implementing a change
-
-  Load these paths:
-
-  - `/doc/changes/**/chg-<workItemRef>-spec.md` # Current change spec
-  - `/doc/adr/**` # Any referenced ADRs from the spec
-  - `/doc/spec/**` # Affected features/api sections
-  - `/doc/contracts/rest/openapi.yaml` # If HTTP endpoints change
-  - `/doc/contracts/events/**` # If events are added/modified
-  - `/doc/quality/test-specs/**` # To align with tests
-  ```
-
-> **Why:** Agents become deterministic and fast by loading _only_ the relevant context.
+> **Why:** Agents become deterministic and fast by loading _only_ the relevant context (see `AGENTS.md` and `.opencode/agent/` for agent definitions).
 
 ---
 
@@ -161,7 +146,7 @@ summary: "Repository documentation structure, conventions, and workflow."
 - **`00-index.md`**: Landing page for docs. Include:
   - “Start here” (overview, architecture, current spec)
   - “Changing behavior?” (how to write a change)
-  - “For AI agents” (link to `/.ai/context-maps/coding-agent-index.md`)
+  - “For AI agents” (link to `AGENTS.md` and `.opencode/agent/`)
 
 - **`/overview/`**:
   - `01-north-star.md` and `02-roadmap.md`: Keep concise, repo-relevant extracts (if the full product vision lives
@@ -185,9 +170,9 @@ summary: "Repository documentation structure, conventions, and workflow."
   - `chg-<workItemRef>-pm-notes.yaml` (recommended): PM progress + decisions + open questions.
   - `examples.json` (optional): Requests/responses, UI screenshots links.
 
-- **`/adr/ADR-####-short-title.md`**: Final decisions. A change may produce 0..n ADRs. Link them both ways:
-  - From the change front-matter: `links.adr: ["ADR-0021"]`
-  - From the ADR: reference the `workItemRef` in the body or via front-matter `links.related_changes`.
+- **`/decisions/<TYPE>-<zeroPad4>-<slug>.md`**: Decision records (ADR/PDR/TDR/BDR/ODR). A change may produce 0..n decision records. Link them both ways:
+  - From the change front-matter: `links.decisions: ["ADR-0021"]`
+  - From the decision record: reference the `workItemRef` in the body or via front-matter `links.related_changes`.
 
 - **`/contracts/`**:
   - `rest/openapi.yaml`: HTTP contracts (server = owner). Generated clients should come from this file’s versioned
@@ -221,9 +206,9 @@ summary: "Repository documentation structure, conventions, and workflow."
 - **`/i18n/`**: Internationalization specifics (UI repos).
 - **`/diagrams/`**: Source first (mermaid/PUML), plus exported artifacts.
 - **`/examples/`**: Cross-cutting example payloads & mocks.
-- **`/templates/`**: All authoring templates (ADR, change spec, feature spec, test spec, MR template).
+- **`/templates/`**: All authoring templates (change spec, decision record, feature spec, test spec, test plan, implementation plan).
 - **`/prompts/`**: Human-facing content prompts (marketing copy, release notes). Agent system prompts remain in
-  `/.ai/agents/`.
+  `.opencode/agent/`.
 
 ---
 
@@ -265,16 +250,16 @@ summary: "Unify units display across UI using unit IDs + i18n."
   - `chg-<workItemRef>-plan.md`
   - `chg-<workItemRef>-pm-notes.yaml`
 - `workItemRef` is tracker-linked (e.g., `PDEV-123`, `GH-456`).
-- ADRs: `ADR-####-short-title.md` with zero-padded 4-digit numbers.
+- Decision records: `<TYPE>-<zeroPad4>-<slug>.md` (e.g., `ADR-0001-event-bus-selection.md`, `PDR-0001-free-tier-scope.md`).
 - Kebab-case filenames, short and descriptive.
 
 ---
 
-## 6) Lifecycle: From Change → ADR → Spec → Contracts
+## 6) Lifecycle: From Change → Decision Record → Spec → Contracts
 
 1. **Propose a change** in `/doc/changes/YYYY-MM/YYYY-MM-DD--<workItemRef>--<slug>/chg-<workItemRef>-spec.md` (or via `/write-spec <workItemRef>`).
 2. **Discuss & revise** until Accepted/Rejected.
-3. **If the change settles a decision**, write an ADR under `/doc/adr/` (or use `/plan-decision` + `/write-adr`) and link it from the change.
+3. **If the change settles a decision**, write a decision record under `/doc/decisions/` (or use `/plan-decision` + `/write-adr`) and link it from the change.
 4. **Create or update the per-change TEST PLAN** alongside the spec as `chg-<workItemRef>-test-plan.md` (or via `/write-test-plan <workItemRef>`).
 5. **Create or update the IMPLEMENTATION PLAN** alongside the spec as `chg-<workItemRef>-plan.md` (or via `/write-plan <workItemRef>`).
 6. **Update `/doc/spec/`** to reflect the _final_, coherent behavior (ideally via `/sync-docs <workItemRef>`).
@@ -283,7 +268,7 @@ summary: "Unify units display across UI using unit IDs + i18n."
 9. **Implementation**: code + tests, referencing the change ID in commit/PR titles.
 10. **Release notes**: Use `/doc/prompts/` to generate drafts, then publish.
 
-> Agents: see `/.ai/context-maps/coding-agent-index.md` to load only relevant docs for each step.
+> Agents: see `AGENTS.md` for the delivery workflow and `.opencode/command/*.md` for per-step context loading.
 
 ---
 
@@ -302,8 +287,8 @@ summary: "Unify units display across UI using unit IDs + i18n."
 
 ## 8) How AI Agents Use the Docs
 
-- **Plan & Implement:** load the current Change spec, referenced ADRs, impacted Spec sections, Contracts, and testing strategy per
-  `/.ai/context-maps/coding-agent-index.md` and `.opencode/command/*.md`.
+- **Plan & Implement:** load the current Change spec, referenced decision records, impacted Spec sections, Contracts, and testing strategy per
+  `AGENTS.md` and `.opencode/command/*.md`.
 - **Write artifacts to the right place:**
   - Implementation plan -> `/doc/changes/**/chg-<workItemRef>-plan.md` (or via `/write-plan <workItemRef>`)
   - Per-change TEST PLAN -> `/doc/changes/**/chg-<workItemRef>-test-plan.md` (or via `/write-test-plan <workItemRef>`)
@@ -356,14 +341,13 @@ The table below indicates what is **shared across repos** (kept identical or cen
 | ---------------------------------- | -------------------------------------- | ------------------------------------ | ----------------- | ---------------------------------------------------------- |
 | Documentation Handbook (this file) | `doc/documentation-handbook.md`        | **Shared (global)**                  | Platform/Product  | Git submodule/subtree; automated sync                      |
 | Templates (ADR/Change/Test/MR)     | `doc/templates/`                       | **Shared (global)**                  | Platform/Product  | Submodule/subtree; versioned                               |
-| AI Rules & Agents                  | `/.ai/rules/`, `/.ai/agents/`          | **Shared (global)**                  | Platform/Product  | Submodule/subtree; versioned                               |
-| Context Maps                       | `/.ai/context-maps/`                   | **Shared baseline + local overlays** | Each repo         | Ship a base file globally; allow repo to extend            |
+| AI Rules & Agents                  | `/.ai/rules/`, `.opencode/agent/`      | **Shared (global)**                  | Platform/Product  | Submodule/subtree; versioned                               |
 | Ubiquitous Language (Global)       | Central product docs repo              | **Shared (global)**                  | Domain leadership | Single source; repos link/mirror needed parts              |
 | Ubiquitous Language (Local)        | `/doc/overview/ubiquitous-language.md` | **Repo (bounded context)**           | Repo owners       | Local file; must not contradict global                     |
 | Glossary (Global)                  | Central product docs repo              | **Shared (global)**                  | Docs team         | Single source; repos may link                              |
 | Glossary (Local)                   | `/doc/overview/glossary.md`            | **Repo**                             | Repo owners       | Local file                                                 |
-| ADRs (Cross‑cutting)               | `/doc/adr/`                            | **Domain-scoped** (affected repos)   | Decision owner(s) | Copy or link to affected repos; reference canonical source |
-| ADRs (Local)                       | `/doc/adr/`                            | **Repo**                             | Repo owners       | Local                                                      |
+| Decision Records (Cross‑cutting)   | `/doc/decisions/`                      | **Domain-scoped** (affected repos)   | Decision owner(s) | Copy or link to affected repos; reference canonical source |
+| Decision Records (Local)           | `/doc/decisions/`                      | **Repo**                             | Repo owners       | Local                                                      |
 | Contracts (OpenAPI/AsyncAPI)       | `/doc/contracts/**`                    | **Owner = producer repo**            | Service owner     | Consumers import versioned artifact; do not fork           |
 | Data Schemas                       | `/doc/contracts/data/`                 | **Repo**                             | Service owner     | Local (unless explicitly shared DB)                        |
 | Domain Model Docs                  | `/doc/domain/**`                       | **Repo**                             | Repo owners       | Local with links to global UL                              |
@@ -373,7 +357,7 @@ The table below indicates what is **shared across repos** (kept identical or cen
 
 ### Notes & Patterns
 
-- **ADRs:** If an ADR affects multiple repos, keep a **canonical ADR** in the _decision’s home repo_ (or a central
+- **Decision Records:** If a decision record affects multiple repos, keep a **canonical record** in the _decision’s home repo_ (or a central
   “architecture” repo) and replicate a copy (or link) to affected repos. Each copy should include a header referencing
   the canonical source and version.
 - **Events & Schemas:** The **producer** is the single source of truth. Publish schemas as versioned artifacts (
@@ -461,13 +445,13 @@ Currently unit display is inconsistent across screens…
 - Given an item with unitId `bottle` and amount `1`…
 ```
 
-### 13.2 Example ADR
+### 13.2 Example Decision Record
 
 ```
-/doc/adr/ADR-0021-unified-units-display.md
+/doc/decisions/ADR-0021-unified-units-display.md
 ```
 
-**ADR (excerpt):**
+**Decision Record (excerpt):**
 
 ```markdown
 ---
@@ -517,20 +501,18 @@ channels:
         $ref: "#/components/messages/RecipeCreated"
 ```
 
-### 13.4 Example Context Map (Agent)
+### 13.4 Example Agent Context Loading
 
 ```md
-# coding-agent-index.md
-
 ## When implementing an HTTP change
 
-Load:
+Agents load context per `.opencode/command/*.md`:
 
-- /doc/changes/_xx/\*\*/<N>-_-spec.md
-- /doc/adr/\*\*
-- /doc/spec/api/\*\*
+- /doc/changes/**/chg-<workItemRef>-spec.md
+- /doc/decisions/**
+- /doc/spec/api/**
 - /doc/contracts/rest/openapi.yaml
-- /doc/quality/test-specs/\*\*
+- /doc/quality/test-specs/**
 ```
 
 ---
@@ -542,7 +524,7 @@ Load:
   - Change folder and file naming:
     - Folder: `doc/changes/YYYY-MM/YYYY-MM-DD--<workItemRef>--<slug>/`
     - Files: `chg-<workItemRef>-spec.md`, `chg-<workItemRef>-test-plan.md`, `chg-<workItemRef>-plan.md` (and optionally `chg-<workItemRef>-pm-notes.yaml`).
-    - ADRs: `ADR-####-short-title.md`.
+    - Decision records: `<TYPE>-<zeroPad4>-<slug>.md` (e.g., `ADR-0001-event-bus-selection.md`).
   - No broken relative links in `/doc/**`.
   - Traceability: acceptance criteria in `chg-<workItemRef>-spec.md` are covered by `chg-<workItemRef>-test-plan.md`.
   - If a change is `Accepted`, Spec sections it touches were updated.
@@ -563,7 +545,7 @@ A: Only in repos impacted by the decision. Keep one canonical ADR and replicate/
 A: `/doc/ops/troubleshooting/`.
 
 **Q: Where do I put UX copy prompts?**  
-A: `/doc/prompts/`. Agent system prompts belong in `/.ai/agents/`.
+A: `/doc/prompts/`. Agent system prompts belong in `.opencode/agent/`.
 
 **Q: Who owns OpenAPI/AsyncAPI?**  
 A: The **producer** (the service that exposes the API or publishes the event). Consumers import versioned artifacts.
@@ -583,10 +565,11 @@ A: The **producer** (the service that exposes the API or publishes the event). C
 ## 17) Appendix: Template Index
 
 - `doc/templates/change-spec-template.md`
-- `doc/templates/adr-template.md`
+- `doc/templates/decision-record-template.md`
 - `doc/templates/feature-spec-template.md`
 - `doc/templates/test-spec-template.md`
-- `doc/templates/mr-template.md`
+- `doc/templates/test-plan-template.md`
+- `doc/templates/implementation-plan-template.md`
 
 (Keep these **shared** and versioned; link to canonical sources.)
 

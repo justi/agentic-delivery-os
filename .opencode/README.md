@@ -173,7 +173,7 @@ This plan aligns all agents and commands with:
 | `/review`          | MEDIUM   | ✅ DONE | Update path discovery; accept `workItemRef`                                                                                                                              |
 | `/review-deep`     | MEDIUM   | ✅ DONE | Same as `/review`                                                                                                                                                        |
 | `/sync-docs`       | MEDIUM   | ✅ DONE | Update path discovery; accept `workItemRef`                                                                                                                              |
-| `/write-adr`       | MEDIUM   | ✅ DONE | No folder convention changes (ADRs use `doc/adr/`); update command references                                                                                            |
+| `/write-adr`       | MEDIUM   | ✅ DONE | Decision records use `doc/decisions/` with `<TYPE>-<zeroPad4>-<slug>.md` naming; update command references                                                               |
 | `/plan-decision`   | MEDIUM   | ✅ DONE | Update command references (`/write-adr`)                                                                                                                                 |
 | `/pr`              | LOW      | ⏭️ SKIP | No convention changes needed                                                                                                                                             |
 | `/commit`          | LOW      | ✅ DONE | No convention changes; verify agent reference (`agent: committer`)                                                                                                       |

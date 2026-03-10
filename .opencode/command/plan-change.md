@@ -65,7 +65,7 @@ Primary sources:
 
 - `doc/spec/**`: system-level and feature-level specifications.
 - `doc/overview/**`: domain and product overview documents.
-- `doc/adr/**`: architecture decision records.
+- `doc/decisions/**`: architecture decision records.
 - `doc/domain/**`, `doc/diagrams/**`: architecture, flows, constraints.
 - Existing change specs under `doc/changes/**/chg-*-spec.md` for related changes.
 

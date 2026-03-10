@@ -27,10 +27,10 @@ The resulting ADR becomes the canonical record of the decision and its rationale
 <directory_rules>
 
 - Normalize adrNumber: strip non-digits; pad left with '0' to length 4.
-- groupFolder is NOT used; all ADRs live directly under `doc/adr/`.
+- groupFolder is NOT used; all ADRs live directly under `doc/decisions/`.
 - slug = normalized-from-title (lowercase ASCII kebab-case, <=60 chars), derived from the ADR title.
 - filename = ADR-<adrNumber>-<slug>.md
-- fullPath = doc/adr/ADR-<adrNumber>-<slug>.md
+- fullPath = doc/decisions/ADR-<adrNumber>-<slug>.md
   </directory_rules>
 
 <front_matter_rules>
@@ -70,7 +70,7 @@ The ADR generator must base its content on:
 
 - The `<technical_decision_planning_summary>` block produced by `/plan-decision <adrNumber>` in the current or recent conversation.
 - Relevant change specs under `doc/changes/**/*--*--*/chg-*-spec.md` when `related_changes` are present.
-- Existing ADRs under `doc/adr/**` referenced from planning context (for supersedes/related decisions).
+- Existing ADRs under `doc/decisions/**` referenced from planning context (for supersedes/related decisions).
 - System specs under `doc/spec/**` and contracts under `doc/contracts/**` where the decision materially affects them.
 
 If a `<technical_decision_planning_summary>` for this adrNumber is NOT available in context, the command MUST:
@@ -150,7 +150,7 @@ No extra top-level sections may be introduced before or between these headings. 
    - slugHint from `adr.slug_hint` or by slugifying the title.
    - owners, service, labels, related_changes, decision_scope, and other meta fields from the planning summary.
 4. Compute slug from title/slugHint; validate length (<=60 chars) and allowed charset (lowercase letters, numbers, hyphens).
-5. Compute fullPath = `doc/adr/ADR-<adrNumber>-<slug>.md`.
+5. Compute fullPath = `doc/decisions/ADR-<adrNumber>-<slug>.md`.
 6. Determine whether the ADR file already exists:
    - If it exists: load existing front matter and body; treat this as an UPDATE, preserving historical narrative and only appending/adjusting content where appropriate.
    - If it does not exist: treat this as a NEW ADR.
@@ -285,7 +285,7 @@ Objective reframing of the problem, focusing on underlying causes rather than sy
 <output_contract>
 
 - Writes exactly one ADR file: `ADR-<adrNumber>-<slug>.md`.
-- File is placed under: `doc/adr/`.
+- File is placed under: `doc/decisions/`.
 - Content follows <adr_structure> and is semantically aligned with `doc/templates/adr-template.md`.
 - No `<...>` placeholders remain; any missing information is called out explicitly as TODO or unresolved questions.
   </output_contract>
@@ -303,7 +303,7 @@ Objective reframing of the problem, focusing on underlying causes rather than sy
 </validation>
 
 <notes>
-- This command formalizes Archie-style technical decisions into repository-native ADRs under `doc/adr/`.
+- This command formalizes Archie-style technical decisions into repository-native ADRs under `doc/decisions/`.
 - It relies on `/plan-decision` for high-quality planning context; do not bypass planning by inventing content.
 - After an ADR is Accepted, follow up with `/sync-docs <workItemRef>` (when related to a change) to reconcile `doc/spec/**` and `doc/contracts/**` with the decided architecture.
 </notes>

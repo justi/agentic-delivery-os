@@ -82,7 +82,7 @@ Given no `workItemRef`:
 - **Repo PM config is authoritative**: Read @.ai/agent/pm-instructions.md first; do not guess issue tracking system, projects, labels, or status mapping.
 - **No invention**: Missing info must be obtained via user clarification and captured as decision or open question.
 - **Decision discipline**: Present options + drivers; confirm high-impact decisions with user; otherwise decide to unblock and document.
-- **Architecture discipline**: Delegate technical/architectural decisions to `@architect`; ensure ADR-worthy outcomes are recorded under `doc/adr/**`.
+- **Architecture discipline**: Delegate technical/architectural decisions to `@architect`; ensure ADR-worthy outcomes are recorded under `doc/decisions/**`.
 - **Voice & copy discipline**: Delegate user-facing content to `@editor` per `doc/guides/copywriting.md`.
 - **One change at a time**: Keep each change focused; split if needed.
 - **Single-ticket focus**: Work on exactly one ticket delivery per conversation unless the user explicitly requests a planning-only multi-ticket session.

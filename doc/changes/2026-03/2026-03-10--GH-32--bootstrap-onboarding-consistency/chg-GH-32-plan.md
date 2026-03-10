@@ -89,9 +89,9 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 **Tasks**:
 
-- [ ] **1.1** Remove all references to `/.ai/context-maps/coding-agent-index.md` from `doc/documentation-handbook.md` (§4.1 excerpt at line ~141, §4.2 "For AI agents" link at line ~164, §6 agent note at line ~286, §8 agent usage at line ~306, §10 multi-repo table at line ~360, §13.4 context map example at lines ~520-534). Replace with correct alternatives: link to `AGENTS.md` or `.opencode/agent/` as the entry point for agents.
-- [ ] **1.2** Replace all `/.ai/agents/` references with `.opencode/agent/` in `doc/documentation-handbook.md` (§10 multi-repo table at line ~359, §4.2 /prompts/ description at line ~226, §15 FAQ at line ~566).
-- [ ] **1.3** Migrate all `doc/adr/` references to `doc/decisions/` in `doc/documentation-handbook.md`:
+- [x] **1.1** Remove all references to `/.ai/context-maps/coding-agent-index.md` from `doc/documentation-handbook.md` (§4.1 excerpt at line ~141, §4.2 "For AI agents" link at line ~164, §6 agent note at line ~286, §8 agent usage at line ~306, §10 multi-repo table at line ~360, §13.4 context map example at lines ~520-534). Replace with correct alternatives: link to `AGENTS.md` or `.opencode/agent/` as the entry point for agents.
+- [x] **1.2** Replace all `/.ai/agents/` references with `.opencode/agent/` in `doc/documentation-handbook.md` (§10 multi-repo table at line ~359, §4.2 /prompts/ description at line ~226, §15 FAQ at line ~566).
+- [x] **1.3** Migrate all `doc/adr/` references to `doc/decisions/` in `doc/documentation-handbook.md`:
   - §3 standard tree (line ~86): change `/adr/` to `/decisions/` and update the example filename from `ADR-0001-short-title.md` to show the new naming pattern
   - §4.1a excerpt (line ~148): change `/doc/adr/**` to `/doc/decisions/**`
   - §4.2 /adr/ section (line ~188): rewrite to reference `doc/decisions/` with the new naming convention
@@ -101,20 +101,20 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
   - §13.4 example (line ~530): change `/doc/adr/` to `/doc/decisions/`
   - §14 tooling (line ~545): update ADR naming validation
   - §17 template index (line ~586): change `adr-template.md` to `decision-record-template.md`
-- [ ] **1.4** Update §17 template index to match the 6 templates from F-10: `change-spec-template.md`, `decision-record-template.md`, `feature-spec-template.md`, `test-spec-template.md`, `test-plan-template.md`, `implementation-plan-template.md` (replaces current list that includes `mr-template.md` and old `adr-template.md`).
-- [ ] **1.5** Create missing directory stubs with `README.md` placeholders explaining purpose:
+- [x] **1.4** Update §17 template index to match the 6 templates from F-10: `change-spec-template.md`, `decision-record-template.md`, `feature-spec-template.md`, `test-spec-template.md`, `test-plan-template.md`, `implementation-plan-template.md` (replaces current list that includes `mr-template.md` and old `adr-template.md`).
+- [x] **1.5** Create missing directory stubs with `README.md` placeholders explaining purpose:
   - `doc/overview/README.md` — high-level project context (north star, roadmap, architecture, glossary)
   - `doc/templates/README.md` — authoring templates for all document types
   - `doc/decisions/README.md` — decision records for all decision types (ADR/PDR/TDR/BDR/ODR)
-- [ ] **1.6** Create `doc/00-index.md` as the documentation landing page with links to overview, spec, changes, guides, templates, and decisions.
-- [ ] **1.7** Migrate `doc/adr/` references to `doc/decisions/` in agent prompts and commands:
+- [x] **1.6** Create `doc/00-index.md` as the documentation landing page with links to overview, spec, changes, guides, templates, and decisions.
+- [x] **1.7** Migrate `doc/adr/` references to `doc/decisions/` in agent prompts and commands:
   - `.opencode/agent/architect.md`: update all `doc/adr/` references to `doc/decisions/`, update naming from `ADR-<zeroPad4>-<slug>.md` to `<TYPE>-<zeroPad4>-<slug>.md` (lines ~9, 32, 33, 46, 66, 143, 149, 213, 219)
   - `.opencode/agent/pm.md`: update `doc/adr/**` to `doc/decisions/**` (line ~85)
   - `.opencode/command/write-adr.md`: update all `doc/adr/` to `doc/decisions/`, update naming convention (lines ~30, 33, 73, 153, 288, 306)
   - `.opencode/command/plan-decision.md`: update all `doc/adr/` to `doc/decisions/` (lines ~13, 30, 67, 80, 91, 288, 331)
   - `.opencode/command/plan-change.md`: update `doc/adr/**` to `doc/decisions/**` (line ~68)
-- [ ] **1.8** Update `.opencode/README.md` line ~176 to reflect the `doc/adr/` → `doc/decisions/` change.
-- [ ] **1.9** Validate: run systematic grep for `doc/adr/`, `/.ai/agents/`, `context-maps`, `coding-agent-index` across all `.md` files (excluding the GH-32 spec itself). Confirm zero matches.
+- [x] **1.8** Update `.opencode/README.md` line ~176 to reflect the `doc/adr/` → `doc/decisions/` change.
+- [x] **1.9** Validate: run systematic grep — zero matches outside GH-32 change artifacts for `doc/adr/`, `/.ai/agents/`, `context-maps`, `coding-agent-index` across all `.md` files (excluding the GH-32 spec itself). Confirm zero matches.
 
 **Acceptance Criteria**:
 
@@ -490,7 +490,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 | Phase | Status | Started | Completed | Commit | Notes |
 |-------|--------|---------|-----------|--------|-------|
-| 1 | Pending | | | | |
+| 1 | Complete | 2026-03-10 | 2026-03-10 | | Ghost refs, stale paths, missing dirs fixed |
 | 2 | Pending | | | | |
 | 3 | Pending | | | | |
 | 4 | Pending | | | | |
