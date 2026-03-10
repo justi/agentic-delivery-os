@@ -1,0 +1,178 @@
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/spec/features/feature-decision-records.md
+
+id: SPEC-DECISION-RECORDS
+status: Current
+created: 2026-03-10
+last_updated: 2026-03-10
+owners: [Juliusz Ćwiąkalski]
+service: delivery-os
+links:
+  related_changes: ["GH-32"]
+  guides:
+    - "doc/guides/decision-records-management.md"
+summary: "Tracker-agnostic decision records standard supporting five decision types (ADR, PDR, TDR, BDR, ODR) with lifecycle management, templates, and agent integration."
+---
+
+# Feature: Decision Records Management
+
+## Overview
+
+ADOS provides a tracker-agnostic standard for recording and managing significant project decisions. The system supports five decision types — Architecture (ADR), Product (PDR), Technical (TDR), Business (BDR), and Operational (ODR) — all co-located in a flat `doc/decisions/` directory. The standard includes a management guide, a reusable template, agent tooling integration, and a defined lifecycle.
+
+## Business Context
+
+### Problem Statement
+
+- **Problem:** Significant decisions lack durable documentation, causing repeated debates, lost institutional knowledge, and onboarding friction.
+- **Affected Users:** Engineers, architects, product owners, and new team members.
+- **Business Impact:** Without decision records, teams lose the rationale behind architectural and product choices when team members rotate.
+
+### Goals & Success Metrics
+
+- **Primary Goal:** Every precedent-setting decision has a discoverable, structured record with context, alternatives, and rationale.
+- **KPIs:** Decision records directory exists and is integrated with agent tooling (`@architect`, `/plan-decision`, `/write-adr`).
+
+## User Experience & Functionality
+
+### Decision Types
+
+| Type | Prefix | Scope |
+|------|--------|-------|
+| Architecture Decision Record | `ADR` | System design, infrastructure patterns, API boundaries |
+| Product Decision Record | `PDR` | Feature scoping, UX strategy, product positioning |
+| Technical Decision Record | `TDR` | Technology choices, libraries, implementation approach |
+| Business Decision Record | `BDR` | Business rules, compliance, process policies |
+| Operational Decision Record | `ODR` | Infrastructure, deployment, monitoring, incident response |
+
+### Capabilities
+
+- **Structured authoring (F-1):** Template with front-matter skeleton and required sections (Context, Problem Framing, Decision Drivers, Alternatives, Decision, Consequences, Verification Criteria).
+- **Lifecycle management (F-2):** Status transitions from Proposed → Under Review → Accepted → (Deprecated | Superseded).
+- **Immutability after acceptance (F-3):** Accepted decisions are not modified; changes create new superseding records.
+- **Cross-linking (F-4):** Decision records link to change specs via `links.related_changes` and vice versa via `links.decisions`.
+- **Agent integration (F-5):** `@architect` creates records via `/plan-decision` + `/write-adr`; records target `doc/decisions/`.
+- **Index maintenance (F-6):** `doc/decisions/00-index.md` provides a table of all records.
+
+### Naming Convention
+
+```
+<TYPE>-<zeroPad4>-<slug>.md
+```
+
+- Each type has its own sequence (ADR-0001 and PDR-0001 can coexist)
+- Numbers are never reused
+- Slug is kebab-case, max 60 characters
+
+Examples: `ADR-0001-event-bus-selection.md`, `PDR-0001-free-tier-scope.md`
+
+### Lifecycle
+
+```
+Proposed → Under Review → Accepted → (Deprecated | Superseded)
+```
+
+| Status | Meaning |
+|--------|---------|
+| Proposed | Initial draft; open for discussion |
+| Under Review | Actively being reviewed by stakeholders |
+| Accepted | Finalized; teams should follow it |
+| Deprecated | No longer applicable; preserved for history |
+| Superseded | Replaced by a newer record (linked via `superseded_by`) |
+
+### Governance
+
+| Decision Type | Reviewers |
+|--------------|-----------|
+| ADR | Architecture lead, affected service owners |
+| PDR | Product owner, engineering lead |
+| TDR | Tech lead, affected developers |
+| BDR | Product owner, business stakeholders |
+| ODR | SRE/platform lead, affected service owners |
+
+### When to Create a Decision Record
+
+Create a record when a decision is hard to reverse, has cross-component impact, involves trade-offs, changes security posture, introduces a new dependency, or is likely to be questioned later. Do not create records for implementation details, bug fixes, or documentation-only changes.
+
+## Technical Architecture & Codebase Map
+
+### Core Components
+
+| Path | Component | Responsibility |
+|------|-----------|----------------|
+| `doc/decisions/` | Decision records directory | Flat directory containing all decision records, co-located by type prefix |
+| `doc/decisions/README.md` | Directory overview | Purpose, naming convention, lifecycle summary, and references |
+| `doc/decisions/00-index.md` | Index | Table of all decision records with ID, type, title, status, date, owners |
+| `doc/guides/decision-records-management.md` | Management guide | Full standard: types, naming, lifecycle, front matter, required sections, governance |
+| `doc/templates/decision-record-template.md` | Authoring template | Reusable template with front-matter skeleton, all sections, and inline HTML-comment guidance |
+| `.opencode/agent/architect.md` | Architect agent | Creates decision records; targets `doc/decisions/` |
+| `.opencode/command/write-adr.md` | Write ADR command | Generates decision record from planning context |
+| `.opencode/command/plan-decision.md` | Plan Decision command | Interactive decision planning session |
+
+### Front Matter Schema
+
+```yaml
+id: ADR-0001
+decision_type: adr          # adr | pdr | tdr | bdr | odr
+status: Proposed             # Proposed | Under Review | Accepted | Deprecated | Superseded
+created: 2026-03-10
+decision_date: null          # Set when Accepted
+last_updated: 2026-03-10
+summary: "Short one-line summary"
+owners: ["team-platform"]
+service: "delivery-os"
+links:
+  related_changes: []        # workItemRef identifiers
+  supersedes: []             # Decision IDs this record replaces
+  superseded_by: []          # Decision IDs that replace this record
+  spec: []                   # Related spec paths
+  contracts: []              # Related contract paths
+  diagrams: []               # Related diagram paths
+  decisions: []              # Other related decision record IDs
+```
+
+### Required Sections
+
+1. Title (`# <TYPE>-<zeroPad4>: <Title>`)
+2. Context
+3. Problem Framing
+4. Decision Drivers
+5. Alternatives Considered (at least 2 options + do-nothing baseline)
+6. Decision
+7. Consequences (positive, negative, unresolved)
+8. Verification Criteria
+9. Status
+10. References
+
+## Non-Functional Requirements
+
+| ID | Category | Requirement | Threshold |
+|----|----------|-------------|-----------|
+| NFR-1 | Completeness | Guide defines all 5 decision types with lifecycle, naming, and governance | 100% coverage |
+| NFR-2 | Template validity | Template renders as valid GitHub-flavored Markdown | All sections present |
+| NFR-3 | Agent alignment | `@architect`, `/write-adr`, `/plan-decision` all target `doc/decisions/` | Zero references to `doc/adr/` |
+
+## Quality Assurance Strategy
+
+### Testing Approach
+
+| Level | Scope | Notes |
+|-------|-------|-------|
+| Manual | Template validation | Copy template to `doc/decisions/`; verify all sections render correctly |
+| Manual | Agent workflow | Run `/plan-decision` + `/write-adr`; verify output lands in `doc/decisions/` with correct naming |
+| Search | Reference consistency | Grep for `doc/adr/` across repo; expect zero matches |
+
+## Dependencies & Risks
+
+- **Depends on:** `@architect` agent for automated creation workflow
+- **Depends on:** Document templates feature for the decision record template
+- **Risk:** Process overhead may discourage adoption — mitigated by lightweight design (single template, flat directory, familiar lifecycle)
+
+## Related Documentation
+
+- **Management guide:** [doc/guides/decision-records-management.md](../../guides/decision-records-management.md) — full standard
+- **Template:** [doc/templates/decision-record-template.md](../../templates/decision-record-template.md)
+- **Directory:** [doc/decisions/](../../decisions/)
+- **Onboarding guide:** [doc/guides/onboarding-existing-project.md](../../guides/onboarding-existing-project.md) — includes decision records setup instructions
