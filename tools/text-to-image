@@ -1,0 +1,2979 @@
+#!/usr/bin/env bash
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/tools/text-to-image
+#
+# text-to-image — Generate images from text prompts using multiple AI providers
+#
+# This tool provides a unified interface to seven AI image-generation providers:
+# OpenAI DALL-E 3, Stability AI, Google Imagen, Hugging Face, Black Forest Labs FLUX,
+# Replicate, SiliconFlow.
+#
+# Dependencies: bash>=4, curl
+# Optional: jq, yq, exiftool
+#
+# Usage: text-to-image [options]
+#
+# Environment variables:
+#   TEXT_TO_IMAGE_CONFIG_DIR - Override config directory (default: ~/.ai/text-to-image)
+#   TEXT_TO_IMAGE_NO_VERSION_CHECK - Set to 'true' to disable automatic version check
+#   DRY_RUN                - Set to 'true' to show what would be done without executing
+#   VERBOSE                - Set to 'true' for debug output
+#   CURL_CMD               - Override curl command (default: curl)
+#   JQ_CMD                 - Override jq command (default: jq)
+#   YQ_CMD                 - Override yq command (default: yq)
+#   SAVE_GENERATION_INFO   - Set to 'false' to disable YAML sidecar generation (default: true)
+#   EXIFTOOL_CMD           - Override exiftool command (default: exiftool)
+#
+# Exit codes:
+#   0 - Success
+#   1 - General error
+#   2 - Invalid parameters
+#   3 - Authentication failed
+#   4 - Rate limit exceeded
+#   5 - Server error
+#   6 - Network error
+#   7 - File system error
+#   8 - Config error
+#   9 - Batch partial failure
+#   100 - Unknown error
+
+set -Eeuo pipefail
+set -o errtrace
+shopt -s inherit_errexit 2>/dev/null || true
+IFS=$'\n\t'
+
+# ============================================================================
+# SETTINGS
+# ============================================================================
+readonly APP_NAME="text-to-image"
+readonly APP_VERSION="1.0.0"
+readonly LOG_TAG="(text-to-image)"
+
+# Exit codes
+readonly EXIT_SUCCESS=0
+readonly EXIT_GENERAL_ERROR=1
+readonly EXIT_INVALID_PARAMS=2
+readonly EXIT_AUTH_FAILED=3
+readonly EXIT_RATE_LIMIT=4
+readonly EXIT_SERVER_ERROR=5
+readonly EXIT_NETWORK_ERROR=6
+readonly EXIT_FILESYSTEM_ERROR=7
+readonly EXIT_CONFIG_ERROR=8
+readonly EXIT_BATCH_PARTIAL_FAILURE=9
+readonly EXIT_UNKNOWN=100
+
+# Quality profile chains (provider priority)
+readonly QUALITY_HIGH="openai stability google"
+readonly QUALITY_MEDIUM="stability openai replicate"
+readonly QUALITY_LOW="huggingface stability siliconflow"
+
+# Documentation links for error messages
+readonly DOC_BASE_URL="https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/tools/${APP_NAME}.md"
+declare -A PROVIDER_DOC_ANCHORS=(
+  [openai]="openai"
+  [stability]="stability-ai"
+  [google]="google-imagen"
+  [huggingface]="hugging-face"
+  [bfl]="black-forest-labs"
+  [replicate]="replicate"
+  [siliconflow]="siliconflow"
+)
+
+# Configurable via environment
+# CONFIG_DIR computed at runtime
+DRY_RUN="${DRY_RUN:-false}"
+VERBOSE="${VERBOSE:-false}"
+OUTPUT_FORMAT="${OUTPUT_FORMAT:-text}"
+PROVIDER="${PROVIDER:-}"
+MODEL="${MODEL:-}"
+MODELS="${MODELS:-}"
+LIST_MODELS="${LIST_MODELS:-false}"
+ALL_MODELS="${ALL_MODELS:-false}"
+MAIN_LOG_FILE=""
+SAVE_GENERATION_INFO="${SAVE_GENERATION_INFO:-true}"
+
+# Generation metadata capture (set by provider functions, consumed by generate_image)
+_GEN_API_URL=""
+_GEN_API_METHOD="POST"
+_GEN_API_REQUEST=""
+_GEN_API_RESPONSE=""
+_GEN_HTTP_CODE=""
+_GEN_EXTRA_INFO=""  # Provider-specific details as key=value pairs
+
+# Google Imagen authentication
+GOOGLE_CREDENTIALS="${GOOGLE_CREDENTIALS:-}"
+GOOGLE_LOCATION="${GOOGLE_LOCATION:-us-central1}"
+GOOGLE_AUTH_METHOD="${GOOGLE_AUTH_METHOD:-auto}"
+# Cached access token (avoid re-generating for each call)
+_GOOGLE_ACCESS_TOKEN=""
+_GOOGLE_TOKEN_EXPIRY=0
+
+_on_err() {
+  local lineno="$1"
+  local cmd="$2"
+  local exit_code="$3"
+  log_err "Command failed at line $lineno: $cmd (exit $exit_code)"
+  exit "$exit_code"
+}
+
+_on_interrupt() {
+  log_warn "Interrupted"
+  exit 130
+}
+
+_on_exit() {
+  log_debug "Script exiting"
+  # Add cleanup logic here if needed (e.g., remove temp files)
+}
+
+trap '_on_err $LINENO "$BASH_COMMAND" $?' ERR
+trap '_on_exit' EXIT
+trap '_on_interrupt' INT TERM
+
+# ============================================================================
+# UTILITIES
+# ============================================================================
+log_info()  { printf '[INFO]  %s %s\n' "${LOG_TAG}" "$*" >&2; if [[ -n "$MAIN_LOG_FILE" ]]; then local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _jq -n --arg ts "$ts" --arg msg "$*" '{timestamp: $ts, level: "INFO", message: $msg}' >> "${MAIN_LOG_FILE}"; fi; if [[ -n "${JOB_LOG_FILE:-}" ]]; then local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _jq -n --arg ts "$ts" --arg msg "$*" '{timestamp: $ts, level: "INFO", message: $msg}' >> "${JOB_LOG_FILE}"; fi; }
+log_warn()  { printf '[WARN]  %s %s\n' "${LOG_TAG}" "$*" >&2; if [[ -n "$MAIN_LOG_FILE" ]]; then local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _jq -n --arg ts "$ts" --arg msg "$*" '{timestamp: $ts, level: "WARN", message: $msg}' >> "${MAIN_LOG_FILE}"; fi; if [[ -n "${JOB_LOG_FILE:-}" ]]; then local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _jq -n --arg ts "$ts" --arg msg "$*" '{timestamp: $ts, level: "WARN", message: $msg}' >> "${JOB_LOG_FILE}"; fi; }
+log_err()   { printf '[ERROR] %s %s\n' "${LOG_TAG}" "$*" >&2; if [[ -n "$MAIN_LOG_FILE" ]]; then local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _jq -n --arg ts "$ts" --arg msg "$*" '{timestamp: $ts, level: "ERROR", message: $msg}' >> "${MAIN_LOG_FILE}"; fi; if [[ -n "${JOB_LOG_FILE:-}" ]]; then local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _jq -n --arg ts "$ts" --arg msg "$*" '{timestamp: $ts, level: "ERROR", message: $msg}' >> "${JOB_LOG_FILE}"; fi; }
+log_debug() { [[ "${VERBOSE}" == "true" ]] && printf '[DEBUG] %s %s\n' "${LOG_TAG}" "$*" >&2; if [[ "${VERBOSE}" == "true" && -n "$MAIN_LOG_FILE" ]]; then local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _jq -n --arg ts "$ts" --arg msg "$*" '{timestamp: $ts, level: "DEBUG", message: $msg}' >> "${MAIN_LOG_FILE}"; fi; if [[ "${VERBOSE}" == "true" && -n "${JOB_LOG_FILE:-}" ]]; then local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _jq -n --arg ts "$ts" --arg msg "$*" '{timestamp: $ts, level: "DEBUG", message: $msg}' >> "${JOB_LOG_FILE}"; fi; }
+log_fatal() { 
+  output_json_error "$@" "${EXIT_GENERAL_ERROR}"
+  log_err "$@"; 
+  exit "${EXIT_GENERAL_ERROR}"; 
+}
+
+# Output error in JSON format if requested
+output_json_error() {
+  local message="$1"
+  local exit_code="${2:-1}"
+  if [[ "${OUTPUT_FORMAT:-text}" == "json" ]]; then
+    echo "{\"status\":\"error\",\"message\":\"$message\",\"exit_code\":$exit_code}" >&2
+  fi
+}
+
+die() { 
+  output_json_error "$@" "${EXIT_INVALID_PARAMS}"
+  log_err "$@"; 
+  exit "${EXIT_INVALID_PARAMS}"; 
+}
+
+require_cmd() {
+  command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
+}
+
+run_cmd() {
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    log_info "[DRY-RUN] Would execute: $*"
+    return 0
+  fi
+  "$@"
+}
+
+# ============================================================================
+# MOCKABLE WRAPPERS (for testing)
+# ============================================================================
+_curl() { "${CURL_CMD:-curl}" "$@"; }
+_jq() { "${JQ_CMD:-jq}" "$@"; }
+_yq() { "${YQ_CMD:-yq}" "$@"; }
+_exiftool() { "${EXIFTOOL_CMD:-exiftool}" "$@"; }
+
+# ============================================================================
+# VERSION CHECK
+# ============================================================================
+
+# Check for newer versions on GitHub (24h cache, silent failure, opt-out)
+_check_version() {
+  local check_file="${CONFIG_DIR}/version-check"
+  local now
+  now="$(date +%s)"
+
+  # Opt-out check
+  if [[ "${TEXT_TO_IMAGE_NO_VERSION_CHECK:-false}" == "true" ]]; then
+    return 0
+  fi
+
+  # 24h cache check
+  if [[ -f "$check_file" ]]; then
+    local last_check
+    last_check="$(cat "$check_file" 2>/dev/null || echo 0)"
+    if (( now - last_check < 86400 )); then
+      return 0
+    fi
+  fi
+
+  # Fetch and compare (silent on failure)
+  {
+    local raw_url="https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main/tools/${APP_NAME}"
+    local remote_version
+    remote_version="$(_curl -sS --max-time 5 "$raw_url" 2>/dev/null | grep -oP 'APP_VERSION="\K[^"]+' || true)"
+
+    printf '%s' "$now" > "$check_file" 2>/dev/null || true
+
+    if [[ -n "$remote_version" && "$remote_version" != "$APP_VERSION" ]]; then
+      # Simple version comparison (lexicographic works for semver with same digit count)
+      if [[ "$(printf '%s\n%s' "$APP_VERSION" "$remote_version" | sort -V | tail -1)" == "$remote_version" && "$remote_version" != "$APP_VERSION" ]]; then
+        log_warn "A newer version is available ($remote_version vs your $APP_VERSION)."
+        printf '[WARN]  (%s)   Update: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/tools/%s\n' "$APP_NAME" "$APP_NAME" >&2
+      fi
+    fi
+  } 2>/dev/null || true
+}
+
+# ============================================================================
+# DOC-LINKED ERROR MESSAGES
+# ============================================================================
+
+# Show provider-specific error with documentation link
+provider_not_configured_error() {
+  local provider="$1"
+  local anchor="${PROVIDER_DOC_ANCHORS[$provider]:-}"
+  local doc_url="${DOC_BASE_URL}"
+  [[ -n "$anchor" ]] && doc_url="${doc_url}#${anchor}"
+  log_err "Provider '${provider}' is not configured. Set up your API key:"
+  printf '[ERROR] (%s)   %s\n' "$APP_NAME" "$doc_url" >&2
+}
+
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+# Sanitize token for logging
+sanitize_token() {
+  local token="$1"
+  if [[ -z "$token" ]]; then
+    echo "unset"
+  else
+    echo "${token:0:8}…****"
+  fi
+}
+
+# Extract human-readable error message from provider JSON error response
+# Tries common patterns across all providers:
+#   OpenAI:      {"error": {"message": "...", "type": "...", "code": "..."}}
+#   Stability:   {"message": "...", "name": "..."}
+#   Google:      {"error": {"message": "...", "status": "...", "code": ...}}
+#   HuggingFace: {"error": "..."} or {"error": {"message": "..."}}
+#   BFL:         {"detail": "..."} or {"error": "..."}
+#   Replicate:   {"detail": "..."}
+#   SiliconFlow:  {"message": "...", "code": ...}
+extract_api_error() {
+  local response="$1"
+  local msg=""
+  msg="$(_jq -r '.error.message // .message // .detail // .error // empty' <<< "$response" 2>/dev/null)" || true
+  if [[ -n "$msg" && "$msg" != "null" ]]; then
+    printf '%s' "$msg"
+  else
+    printf '%s' "${response:0:200}"
+  fi
+}
+
+# Shell-escape a value for safe eval
+shell_escape() {
+    printf '%q' "$1"
+}
+
+# Return the native output format for a given provider+model combination.
+# This is the format the API returns without any conversion.
+# Usage: get_native_format <provider> <model>
+# Prints: png, jpg, or webp (defaults to png for unknown models)
+get_native_format() {
+  local provider="$1"
+  local model="$2"
+  local key="${provider}::${model}"
+
+  case "$key" in
+    openai::dall-e-3)                                     printf 'png' ;;
+    openai::dall-e-2)                                     printf 'png' ;;
+    stability::stable-diffusion-xl-1024-v1-0)             printf 'png' ;;
+    google::imagen-4.0-generate-001)                      printf 'png' ;;
+    google::imagen-4.0-ultra-generate-001)                printf 'png' ;;
+    google::imagen-4.0-fast-generate-001)                 printf 'png' ;;
+    google::imagen-3.0-generate-001)                      printf 'png' ;;
+    huggingface::stabilityai/stable-diffusion-2-1)        printf 'png' ;;
+    huggingface::runwayml/stable-diffusion-v1-5)          printf 'png' ;;
+    huggingface::black-forest-labs/flux-1.1-pro)          printf 'webp' ;;
+    bfl::flux-1.1-pro)                                    printf 'jpg' ;;
+    bfl::flux-1.0-pro)                                    printf 'jpg' ;;
+    replicate::stability-ai/sdxl:39ed52f*)                printf 'png' ;;
+    replicate::black-forest-labs/flux-1.1-pro)            printf 'webp' ;;
+    siliconflow::stabilityai/stable-diffusion-3-medium)   printf 'png' ;;
+    siliconflow::stabilityai/stable-diffusion-xl-1.0)     printf 'png' ;;
+    *)                                                    printf 'png' ;;
+  esac
+}
+
+# Check whether an output path has a recognized image file extension.
+# Returns 0 (true) if the basename contains a dot followed by a known image format,
+# 1 (false) otherwise. Handles edge cases: dots in directory paths, trailing dots,
+# and unrecognized extensions (e.g., .txt).
+# Usage: has_recognized_image_extension <output_path>
+has_recognized_image_extension() {
+  local output_path="$1"
+  local output_basename
+  output_basename="$(basename "$output_path")"
+
+  # No dot in basename → no extension
+  if [[ "$output_basename" != *.* ]]; then
+    return 1
+  fi
+
+  local ext="${output_basename##*.}"
+
+  # Trailing dot (empty extension) → no recognized extension
+  if [[ -z "$ext" ]]; then
+    return 1
+  fi
+
+  case "${ext,,}" in
+    png|jpg|jpeg|webp|avif|tiff|tif) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Resolve the output path by appending a native format extension when the user
+# did not specify a recognized image extension. Uses provider+model to determine
+# the native format; falls back to png if no provider can be resolved.
+# Prints the (possibly updated) output path to stdout.
+# Usage: resolve_output_extension <output> <provider> <model> <quality>
+resolve_output_extension() {
+  local output="$1"
+  local provider="${2:-}"
+  local model="${3:-}"
+  local quality="${4:-high}"
+
+  if [[ -z "$output" ]]; then
+    printf '%s' "$output"
+    return 0
+  fi
+
+  if has_recognized_image_extension "$output"; then
+    printf '%s' "$output"
+    return 0
+  fi
+
+  # No recognized extension — resolve native format
+  local resolved_provider="${provider}"
+  local resolved_model="${model}"
+  if [[ -z "$resolved_provider" ]]; then
+    resolved_provider="$(select_provider "$quality" 2>/dev/null)" || true
+  fi
+  if [[ -n "$resolved_provider" && -z "$resolved_model" ]]; then
+    resolved_model="$(get_provider_model "$resolved_provider")"
+  fi
+  if [[ -n "$resolved_provider" ]]; then
+    local native_ext
+    native_ext="$(get_native_format "$resolved_provider" "$resolved_model")"
+    log_info "No output format specified, using native format: ${native_ext}"
+    printf '%s' "${output}.${native_ext}"
+  else
+    log_info "No output format specified, defaulting to png"
+    printf '%s' "${output}.png"
+  fi
+}
+
+# Determine the best available conversion command for a source→target format pair.
+# Prints the command name to use, or empty string if no tool is available.
+# Prefers specialized tools (cwebp, avifenc) over ImageMagick for quality and speed.
+# Usage: get_conversion_command <source_format> <target_format>
+get_conversion_command() {
+  local source_format="$1"
+  local target_format="$2"
+
+  # No conversion needed if formats match
+  if [[ "$source_format" == "$target_format" ]]; then
+    printf ''
+    return 0
+  fi
+
+  case "$target_format" in
+    webp)
+      if command -v cwebp >/dev/null 2>&1; then
+        printf 'cwebp'
+      elif command -v magick >/dev/null 2>&1; then
+        printf 'magick'
+      elif command -v convert >/dev/null 2>&1; then
+        printf 'convert'
+      fi
+      ;;
+    avif)
+      if command -v avifenc >/dev/null 2>&1; then
+        printf 'avifenc'
+      elif command -v magick >/dev/null 2>&1; then
+        printf 'magick'
+      elif command -v convert >/dev/null 2>&1; then
+        printf 'convert'
+      fi
+      ;;
+    png|jpg)
+      if command -v magick >/dev/null 2>&1; then
+        printf 'magick'
+      elif command -v convert >/dev/null 2>&1; then
+        printf 'convert'
+      fi
+      ;;
+  esac
+}
+
+# Ensure the output file's actual image format matches the requested extension.
+# Detects format via file(1) and converts using the best available tool.
+# Prefers specialized converters (cwebp for WebP, avifenc for AVIF) over ImageMagick.
+# Gracefully degrades (warning only) when no conversion tool is installed.
+ensure_output_format() {
+  local output_path="$1"
+
+  # Extract requested extension (lowercase)
+  local requested_ext
+  requested_ext="${output_path##*.}"
+  requested_ext="${requested_ext,,}"
+
+  # Normalize jpeg -> jpg for comparison
+  local requested_normalized="$requested_ext"
+  [[ "$requested_normalized" == "jpeg" ]] && requested_normalized="jpg"
+
+  # Only handle supported formats
+  case "$requested_normalized" in
+    png|jpg|webp|avif) ;;
+    *)
+      log_debug "ensure_output_format: unsupported target format '$requested_ext', skipping conversion"
+      return 0
+      ;;
+  esac
+
+  # Detect actual format via file(1)
+  local actual_mime
+  actual_mime="$(file --mime-type -b "$output_path" 2>/dev/null)" || {
+    log_debug "ensure_output_format: file(1) failed, skipping format check"
+    return 0
+  }
+
+  # Map mime type to normalized extension
+  local actual_normalized
+  case "$actual_mime" in
+    image/png)  actual_normalized="png" ;;
+    image/jpeg) actual_normalized="jpg" ;;
+    image/webp) actual_normalized="webp" ;;
+    image/avif) actual_normalized="avif" ;;
+    *)
+      log_debug "ensure_output_format: unknown mime type '$actual_mime', skipping conversion"
+      return 0
+      ;;
+  esac
+
+  # If formats match, nothing to do
+  if [[ "$actual_normalized" == "$requested_normalized" ]]; then
+    log_debug "ensure_output_format: format matches ($actual_normalized), no conversion needed"
+    return 0
+  fi
+
+  log_debug "ensure_output_format: format mismatch detected — file is $actual_mime ($actual_normalized) but extension is .$requested_ext ($requested_normalized)"
+
+  # Find the best conversion tool for this format pair
+  local converter
+  converter="$(get_conversion_command "$actual_normalized" "$requested_normalized")"
+
+  if [[ -z "$converter" ]]; then
+    log_warn "Downloaded image is actually $actual_normalized but output file has .$requested_ext extension. Install a conversion tool to enable automatic format conversion."
+    return 0
+  fi
+
+  # Convert using the best available tool
+  local tmp_converted
+  tmp_converted="$(mktemp "${output_path}.convert.XXXXXX.${requested_ext}")"
+
+  local convert_ok=false
+  case "$converter" in
+    cwebp)
+      if cwebp -q 90 "$output_path" -o "$tmp_converted" >/dev/null 2>&1; then
+        convert_ok=true
+      fi
+      ;;
+    avifenc)
+      if avifenc --min 20 --max 30 "$output_path" "$tmp_converted" >/dev/null 2>&1; then
+        convert_ok=true
+      fi
+      ;;
+    magick|convert)
+      if "$converter" "$output_path" "$tmp_converted" 2>/dev/null; then
+        convert_ok=true
+      fi
+      ;;
+  esac
+
+  if [[ "$convert_ok" == "true" ]]; then
+    mv -f "$tmp_converted" "$output_path"
+    log_debug "ensure_output_format: converted $actual_normalized -> $requested_normalized via $converter successfully"
+    return 0
+  else
+    rm -f "$tmp_converted"
+    log_warn "ensure_output_format: conversion from $actual_normalized to $requested_normalized via $converter failed"
+    return 1
+  fi
+}
+
+# Truncate long string values in a JSON response for YAML sidecar readability.
+# Replaces any string field longer than max_field_len with a placeholder.
+# Falls back to simple character truncation if jq is unavailable.
+# Usage: truncate_response_for_yaml <response_json>
+truncate_response_for_yaml() {
+  local response="$1"
+  local max_field_len=200
+
+  # Try jq-based field truncation
+  if command -v jq >/dev/null 2>&1; then
+    local result
+    result="$(_jq 'walk(if type == "string" and (length > '"$max_field_len"') then "[\(length) chars truncated]" else . end)' <<< "$response" 2>/dev/null)"
+    if [[ -n "$result" ]]; then
+      printf '%s' "$result"
+      return 0
+    fi
+  fi
+
+  # Fallback: simple character truncation
+  if [[ ${#response} -gt 5000 ]]; then
+    printf '%s' "${response:0:2000}...[TRUNCATED: ${#response} chars total]"
+  else
+    printf '%s' "$response"
+  fi
+}
+
+# Sanitize a JSON response body for YAML sidecar output.
+# Keeps all text/metadata fields verbatim (no truncation).
+# Only replaces fields that look like base64 image data (>1000 chars of base64
+# characters) with a size placeholder.
+# Redacts any fields named *token*, *key*, *secret*, *authorization* as
+# defense-in-depth against accidental credential leakage.
+# Falls back to regex-based sanitization if jq is unavailable.
+# Usage: sanitize_response_for_yaml <response_json>
+sanitize_response_for_yaml() {
+  local response="$1"
+
+  if [[ -z "$response" ]]; then
+    printf '%s' "$response"
+    return 0
+  fi
+
+  # Try jq-based sanitization
+  if command -v jq >/dev/null 2>&1; then
+    local result
+    result="$(_jq '
+      walk(
+        if type == "object" then
+          with_entries(
+            if (.key | test("token|key|secret|authorization|password"; "i")) then
+              .value = "[REDACTED]"
+            elif (.value | type) == "string" and (.value | length) > 1000 and (.value | test("^[A-Za-z0-9+/=\\s]+$")) then
+              .value = "[base64 image data: \(.value | length) chars]"
+            else .
+            end
+          )
+        elif type == "string" and length > 1000 and test("^[A-Za-z0-9+/=\\s]+$") then
+          "[base64 image data: \(length) chars]"
+        else .
+        end
+      )
+    ' <<< "$response" 2>/dev/null)"
+    if [[ -n "$result" ]]; then
+      printf '%s' "$result"
+      return 0
+    fi
+  fi
+
+  # Fallback: simple regex-based sanitization
+  # Replace long base64-like strings (>1000 chars of [A-Za-z0-9+/=])
+  local sanitized="$response"
+  if [[ ${#sanitized} -gt 5000 ]]; then
+    printf '%s' "${sanitized:0:2000}...[TRUNCATED: ${#sanitized} chars total]"
+  else
+    printf '%s' "$sanitized"
+  fi
+}
+
+# Sanitize a JSON request body for YAML sidecar output.
+# Pretty-prints the JSON and redacts any fields whose names match sensitive
+# patterns (*token*, *key*, *secret*, *authorization*, *password*) as
+# defense-in-depth. Auth credentials are normally in HTTP headers, not in
+# request payloads, but this provides an extra safety net.
+# Usage: sanitize_request_for_yaml <request_json>
+sanitize_request_for_yaml() {
+  local request="$1"
+
+  if [[ -z "$request" ]]; then
+    printf '%s' "$request"
+    return 0
+  fi
+
+  # Try jq-based redaction
+  if command -v jq >/dev/null 2>&1; then
+    local result
+    result="$(_jq '
+      walk(
+        if type == "object" then
+          with_entries(
+            if (.key | test("token|key|secret|authorization|password"; "i")) then
+              .value = "[REDACTED]"
+            else .
+            end
+          )
+        else .
+        end
+      )
+    ' <<< "$request" 2>/dev/null)"
+    if [[ -n "$result" ]]; then
+      printf '%s' "$result"
+      return 0
+    fi
+  fi
+
+  # Fallback: pass through as-is (payloads normally don't contain credentials)
+  printf '%s' "$request"
+}
+
+# Write generation metadata YAML sidecar file alongside the output image.
+# Uses global vars set by the provider function: _GEN_API_URL, _GEN_API_METHOD,
+# _GEN_API_REQUEST, _GEN_API_RESPONSE, _GEN_HTTP_CODE, _GEN_EXTRA_INFO
+# Arguments: output_path prompt negative_prompt width height quality provider model duration_ms [exit_code]
+write_generation_info() {
+  local output_path="$1"
+  local prompt="$2"
+  local negative_prompt="$3"
+  local width="$4"
+  local height="$5"
+  local quality="$6"
+  local provider="$7"
+  local model="$8"
+  local duration_ms="$9"
+  local exit_code="${10:-0}"
+
+  local yaml_path="${output_path%.*}.yaml"
+  local timestamp
+  timestamp="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
+  # Determine status and error message
+  local gen_status="success"
+  local error_message=""
+  if (( exit_code != 0 )); then
+    gen_status="error"
+    # Extract error message from API response if available
+    if [[ -n "$_GEN_API_RESPONSE" ]]; then
+      error_message="$(extract_api_error "$_GEN_API_RESPONSE" 2>/dev/null)" || true
+    fi
+    if [[ -z "$error_message" ]]; then
+      error_message="Generation failed with exit code ${exit_code}"
+    fi
+  fi
+
+  # Image metadata
+  local file_size_bytes=0
+  local file_size_human="unknown"
+  local format_detected="unknown"
+  local img_width="unknown"
+  local img_height="unknown"
+
+  if [[ -f "$output_path" ]]; then
+    file_size_bytes="$(stat --format='%s' "$output_path" 2>/dev/null || stat -f '%z' "$output_path" 2>/dev/null || printf '0')"
+    if [[ "$file_size_bytes" -ge 1048576 ]]; then
+      file_size_human="$(awk "BEGIN {printf \"%.1f MB\", ${file_size_bytes}/1048576}")"
+    elif [[ "$file_size_bytes" -ge 1024 ]]; then
+      file_size_human="$(( file_size_bytes / 1024 )) KB"
+    else
+      file_size_human="${file_size_bytes} B"
+    fi
+    format_detected="$(file --mime-type -b "$output_path" 2>/dev/null || printf 'unknown')"
+    # Try to get dimensions via identify (ImageMagick) or file
+    if command -v identify >/dev/null 2>&1; then
+      local dims
+      dims="$(identify -format '%wx%h' "$output_path" 2>/dev/null || true)"
+      if [[ "$dims" =~ ^([0-9]+)x([0-9]+)$ ]]; then
+        img_width="${BASH_REMATCH[1]}"
+        img_height="${BASH_REMATCH[2]}"
+      fi
+    fi
+  fi
+
+  # Sanitize request for YAML (indent for literal block)
+  local request_indented=""
+  if [[ -n "$_GEN_API_REQUEST" ]]; then
+    local request_clean
+    request_clean="$(sanitize_request_for_yaml "$_GEN_API_REQUEST")"
+    request_indented="$(_jq '.' <<< "$request_clean" 2>/dev/null | sed 's/^/    /' || printf '%s' "$request_clean" | sed 's/^/    /')"
+  fi
+
+  # Sanitize response for YAML (indent for literal block)
+  local response_indented=""
+  if [[ -n "$_GEN_API_RESPONSE" ]]; then
+    local response_clean
+    response_clean="$(sanitize_response_for_yaml "$_GEN_API_RESPONSE")"
+    response_indented="$(_jq '.' <<< "$response_clean" 2>/dev/null | sed 's/^/    /' || printf '%s' "$response_clean" | sed 's/^/    /')"
+  fi
+
+  # Determine content-type header based on request method
+  local content_type_header="application/json"
+
+  # HTTP code from global (set by retry_curl)
+  local http_code="${_GEN_HTTP_CODE:-}"
+
+  # Get native format for this model
+  local native_fmt
+  native_fmt="$(get_native_format "$provider" "$model")"
+
+  # Build provider_details section
+  local provider_details_section=""
+  if [[ -n "$_GEN_EXTRA_INFO" ]]; then
+    local old_ifs="$IFS"
+    IFS=$'\n'
+    local pair
+    for pair in $_GEN_EXTRA_INFO; do
+      local key="${pair%%=*}"
+      local value="${pair#*=}"
+      provider_details_section+="$(printf '  %s: "%s"\n' "$key" "$value")"
+    done
+    IFS="$old_ifs"
+  else
+    provider_details_section="  {}"
+  fi
+
+  # Write YAML
+  cat > "$yaml_path" <<YAML
+# Image Generation Details
+# Generated by ${APP_NAME} v${APP_VERSION}
+# ${timestamp}
+
+generation:
+  timestamp: "${timestamp}"
+  tool_version: "${APP_VERSION}"
+  duration_ms: ${duration_ms}
+  status: "${gen_status}"
+  error_message: "$(printf '%s' "${error_message}")"
+
+input:
+  prompt: |
+$(printf '%s' "$prompt" | sed 's/^/    /')
+  negative_prompt: "$(printf '%s' "${negative_prompt}")"
+  provider: "${provider}"
+  model: "${model}"
+  width: ${width}
+  height: ${height}
+  quality: "${quality}"
+  native_format: "${native_fmt}"
+
+request:
+  url: "${_GEN_API_URL}"
+  method: "${_GEN_API_METHOD}"
+  headers:
+    content_type: "${content_type_header}"
+  payload: |
+${request_indented}
+
+response:
+  http_code: ${http_code:-0}
+  body: |
+${response_indented}
+
+provider_details:
+${provider_details_section}
+
+output:
+  file_path: "${output_path}"
+  file_size_bytes: ${file_size_bytes}
+  file_size_human: "${file_size_human}"
+  format_detected: "${format_detected}"
+  format_requested: "${output_path##*.}"
+  width_px: ${img_width}
+  height_px: ${img_height}
+YAML
+
+  log_debug "Generation info written to ${yaml_path}"
+}
+
+# Retry curl with exponential backoff
+retry_curl() {
+  local max_retries=3
+  local attempt=0
+  local delay=1
+  local response
+  local stderr_file
+  stderr_file="$(mktemp)"
+
+  while (( attempt < max_retries )); do
+    # Capture response body and HTTP code
+    response="$(_curl -s -w "\n%{http_code}" "$@" 2>"$stderr_file")"
+    local http_code="${response##*$'\n'}"
+    response="${response%$'\n'*}"
+
+    # Handle malformed responses: default to 200 if http_code is not numeric
+    if [[ ! "$http_code" =~ ^[0-9]+$ ]]; then
+      http_code=200
+    fi
+    if [[ "${VERBOSE}" == "true" ]]; then
+      local curl_stderr
+      curl_stderr="$(cat "$stderr_file")"
+      if [[ -n "$curl_stderr" ]]; then
+        log_debug "Curl stderr: $curl_stderr" >&2
+      fi
+    fi
+
+    if (( http_code >= 200 && http_code < 300 )); then
+      rm -f "$stderr_file"
+      _GEN_HTTP_CODE="$http_code"
+      echo "$response"
+      return 0
+    fi
+
+    if (( http_code == 429 )); then
+      # Rate limited, wait for Retry-After or default
+      local retry_after
+      retry_after="$(_curl -s -I "$@" 2>/dev/null | grep -i retry-after | sed 's/.*: //' | tr -d '\r')"
+      if [[ -n "$retry_after" ]] && [[ "$retry_after" =~ ^[0-9]+$ ]]; then
+        delay="$retry_after"
+      fi
+      log_warn "Rate limited (429), retrying in $delay seconds" >&2
+    elif (( http_code >= 500 )); then
+      log_warn "Server error ($http_code), retrying in $delay seconds (attempt $((attempt+1))/$max_retries)" >&2
+    else
+      log_err "Request failed with HTTP $http_code"
+      log_debug "Response body: ${response:0:500}" >&2
+      rm -f "$stderr_file"
+      _GEN_HTTP_CODE="$http_code"
+      echo "$response"
+      return "$EXIT_NETWORK_ERROR"
+    fi
+
+    sleep "$delay"
+    (( delay *= 2 ))
+    (( attempt++ ))
+  done
+
+  rm -f "$stderr_file"
+  _GEN_HTTP_CODE="$http_code"
+  log_err "Max retries exceeded"
+  return "$EXIT_NETWORK_ERROR"
+}
+
+# Custom timeout wrapper to handle subshell issues
+timeout_wrapper() {
+  local timeout_seconds="$1"
+  shift
+  local pid
+
+  # Run in background
+  "$@" &
+  pid=$!
+
+  # Wait with timeout
+  local count=0
+  while (( count < timeout_seconds )) && kill -0 "$pid" 2>/dev/null; do
+    sleep 1
+    (( count++ ))
+  done
+
+  if kill -0 "$pid" 2>/dev/null; then
+    # Still running, kill it
+    kill "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null || true
+    return 124  # Timeout exit code like GNU timeout
+  else
+    # Already finished, get exit code
+    wait "$pid"
+    return $?
+  fi
+}
+
+# ============================================================================
+# DOMAIN FUNCTIONS
+# ============================================================================
+# Provider selection
+select_provider() {
+  local quality="$1"
+  local chain
+  case "$quality" in
+    high) chain="$QUALITY_HIGH" ;;
+    medium) chain="$QUALITY_MEDIUM" ;;
+    low) chain="$QUALITY_LOW" ;;
+    *) return "$EXIT_INVALID_PARAMS" ;;
+  esac
+
+  local old_ifs="$IFS"
+  IFS=' '
+  for provider in $chain; do
+    if [[ "${provider}" == "google" ]]; then
+      # Google supports multiple auth methods: JSON credentials, gcloud, or API key
+      if [[ -n "${GOOGLE_CREDENTIALS:-}" && -f "${GOOGLE_CREDENTIALS:-}" ]] || \
+         command -v gcloud >/dev/null 2>&1 || \
+         [[ -n "${GOOGLE_API_KEY:-}" && -n "${GOOGLE_PROJECT_ID:-}" ]]; then
+        echo "$provider"
+        IFS="$old_ifs"
+        return 0
+      fi
+      continue
+    fi
+    local key_var="${provider^^}_API_KEY"
+    if [[ "${provider}" == "replicate" ]]; then
+      key_var="REPLICATE_API_TOKEN"
+    fi
+    if [[ -n "${!key_var:-}" ]]; then
+      echo "$provider"
+      IFS="$old_ifs"
+      return 0
+    fi
+  done
+  IFS="$old_ifs"
+
+  log_err "No available provider for quality $quality"
+  return "$EXIT_AUTH_FAILED"
+}
+
+# Get model used by provider
+get_provider_model() {
+  local provider="$1"
+  case "$provider" in
+    openai) echo "dall-e-3" ;;
+    stability) echo "stable-diffusion-xl-1024-v1-0" ;;
+    google) echo "imagen-4.0-generate-001" ;;
+    huggingface) echo "${HF_MODEL:-stabilityai/stable-diffusion-2-1}" ;;
+    bfl) echo "flux-1.1-pro" ;;
+    replicate) echo "${REPLICATE_MODEL:-stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b}" ;;
+    siliconflow) echo "stabilityai/stable-diffusion-3-medium" ;;
+    *) echo "unknown" ;;
+  esac
+}
+
+# Main image generation function
+generate_image() {
+  local prompt="$1"
+  local negative_prompt="$2"
+  local width="$3"
+  local height="$4"
+  local quality="$5"
+  local output_path="$6"
+  local provider="$7"
+  local model="$8"
+
+  # Determine provider if not provided
+  if [[ -z "$provider" ]]; then
+    provider="$(select_provider "$quality")"
+    local exit_code=$?
+    if (( exit_code != 0 )); then
+      return "$exit_code"
+    fi
+  else
+    # Validate provider
+    case "$provider" in
+      openai|stability|google|huggingface|bfl|replicate|siliconflow) ;;
+      *) log_err "Invalid provider: $provider"; return "$EXIT_INVALID_PARAMS" ;;
+    esac
+  fi
+
+  log_info "Using provider: $provider"
+
+  # Determine model if not provided
+  if [[ -z "$model" ]]; then
+    model="$(get_provider_model "$provider")"
+  fi
+
+  # Compute cache key (include model)
+  local cache_key
+  cache_key="$(compute_cache_key "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$provider" "$model")"
+
+  # Check cache unless force is set
+  if [[ "${FORCE}" != "true" ]]; then
+    if cache_lookup "$cache_key" "$output_path"; then
+      # If YAML sidecar was not restored from cache, generate a basic one
+      if [[ "${SAVE_GENERATION_INFO}" == "true" ]]; then
+        local output_yaml="${output_path%.*}.yaml"
+        if [[ ! -f "$output_yaml" ]]; then
+          write_generation_info "$output_path" "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$provider" "$model" 0
+          # Back-fill cache with the newly created YAML
+          local cache_file="${CACHE_DIR}/${cache_key}"
+          if [[ -f "$output_yaml" ]]; then
+            cp "$output_yaml" "${cache_file}.yaml" 2>/dev/null || true
+          fi
+        fi
+      fi
+      return "$EXIT_SUCCESS"
+    fi
+  fi
+
+  # Clear metadata capture
+  _GEN_API_URL=""
+  _GEN_API_METHOD="POST"
+  _GEN_API_REQUEST=""
+  _GEN_API_RESPONSE=""
+  _GEN_HTTP_CODE=""
+  _GEN_EXTRA_INFO=""
+
+  local gen_start_ms
+  gen_start_ms="$(date +%s%3N)"
+
+  # Generate image
+  "generate_image_$provider" "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$output_path" "$model"
+  local exit_code=$?
+
+  local gen_end_ms
+  gen_end_ms="$(date +%s%3N)"
+  local gen_duration_ms=$(( gen_end_ms - gen_start_ms ))
+
+  if (( exit_code == EXIT_AUTH_FAILED )); then
+    provider_not_configured_error "$provider"
+    return "$exit_code"
+  fi
+
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    return "$exit_code"
+  fi
+
+  if (( exit_code == 0 )); then
+    # Ensure output format matches requested extension (e.g., convert WebP -> PNG)
+    ensure_output_format "$output_path" || true
+  fi
+
+  # Write generation info sidecar YAML (on BOTH success and error)
+  if [[ "${SAVE_GENERATION_INFO}" == "true" ]]; then
+    write_generation_info "$output_path" "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$provider" "$model" "$gen_duration_ms" "$exit_code"
+  fi
+
+  if (( exit_code != 0 )); then
+    return "$exit_code"
+  fi
+
+  # Store in cache (success only)
+  cache_store "$cache_key" "$output_path" "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$provider" "$model"
+
+  # Embed metadata if requested
+  if [[ "${EMBED_METADATA}" == "true" ]]; then
+    embed_metadata "$output_path" "${ARTIST}" "${COPYRIGHT}" "${KEYWORDS}" "${DESCRIPTION}" "$prompt" "$provider"
+  fi
+
+  # Optional cache cleanup
+  cache_cleanup
+
+  return "$EXIT_SUCCESS"
+}
+
+ensure_directories() {
+  CONFIG_DIR="${TEXT_TO_IMAGE_CONFIG_DIR:-${HOME}/.ai/text-to-image}"
+  CACHE_DIR="${CONFIG_DIR}/cache"
+  LOG_DIR="${CONFIG_DIR}/logs"
+  JOB_LOG_DIR="${LOG_DIR}/jobs"
+  MAIN_LOG_FILE="${LOG_DIR}/main.log"
+  mkdir -p "${CACHE_DIR}" "${LOG_DIR}" "${JOB_LOG_DIR}"
+  # Set restrictive permissions (owner only)
+  chmod 700 "${CONFIG_DIR}" "${CACHE_DIR}" "${LOG_DIR}" "${JOB_LOG_DIR}"
+}
+
+# OpenAI DALL-E provider
+generate_image_openai() {
+  local prompt="$1"
+  local negative_prompt="$2"  # Not supported
+  local width="$3"
+  local height="$4"
+  local quality="$5"  # Not used
+  local output_path="$6"
+  local model="${7:-dall-e-3}"
+
+  local api_key="${OPENAI_API_KEY:-}"
+  if [[ -z "$api_key" ]]; then
+    log_debug "OpenAI API key not set"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  # Validate model
+  case "$model" in
+    dall-e-2|dall-e-3) ;;
+    *) log_err "Unsupported OpenAI model: $model. Supported: dall-e-2, dall-e-3"; return "$EXIT_INVALID_PARAMS" ;;
+  esac
+
+  local size="${width}x${height}"
+  local payload
+  payload="$(_jq -n --arg prompt "$prompt" --arg size "$size" --arg model "$model" '{prompt: $prompt, model: $model, size: $size, response_format: "url"}' 2>/dev/null)"
+
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    log_info "[DRY-RUN] Would call: curl -s -X POST https://api.openai.com/v1/images/generations -H Authorization: Bearer $(sanitize_token "$api_key") -H Content-Type: application/json -d '$payload'"
+    return "$EXIT_SUCCESS"
+  fi
+
+  response="$(retry_curl --max-time 60 -s -X POST "https://api.openai.com/v1/images/generations" \
+    -H "Authorization: Bearer $api_key" \
+    -H "Content-Type: application/json" \
+    -d "$payload")"
+
+  local exit_code=$?
+  if (( exit_code != 0 )); then
+    _GEN_API_URL="https://api.openai.com/v1/images/generations"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    local api_error
+    api_error="$(extract_api_error "$response" 2>/dev/null)"
+    log_err "OpenAI API call failed: ${api_error:-unknown error}"
+    log_debug "Full response: ${response:0:500}"
+    return "$exit_code"
+  fi
+
+  local url
+  url="$(_jq -r '.data[0].url // empty' <<< "$response" 2>/dev/null)"
+  if [[ -z "$url" ]]; then
+    _GEN_API_URL="https://api.openai.com/v1/images/generations"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "No URL in OpenAI response"
+    return "$EXIT_SERVER_ERROR"
+  fi
+
+  if ! _curl -s -o "$output_path" "$url"; then
+    _GEN_API_URL="https://api.openai.com/v1/images/generations"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "Failed to download image from $url"
+    return "$EXIT_NETWORK_ERROR"
+  fi
+
+  # Capture metadata for generation info sidecar
+  _GEN_API_URL="https://api.openai.com/v1/images/generations"
+  _GEN_API_REQUEST="$payload"
+  _GEN_API_RESPONSE="$response"
+  local revised_prompt
+  revised_prompt="$(_jq -r '.data[0].revised_prompt // empty' <<< "$response" 2>/dev/null)"
+  if [[ -n "$revised_prompt" ]]; then
+    _GEN_EXTRA_INFO="revised_prompt=${revised_prompt}"
+  fi
+
+  log_info "Image generated with OpenAI ($model)"
+  return "$EXIT_SUCCESS"
+}
+
+# Stability AI provider
+# NOTE: Currently uses Stability AI v1 REST API (legacy engines only).
+# v2beta support (SD3, SD3.5, Stable Image Core, Stable Image Ultra) is planned.
+generate_image_stability() {
+  local prompt="$1"
+  local negative_prompt="$2"
+  local width="$3"
+  local height="$4"
+  local quality="$5"  # Not used
+  local output_path="$6"
+  local model="${7:-stable-diffusion-xl-1024-v1-0}"
+
+  local api_key="${STABILITY_API_KEY:-}"
+  if [[ -z "$api_key" ]]; then
+    log_debug "Stability API key not set"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  # Validate model — only v1 engine IDs are supported
+  case "$model" in
+    stable-diffusion-xl-1024-v1-0) ;;
+    *) log_err "Unsupported Stability AI model: $model. Supported v1 engines: stable-diffusion-xl-1024-v1-0"; return "$EXIT_INVALID_PARAMS" ;;
+  esac
+
+  local payload
+  if [[ -n "$negative_prompt" ]]; then
+    payload="$(_jq -n --arg prompt "$prompt" --arg negative "$negative_prompt" --argjson w "$width" --argjson h "$height" \
+      '{text_prompts: [{text: $prompt}, {text: $negative, weight: -1}], cfg_scale: 7, height: $h, width: $w, samples: 1, steps: 20}' 2>/dev/null)"
+  else
+    payload="$(_jq -n --arg prompt "$prompt" --argjson w "$width" --argjson h "$height" \
+      '{text_prompts: [{text: $prompt}], cfg_scale: 7, height: $h, width: $w, samples: 1, steps: 20}' 2>/dev/null)"
+  fi
+
+  local response
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    log_info "[DRY-RUN] Would call: curl -s -X POST https://api.stability.ai/v1/generation/$model/text-to-image -H Accept: application/json -H Authorization: Bearer $(sanitize_token "$api_key") -H Content-Type: application/json -d '$payload'"
+    return "$EXIT_SUCCESS"
+  fi
+  response="$(retry_curl --max-time 60 -s -X POST "https://api.stability.ai/v1/generation/$model/text-to-image" \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $api_key" \
+    -H "Content-Type: application/json" \
+    -d "$payload" 2>/dev/null)"
+
+  local exit_code=$?
+  if (( exit_code != 0 )); then
+    _GEN_API_URL="https://api.stability.ai/v1/generation/$model/text-to-image"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    local api_error
+    api_error="$(extract_api_error "$response" 2>/dev/null)"
+    log_err "Stability API call failed: ${api_error:-unknown error}"
+    log_debug "Full response: ${response:0:500}"
+    return "$exit_code"
+  fi
+
+  local base64
+  base64="$(_jq -r '.artifacts[0].base64 // empty' <<< "$response" 2>/dev/null)"
+  if [[ -z "$base64" ]]; then
+    _GEN_API_URL="https://api.stability.ai/v1/generation/$model/text-to-image"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "No base64 in Stability response"
+    return "$EXIT_SERVER_ERROR"
+  fi
+
+  if ! base64 -d <<< "$base64" > "$output_path" 2>/dev/null; then
+    _GEN_API_URL="https://api.stability.ai/v1/generation/$model/text-to-image"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "Failed to decode base64"
+    return "$EXIT_GENERAL_ERROR"
+  fi
+
+  # Capture metadata for generation info sidecar
+  _GEN_API_URL="https://api.stability.ai/v1/generation/$model/text-to-image"
+  _GEN_API_REQUEST="$payload"
+  _GEN_API_RESPONSE="$response"
+
+  log_info "Image generated with Stability AI ($model)"
+  return "$EXIT_SUCCESS"
+}
+
+# ============================================================================
+# GOOGLE AUTHENTICATION FUNCTIONS
+# ============================================================================
+
+# Obtain Google access token via service account JSON key file (JWT-based)
+# Requires: openssl, jq, curl
+# The JSON file must contain: client_email, private_key, token_uri
+obtain_google_token_from_json() {
+  local credentials_file="$1"
+
+  if [[ ! -f "$credentials_file" ]]; then
+    log_err "Google credentials file not found: $credentials_file"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  # Extract fields from JSON
+  local client_email private_key token_uri
+  client_email="$(_jq -r '.client_email // empty' "$credentials_file" 2>/dev/null)"
+  private_key="$(_jq -r '.private_key // empty' "$credentials_file" 2>/dev/null)"
+  token_uri="$(_jq -r '.token_uri // "https://oauth2.googleapis.com/token"' "$credentials_file" 2>/dev/null)"
+
+  if [[ -z "$client_email" || -z "$private_key" ]]; then
+    log_err "Google credentials file missing client_email or private_key"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  if ! command -v openssl >/dev/null 2>&1; then
+    log_err "openssl is required for service account JWT authentication"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  # Build JWT header
+  local header='{"alg":"RS256","typ":"JWT"}'
+  local header_b64
+  header_b64="$(echo -n "$header" | base64 -w 0 2>/dev/null || echo -n "$header" | base64 | tr -d '\n')"
+  header_b64="$(echo -n "$header_b64" | tr '+/' '-_' | tr -d '=')"
+
+  # Build JWT payload (expires in 1 hour)
+  local iat exp
+  iat="$(date +%s)"
+  exp="$(( iat + 3600 ))"
+  local payload='{"iss":"'"$client_email"'","scope":"https://www.googleapis.com/auth/cloud-platform","aud":"'"$token_uri"'","exp":'"$exp"',"iat":'"$iat"'}'
+  local payload_b64
+  payload_b64="$(echo -n "$payload" | base64 -w 0 2>/dev/null || echo -n "$payload" | base64 | tr -d '\n')"
+  payload_b64="$(echo -n "$payload_b64" | tr '+/' '-_' | tr -d '=')"
+
+  # Sign with private key (RS256)
+  local signature
+  signature="$(echo -n "${header_b64}.${payload_b64}" | openssl dgst -sha256 -sign <(echo "$private_key") 2>/dev/null | base64 -w 0 2>/dev/null || echo -n "${header_b64}.${payload_b64}" | openssl dgst -sha256 -sign <(echo "$private_key") 2>/dev/null | base64 | tr -d '\n')"
+  if [[ -z "$signature" ]]; then
+    log_err "Failed to sign JWT with service account private key"
+    return "$EXIT_AUTH_FAILED"
+  fi
+  signature="$(echo -n "$signature" | tr '+/' '-_' | tr -d '=')"
+
+  local jwt="${header_b64}.${payload_b64}.${signature}"
+
+  # Exchange JWT for access token
+  local token_response
+  token_response="$(_curl -s -X POST "$token_uri" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}" 2>/dev/null)"
+
+  local access_token
+  access_token="$(_jq -r '.access_token // empty' <<< "$token_response" 2>/dev/null)"
+  if [[ -z "$access_token" ]]; then
+    local error_msg
+    error_msg="$(_jq -r '.error_description // .error // "unknown error"' <<< "$token_response" 2>/dev/null)"
+    log_err "Failed to obtain Google access token: $error_msg"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  # Cache the token
+  _GOOGLE_ACCESS_TOKEN="$access_token"
+  _GOOGLE_TOKEN_EXPIRY="$exp"
+
+  echo "$access_token"
+  return "$EXIT_SUCCESS"
+}
+
+# Obtain Google access token via gcloud CLI
+obtain_google_token_from_gcloud() {
+  if ! command -v gcloud >/dev/null 2>&1; then
+    log_debug "gcloud CLI not available"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  local access_token
+  access_token="$(gcloud auth print-access-token 2>/dev/null)"
+  if [[ -z "$access_token" ]]; then
+    # Try application-default credentials
+    access_token="$(gcloud auth application-default print-access-token 2>/dev/null)"
+  fi
+
+  if [[ -z "$access_token" ]]; then
+    log_err "Failed to obtain access token from gcloud CLI"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  # Cache the token (gcloud tokens are typically valid for 1 hour)
+  _GOOGLE_ACCESS_TOKEN="$access_token"
+  _GOOGLE_TOKEN_EXPIRY="$(( $(date +%s) + 3500 ))"
+
+  echo "$access_token"
+  return "$EXIT_SUCCESS"
+}
+
+# Obtain Google access token using configured auth method
+# Priority: --google-auth-method flag > GOOGLE_CREDENTIALS file > GOOGLE_API_KEY > gcloud CLI
+obtain_google_access_token() {
+  local auth_method="${GOOGLE_AUTH_METHOD:-auto}"
+  local credentials_file="${GOOGLE_CREDENTIALS:-}"
+
+  # Check if cached token is still valid (with 5-minute buffer)
+  local now
+  now="$(date +%s)"
+  if [[ -n "$_GOOGLE_ACCESS_TOKEN" ]] && (( _GOOGLE_TOKEN_EXPIRY > now + 300 )); then
+    log_debug "Using cached Google access token"
+    echo "$_GOOGLE_ACCESS_TOKEN"
+    return "$EXIT_SUCCESS"
+  fi
+
+  case "$auth_method" in
+    json|service-account)
+      if [[ -z "$credentials_file" ]]; then
+        log_err "GOOGLE_CREDENTIALS must be set when using --google-auth-method json"
+        return "$EXIT_AUTH_FAILED"
+      fi
+      obtain_google_token_from_json "$credentials_file"
+      return $?
+      ;;
+    gcloud)
+      obtain_google_token_from_gcloud
+      return $?
+      ;;
+    api-key)
+      # Use GOOGLE_API_KEY directly (legacy mode)
+      if [[ -n "${GOOGLE_API_KEY:-}" ]]; then
+        echo "${GOOGLE_API_KEY}"
+        return "$EXIT_SUCCESS"
+      fi
+      log_err "GOOGLE_API_KEY must be set when using --google-auth-method api-key"
+      return "$EXIT_AUTH_FAILED"
+      ;;
+    auto)
+      # Auto-detect: try JSON credentials first, then gcloud, then API key
+      if [[ -n "$credentials_file" && -f "$credentials_file" ]]; then
+        log_debug "Auto-detected Google service account JSON credentials"
+        obtain_google_token_from_json "$credentials_file"
+        return $?
+      fi
+      if command -v gcloud >/dev/null 2>&1; then
+        log_debug "Auto-detected gcloud CLI for Google authentication"
+        local token
+        token="$(obtain_google_token_from_gcloud 2>/dev/null)" && {
+          echo "$token"
+          return "$EXIT_SUCCESS"
+        }
+      fi
+      if [[ -n "${GOOGLE_API_KEY:-}" ]]; then
+        log_debug "Using GOOGLE_API_KEY for Google authentication (legacy)"
+        echo "${GOOGLE_API_KEY}"
+        return "$EXIT_SUCCESS"
+      fi
+      log_debug "No Google authentication method available"
+      return "$EXIT_AUTH_FAILED"
+      ;;
+    *)
+      log_err "Invalid --google-auth-method: $auth_method (valid: auto, json, service-account, gcloud, api-key)"
+      return "$EXIT_INVALID_PARAMS"
+      ;;
+  esac
+}
+
+# Determine the correct API endpoint and request format for a Google Imagen model
+# Imagen 4 uses :predict with publishers/google path
+# Imagen 3 and earlier use the older :predict endpoint
+google_imagen_api_url() {
+  local project="$1"
+  local location="$2"
+  local model="$3"
+
+  # All Imagen models use the publishers/google/models path with :predict
+  echo "https://${location}-aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${model}:predict"
+}
+
+# Build request payload for Google Imagen model
+google_imagen_build_payload() {
+  local prompt="$1"
+  local negative_prompt="$2"
+  local width="$3"
+  local height="$4"
+  local model="$5"
+  local sample_count="${6:-1}"
+
+  # Determine aspect ratio from dimensions
+  local aspect_ratio=""
+  if (( width == height )); then
+    aspect_ratio="1:1"
+  elif (( width * 3 == height * 4 )); then
+    aspect_ratio="4:3"
+  elif (( width * 4 == height * 3 )); then
+    aspect_ratio="3:4"
+  elif (( width * 9 == height * 16 )); then
+    aspect_ratio="16:9"
+  elif (( width * 16 == height * 9 )); then
+    aspect_ratio="9:16"
+  fi
+
+  # Build parameters object
+  local params_args=(
+    --arg prompt "$prompt"
+    --argjson sampleCount "$sample_count"
+  )
+
+  # Add aspect ratio if determined
+  if [[ -n "$aspect_ratio" ]]; then
+    params_args+=(--arg aspectRatio "$aspect_ratio")
+  fi
+
+  # Add negative prompt if provided (supported on some models)
+  local negative_prompt_field=""
+  if [[ -n "$negative_prompt" ]]; then
+    negative_prompt_field=', "negativePrompt": $negativePrompt'
+    params_args+=(--arg negativePrompt "$negative_prompt")
+  fi
+
+  local jq_filter
+  if [[ -n "$aspect_ratio" ]]; then
+    jq_filter='{instances: [{prompt: $prompt}], parameters: {sampleCount: $sampleCount, aspectRatio: $aspectRatio'"$negative_prompt_field"'}}'
+  else
+    jq_filter='{instances: [{prompt: $prompt}], parameters: {sampleCount: $sampleCount'"$negative_prompt_field"'}}'
+  fi
+
+  _jq -n "${params_args[@]}" "$jq_filter" 2>/dev/null
+}
+
+# Google Imagen provider
+# Supports authentication via:
+#   1. Service account JSON key file (GOOGLE_CREDENTIALS env var or --google-credentials)
+#   2. gcloud CLI (gcloud auth print-access-token)
+#   3. GOOGLE_API_KEY env var (legacy)
+# Supports Imagen models:
+#   - imagen-4.0-generate-001 (Imagen 4 standard)
+#   - imagen-4.0-ultra-generate-001 (Imagen 4 ultra)
+#   - imagen-4.0-fast-generate-001 (Imagen 4 fast)
+#   - imagen-3.0-generate-001 (Imagen 3)
+
+generate_image_google() {
+  local prompt="$1"
+  local negative_prompt="$2"
+  local width="$3"
+  local height="$4"
+  local quality="$5"
+  local output_path="$6"
+  local model="${7:-imagen-4.0-generate-001}"
+
+  local project="${GOOGLE_PROJECT_ID:-}"
+  local location="${GOOGLE_LOCATION:-us-central1}"
+
+  # Obtain access token via configured auth method
+  local access_token
+  access_token="$(obtain_google_access_token 2>/dev/null)"
+  if [[ -z "$access_token" ]]; then
+    log_debug "Google authentication failed (no credentials, gcloud, or API key available)"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  # Project ID is required for Vertex AI endpoints
+  if [[ -z "$project" ]]; then
+    # Try to extract from credentials file
+    if [[ -n "${GOOGLE_CREDENTIALS:-}" && -f "${GOOGLE_CREDENTIALS}" ]]; then
+      project="$(_jq -r '.project_id // empty' "${GOOGLE_CREDENTIALS}" 2>/dev/null)"
+    fi
+    # Try gcloud config
+    if [[ -z "$project" ]] && command -v gcloud >/dev/null 2>&1; then
+      project="$(gcloud config get-value project 2>/dev/null || true)"
+    fi
+    if [[ -z "$project" ]]; then
+      log_err "GOOGLE_PROJECT_ID is required (set via env var, credentials file, or gcloud config)"
+      return "$EXIT_AUTH_FAILED"
+    fi
+  fi
+
+  # Validate model
+  case "$model" in
+    imagen-4.0-generate-001|imagen-4.0-ultra-generate-001|imagen-4.0-fast-generate-001|\
+    imagen-3.0-generate-001|imagen-3.0-capability-001)
+      ;;
+    *)
+      log_err "Unsupported Google Imagen model: $model. Supported: imagen-4.0-generate-001, imagen-4.0-ultra-generate-001, imagen-4.0-fast-generate-001, imagen-3.0-generate-001"
+      return "$EXIT_INVALID_PARAMS"
+      ;;
+  esac
+
+  # Build API URL
+  local api_url
+  api_url="$(google_imagen_api_url "$project" "$location" "$model")"
+
+  # Build payload
+  local payload
+  payload="$(google_imagen_build_payload "$prompt" "$negative_prompt" "$width" "$height" "$model")"
+
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    log_info "[DRY-RUN] Would call: curl -s -X POST $api_url -H Authorization: Bearer $(sanitize_token "$access_token") -H Content-Type: application/json -d '$payload'"
+    return "$EXIT_SUCCESS"
+  fi
+
+  local response
+  response="$(retry_curl --max-time 120 -s -X POST "$api_url" \
+    -H "Authorization: Bearer $access_token" \
+    -H "Content-Type: application/json" \
+    -d "$payload" 2>/dev/null)"
+
+  local exit_code=$?
+  if (( exit_code != 0 )); then
+    _GEN_API_URL="$api_url"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    local api_error
+    api_error="$(extract_api_error "$response" 2>/dev/null)"
+    log_err "Google Imagen API call failed: ${api_error:-unknown error}"
+    log_debug "Full response: ${response:0:500}"
+    return "$exit_code"
+  fi
+
+  # Extract base64 image data from response
+  # Vertex AI Imagen returns predictions[].bytesBase64Encoded
+  local img_base64
+  img_base64="$(_jq -r '.predictions[0].bytesBase64Encoded // empty' <<< "$response" 2>/dev/null)"
+  if [[ -z "$img_base64" ]]; then
+    _GEN_API_URL="$api_url"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    local error_msg
+    error_msg="$(_jq -r '.error.message // empty' <<< "$response" 2>/dev/null)"
+    if [[ -n "$error_msg" ]]; then
+      log_err "Google Imagen API error: $error_msg"
+    else
+      log_err "No image data in Google Imagen response"
+    fi
+    return "$EXIT_SERVER_ERROR"
+  fi
+
+  if ! base64 -d <<< "$img_base64" > "$output_path" 2>/dev/null; then
+    _GEN_API_URL="$api_url"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "Failed to decode base64 image data"
+    return "$EXIT_GENERAL_ERROR"
+  fi
+
+  # Capture metadata for generation info sidecar
+  _GEN_API_URL="$api_url"
+  _GEN_API_REQUEST="$payload"
+  _GEN_API_RESPONSE="$response"
+
+  log_info "Image generated with Google Imagen ($model)"
+  return "$EXIT_SUCCESS"
+}
+
+# Hugging Face provider
+generate_image_huggingface() {
+  local prompt="$1"
+  local negative_prompt="$2"  # Not supported
+  local width="$3"
+  local height="$4"
+  local quality="$5"  # Not used
+  local output_path="$6"
+  local model="${7:-}"
+
+  local api_key="${HF_API_KEY:-}"
+  # Use passed model, then HF_MODEL env var, then default
+  if [[ -z "$model" ]]; then
+    model="${HF_MODEL:-stabilityai/stable-diffusion-2-1}"
+  fi
+  if [[ -z "$api_key" ]]; then
+    log_debug "HF API key not set"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  local payload
+  payload="$(_jq -n --arg inputs "$prompt" '{inputs: $inputs, options: {wait_for_model: true}}' 2>/dev/null)"
+
+  local response
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    log_info "[DRY-RUN] Would call: curl -s -X POST https://api-inference.huggingface.co/models/$model -H Authorization: Bearer $(sanitize_token "$api_key") -H Content-Type: application/json -d '$payload'"
+    return "$EXIT_SUCCESS"
+  fi
+  response="$(retry_curl --max-time 60 -s -X POST "https://api-inference.huggingface.co/models/$model" \
+    -H "Authorization: Bearer $api_key" \
+    -H "Content-Type: application/json" \
+    -d "$payload" 2>/dev/null)"
+
+  local exit_code=$?
+  if (( exit_code != 0 )); then
+    _GEN_API_URL="https://api-inference.huggingface.co/models/$model"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    local api_error
+    api_error="$(extract_api_error "$response" 2>/dev/null)"
+    log_err "HF API call failed: ${api_error:-unknown error}"
+    log_debug "Full response: ${response:0:500}"
+    return "$exit_code"
+  fi
+
+  # Assume response is base64 or handle accordingly
+  if [[ "$response" =~ ^[A-Za-z0-9+/]*={0,2}$ ]]; then
+    # Base64
+    base64 -d <<< "$response" > "$output_path" 2>/dev/null
+  else
+    # Assume URL
+    local url="$response"
+    _curl -s -o "$output_path" "$url"
+  fi
+
+  if [[ ! -f "$output_path" ]]; then
+    _GEN_API_URL="https://api-inference.huggingface.co/models/$model"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "Failed to get image from HF"
+    return "$EXIT_SERVER_ERROR"
+  fi
+
+  # Capture metadata for generation info sidecar
+  _GEN_API_URL="https://api-inference.huggingface.co/models/$model"
+  _GEN_API_REQUEST="$payload"
+  _GEN_API_RESPONSE="$response"
+
+  log_info "Image generated with Hugging Face ($model)"
+  return "$EXIT_SUCCESS"
+}
+
+# Black Forest Labs FLUX provider
+generate_image_bfl() {
+  local prompt="$1"
+  local negative_prompt="$2"  # Not supported
+  local width="$3"
+  local height="$4"
+  local quality="$5"  # Not used
+  local output_path="$6"
+  local model="${7:-flux-1.1-pro}"
+
+  local api_key="${BFL_API_KEY:-}"
+  if [[ -z "$api_key" ]]; then
+    log_debug "BFL API key not set"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  local payload
+  payload="$(_jq -n --arg prompt "$prompt" --arg w "$width" --arg h "$height" --arg model "$model" '{prompt: $prompt, width: ($w|tonumber), height: ($h|tonumber), model: $model}' 2>/dev/null)"
+
+  local response
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    log_info "[DRY-RUN] Would call: curl -s -X POST https://api.blackforestlabs.ai/v1/images/generate -H Authorization: Bearer $(sanitize_token "$api_key") -H Content-Type: application/json -d '$payload' (model: $model)"
+    return "$EXIT_SUCCESS"
+  fi
+  response="$(retry_curl --max-time 60 -s -X POST "https://api.blackforestlabs.ai/v1/images/generate" \
+    -H "Authorization: Bearer $api_key" \
+    -H "Content-Type: application/json" \
+    -d "$payload" 2>/dev/null)"
+
+  local exit_code=$?
+  if (( exit_code != 0 )); then
+    _GEN_API_URL="https://api.blackforestlabs.ai/v1/images/generate"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    local api_error
+    api_error="$(extract_api_error "$response" 2>/dev/null)"
+    log_err "BFL API call failed: ${api_error:-unknown error}"
+    log_debug "Full response: ${response:0:500}"
+    return "$exit_code"
+  fi
+
+  local inference_id
+  inference_id="$(_jq -r '.inference_id // empty' <<< "$response" 2>/dev/null)"
+  if [[ -z "$inference_id" ]]; then
+    _GEN_API_URL="https://api.blackforestlabs.ai/v1/images/generate"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "No inference_id in BFL response"
+    return "$EXIT_SERVER_ERROR"
+  fi
+
+  # Poll for result
+  local max_polls=30
+  local poll_count=0
+  while (( poll_count < max_polls )); do
+    sleep 2
+    response="$(retry_curl --max-time 60 -s "https://api.blackforestlabs.ai/v1/images/get/$inference_id" \
+      -H "Authorization: Bearer $api_key" 2>/dev/null)"
+    local status
+    status="$(_jq -r '.status // empty' <<< "$response" 2>/dev/null)"
+    if [[ "$status" == "COMPLETED" ]]; then
+      local url
+      url="$(_jq -r '.result.samples[0].url // empty' <<< "$response" 2>/dev/null)"
+      if [[ -n "$url" ]]; then
+        _curl -s -o "$output_path" "$url"
+        # Capture metadata for generation info sidecar
+        _GEN_API_URL="https://api.blackforestlabs.ai/v1/images/generate"
+        _GEN_API_REQUEST="$payload"
+        _GEN_API_RESPONSE="$response"
+        log_info "Image generated with BFL ($model)"
+        return "$EXIT_SUCCESS"
+      fi
+    elif [[ "$status" == "FAILED" ]]; then
+      _GEN_API_URL="https://api.blackforestlabs.ai/v1/images/generate"
+      _GEN_API_REQUEST="$payload"
+      _GEN_API_RESPONSE="$response"
+      _GEN_API_METHOD="POST"
+      log_err "BFL generation failed"
+      return "$EXIT_SERVER_ERROR"
+    fi
+    (( poll_count++ ))
+  done
+
+  _GEN_API_URL="https://api.blackforestlabs.ai/v1/images/generate"
+  _GEN_API_REQUEST="$payload"
+  _GEN_API_RESPONSE="$response"
+  _GEN_API_METHOD="POST"
+  log_err "BFL polling timeout"
+  return "$EXIT_SERVER_ERROR"
+}
+
+# Replicate provider
+generate_image_replicate() {
+  local prompt="$1"
+  local negative_prompt="$2"  # Not supported
+  local width="$3"
+  local height="$4"
+  local quality="$5"  # Not used
+  local output_path="$6"
+  local model="${7:-}"
+
+  local api_key="${REPLICATE_API_TOKEN:-}"
+  # Use passed model, then REPLICATE_MODEL env var, then default
+  if [[ -z "$model" ]]; then
+    model="${REPLICATE_MODEL:-stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b}"
+  fi
+  if [[ -z "$api_key" ]]; then
+    log_debug "Replicate API key not set"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  local api_url payload
+  if [[ "$model" == *:* ]]; then
+    # Versioned community model: POST /v1/predictions with version hash
+    local version_hash="${model##*:}"
+    api_url="https://api.replicate.com/v1/predictions"
+    payload="$(_jq -n --arg prompt "$prompt" --arg version "$version_hash" '{version: $version, input: {prompt: $prompt}}' 2>/dev/null)"
+  else
+    # Official model: POST /v1/models/{owner}/{name}/predictions without version
+    api_url="https://api.replicate.com/v1/models/${model}/predictions"
+    payload="$(_jq -n --arg prompt "$prompt" '{input: {prompt: $prompt}}' 2>/dev/null)"
+  fi
+
+  local response
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    log_info "[DRY-RUN] Would call: curl -s -X POST $api_url -H Authorization: Bearer $(sanitize_token "$api_key") -H Content-Type: application/json -d '$payload'"
+    return "$EXIT_SUCCESS"
+  fi
+  response="$(retry_curl --max-time 60 -s -X POST "$api_url" \
+    -H "Authorization: Bearer $api_key" \
+    -H "Content-Type: application/json" \
+    -d "$payload" 2>/dev/null)"
+
+  local exit_code=$?
+  if (( exit_code != 0 )); then
+    _GEN_API_URL="$api_url"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    local api_error
+    api_error="$(extract_api_error "$response" 2>/dev/null)"
+    log_err "Replicate API call failed: ${api_error:-unknown error}"
+    log_debug "Full response: ${response:0:500}"
+    return "$exit_code"
+  fi
+
+  local prediction_id
+  prediction_id="$(_jq -r '.id // empty' <<< "$response" 2>/dev/null)"
+  if [[ -z "$prediction_id" ]]; then
+    _GEN_API_URL="$api_url"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "No prediction_id in Replicate response"
+    return "$EXIT_SERVER_ERROR"
+  fi
+
+  # Poll for result
+  local max_polls=30
+  local poll_count=0
+  while (( poll_count < max_polls )); do
+    sleep 2
+    response="$(retry_curl --max-time 60 -s "https://api.replicate.com/v1/predictions/$prediction_id" \
+      -H "Authorization: Bearer $api_key" 2>/dev/null)"
+    local status
+    status="$(_jq -r '.status // empty' <<< "$response" 2>/dev/null)"
+    if [[ "$status" == "succeeded" ]]; then
+      local url
+      # Official models return output as string; community models as array
+      url="$(_jq -r 'if (.output | type) == "array" then .output[0] // empty elif (.output | type) == "string" then .output // empty else empty end' <<< "$response" 2>/dev/null)"
+      if [[ -n "$url" ]]; then
+        _curl -s -o "$output_path" "$url"
+        # Capture metadata for generation info sidecar
+        _GEN_API_URL="$api_url"
+        _GEN_API_REQUEST="$payload"
+        _GEN_API_RESPONSE="$response"
+        log_info "Image generated with Replicate ($model)"
+        return "$EXIT_SUCCESS"
+      fi
+    elif [[ "$status" == "failed" ]]; then
+      _GEN_API_URL="$api_url"
+      _GEN_API_REQUEST="$payload"
+      _GEN_API_RESPONSE="$response"
+      _GEN_API_METHOD="POST"
+      log_err "Replicate generation failed"
+      return "$EXIT_SERVER_ERROR"
+    fi
+    (( poll_count++ ))
+  done
+
+  _GEN_API_URL="$api_url"
+  _GEN_API_REQUEST="$payload"
+  _GEN_API_RESPONSE="$response"
+  _GEN_API_METHOD="POST"
+  log_err "Replicate polling timeout"
+  return "$EXIT_SERVER_ERROR"
+}
+
+# SiliconFlow provider
+generate_image_siliconflow() {
+  local prompt="$1"
+  local negative_prompt="$2"  # Not supported
+  local width="$3"
+  local height="$4"
+  local quality="$5"  # Not used
+  local output_path="$6"
+  local model="${7:-stabilityai/stable-diffusion-3-medium}"
+
+  local api_key="${SILICONFLOW_API_KEY:-}"
+  if [[ -z "$api_key" ]]; then
+    log_debug "SiliconFlow API key not set"
+    return "$EXIT_AUTH_FAILED"
+  fi
+
+  local size="${width}x${height}"
+  local payload
+  payload="$(_jq -n --arg prompt "$prompt" --arg size "$size" --arg model "$model" '{prompt: $prompt, model: $model, size: $size}' 2>/dev/null)"
+
+  local response
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    log_info "[DRY-RUN] Would call: curl -s -X POST https://api.siliconflow.cn/v1/images/generations -H Authorization: Bearer $(sanitize_token "$api_key") -H Content-Type: application/json -d '$payload' (model: $model)"
+    return "$EXIT_SUCCESS"
+  fi
+  response="$(retry_curl --max-time 60 -s -X POST "https://api.siliconflow.cn/v1/images/generations" \
+    -H "Authorization: Bearer $api_key" \
+    -H "Content-Type: application/json" \
+    -d "$payload" 2>/dev/null)"
+
+  local exit_code=$?
+  if (( exit_code != 0 )); then
+    _GEN_API_URL="https://api.siliconflow.cn/v1/images/generations"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    local api_error
+    api_error="$(extract_api_error "$response" 2>/dev/null)"
+    log_err "SiliconFlow API call failed: ${api_error:-unknown error}"
+    log_debug "Full response: ${response:0:500}"
+    return "$exit_code"
+  fi
+
+  local url
+  url="$(_jq -r '.data[0].url // empty' <<< "$response" 2>/dev/null)"
+  if [[ -z "$url" ]]; then
+    _GEN_API_URL="https://api.siliconflow.cn/v1/images/generations"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "No URL in SiliconFlow response"
+    return "$EXIT_SERVER_ERROR"
+  fi
+
+  if ! _curl -s -o "$output_path" "$url"; then
+    _GEN_API_URL="https://api.siliconflow.cn/v1/images/generations"
+    _GEN_API_REQUEST="$payload"
+    _GEN_API_RESPONSE="$response"
+    _GEN_API_METHOD="POST"
+    log_err "Failed to download image from $url"
+    return "$EXIT_NETWORK_ERROR"
+  fi
+
+  # Capture metadata for generation info sidecar
+  _GEN_API_URL="https://api.siliconflow.cn/v1/images/generations"
+  _GEN_API_REQUEST="$payload"
+  _GEN_API_RESPONSE="$response"
+
+  log_info "Image generated with SiliconFlow ($model)"
+  return "$EXIT_SUCCESS"
+}
+
+
+
+# ============================================================================
+# CONFIGURATION FUNCTIONS
+# ============================================================================
+
+# Load .env file if exists
+load_dotenv() {
+  local env_file="${CONFIG_DIR}/.env"
+  if [[ -f "$env_file" ]]; then
+    log_debug "Loading .env from $env_file"
+    # Source only if file exists and is readable
+    if ! source "$env_file" 2>/dev/null; then
+      log_warn "Failed to load .env file: $env_file"
+    fi
+  fi
+}
+
+# Parse YAML config file using yq, fallback to simple key-value
+parse_yaml() {
+  local config_file="$1"
+  if [[ ! -f "$config_file" ]]; then
+    log_err "Config file not found: $config_file"
+    return "$EXIT_CONFIG_ERROR"
+  fi
+
+  # Try yq first (preferred, supports nested YAML)
+  if command -v yq >/dev/null 2>&1; then
+    # Convert YAML to JSON and use jq to generate shell assignments
+    local json_data
+    json_data="$(_yq eval -o=json '.' "$config_file" 2>/dev/null)"
+    if [[ -n "$json_data" ]] && command -v jq >/dev/null 2>&1; then
+      # Use jq to output key=value pairs with shell escaping
+      echo "$json_data" | _jq -r 'to_entries[] | "\(.key)=\(.value | @sh)"' 2>/dev/null
+      return 0
+    fi
+  fi
+
+  # Fallback: simple key-value parsing (no nested structures)
+  log_warn "yq not available or failed, using simple key-value fallback"
+  awk -F': ' '/^[[:space:]]*[^#[:space:]]+:/ {gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); print $1 "=" $2}' "$config_file" | while IFS='=' read -r key value; do
+    printf '%s=%q\n' "$key" "$value"
+  done
+}
+
+# Merge config with precedence: CLI > YAML > env > defaults
+merge_config() {
+  # Load defaults
+  local prompt="${PROMPT:-}"
+  local output="${OUTPUT:-}"
+  local quality="${QUALITY:-high}"
+  local config_file="${CONFIG_FILE:-}"
+  local parallel="${PARALLEL:-false}"
+  local max_parallel="${MAX_PARALLEL:-$(nproc 2>/dev/null || echo 4)}"
+  local force="${FORCE:-false}"
+  local embed_metadata="${EMBED_METADATA:-false}"
+  local artist="${ARTIST:-}"
+  local copyright="${COPYRIGHT:-}"
+  local keywords="${KEYWORDS:-}"
+  local description="${DESCRIPTION:-}"
+  local width="${WIDTH:-1024}"
+  local height="${HEIGHT:-1024}"
+  local negative_prompt="${NEGATIVE_PROMPT:-}"
+  local output_format="${OUTPUT_FORMAT:-text}"
+  local provider="${PROVIDER:-}"
+  local model="${MODEL:-}"
+  local models="${MODELS:-}"
+  local save_generation_info="${SAVE_GENERATION_INFO:-true}"
+
+  # Parse YAML if provided
+  if [[ -n "$config_file" ]]; then
+    local yaml_data
+    yaml_data="$(parse_yaml "$config_file")"
+    if [[ $? -eq 0 ]]; then
+      # Extract values from yaml_data (now safe shell assignments)
+      eval "$yaml_data" 2>/dev/null || log_warn "Failed to parse YAML config"
+    fi
+  fi
+
+  # CLI overrides (already parsed in parse_args)
+
+  # Output merged config with shell-escaped values
+  cat <<EOF
+prompt=$(shell_escape "$prompt")
+output=$(shell_escape "$output")
+quality=$(shell_escape "$quality")
+parallel=$(shell_escape "$parallel")
+max_parallel=$(shell_escape "$max_parallel")
+force=$(shell_escape "$force")
+embed_metadata=$(shell_escape "$embed_metadata")
+artist=$(shell_escape "$artist")
+copyright=$(shell_escape "$copyright")
+keywords=$(shell_escape "$keywords")
+description=$(shell_escape "$description")
+width=$(shell_escape "$width")
+height=$(shell_escape "$height")
+negative_prompt=$(shell_escape "$negative_prompt")
+output_format=$(shell_escape "$output_format")
+provider=$(shell_escape "$provider")
+model=$(shell_escape "$model")
+models=$(shell_escape "$models")
+save_generation_info=$(shell_escape "$save_generation_info")
+EOF
+}
+
+# Validate configuration
+validate_config() {
+  local prompt="$1"
+  local output="$2"
+  local quality="$3"
+  local width="$4"
+  local height="$5"
+
+  # Prompt required and non-empty
+  if [[ -z "$prompt" ]]; then
+    log_err "Prompt is required"
+    return "$EXIT_INVALID_PARAMS"
+  fi
+
+  # Output path required and writable
+  if [[ -z "$output" ]]; then
+    log_err "Output path is required"
+    return "$EXIT_INVALID_PARAMS"
+  fi
+  local output_dir
+  output_dir="$(dirname "$output")"
+  if [[ ! -d "$output_dir" ]]; then
+    log_err "Output directory does not exist: $output_dir"
+    return "$EXIT_INVALID_PARAMS"
+  fi
+  if [[ ! -w "$output_dir" ]]; then
+    log_err "Output directory not writable: $output_dir"
+    return "$EXIT_INVALID_PARAMS"
+  fi
+
+  # Quality valid
+  case "$quality" in
+    high|medium|low) ;;
+    *) log_err "Invalid quality: $quality"; return "$EXIT_INVALID_PARAMS" ;;
+  esac
+
+  # Dimensions within reasonable range (256-2048 for most providers)
+  if ! [[ "$width" =~ ^[0-9]+$ ]] || (( width < 256 || width > 2048 )); then
+    log_err "Width must be between 256 and 2048: $width"
+    return "$EXIT_INVALID_PARAMS"
+  fi
+  if ! [[ "$height" =~ ^[0-9]+$ ]] || (( height < 256 || height > 2048 )); then
+    log_err "Height must be between 256 and 2048: $height"
+    return "$EXIT_INVALID_PARAMS"
+  fi
+
+  # Output format validation
+  local ext="${output##*.}"
+  ext="${ext,,}"
+  local ext_normalized="$ext"
+  [[ "$ext_normalized" == "jpeg" ]] && ext_normalized="jpg"
+
+  case "$ext_normalized" in
+    png|jpg|webp|avif)
+      # Supported format — validate conversion feasibility if provider+model are known
+      if [[ -n "${PROVIDER:-}" ]]; then
+        local val_model="${MODEL:-}"
+        if [[ -z "$val_model" ]]; then
+          val_model="$(get_provider_model "$PROVIDER")"
+        fi
+        local native_fmt
+        native_fmt="$(get_native_format "$PROVIDER" "$val_model")"
+        if [[ "$native_fmt" != "$ext_normalized" ]]; then
+          # Conversion will be needed — check if tools are available
+          local converter
+          converter="$(get_conversion_command "$native_fmt" "$ext_normalized")"
+          if [[ -z "$converter" ]]; then
+            # Build actionable error message
+            local install_hint=""
+            case "$ext_normalized" in
+              webp) install_hint="Install cwebp: sudo apt install webp\n       Or install ImageMagick: sudo apt install imagemagick" ;;
+              avif) install_hint="Install avifenc: sudo apt install libavif-apps\n       Or install ImageMagick: sudo apt install imagemagick" ;;
+              png|jpg) install_hint="Install ImageMagick: sudo apt install imagemagick" ;;
+            esac
+            # Suggest alternative models that natively produce the requested format
+            local alt_models=""
+            case "$ext_normalized" in
+              png) alt_models="dall-e-3, imagen-4.0-generate-001, stable-diffusion-xl-1024-v1-0" ;;
+              jpg) alt_models="flux-1.1-pro (bfl), flux-1.0-pro (bfl)" ;;
+              webp) alt_models="black-forest-labs/flux-1.1-pro (huggingface or replicate)" ;;
+            esac
+            printf >&2 "Error: Model '%s' natively produces %s images, but you requested %s output.\n" "$val_model" "${native_fmt^^}" "${ext_normalized^^}"
+            printf >&2 "       Conversion requires a tool but none is installed.\n"
+            printf >&2 "\n"
+            printf >&2 "       Options:\n"
+            printf >&2 "         1. %b\n" "$install_hint"
+            printf >&2 "         2. Use the model's native format: --output image.%s\n" "$native_fmt"
+            if [[ -n "$alt_models" ]]; then
+              printf >&2 "         3. Choose a model that natively produces %s (e.g., %s)\n" "${ext_normalized^^}" "$alt_models"
+            fi
+            return "$EXIT_INVALID_PARAMS"
+          else
+            log_debug "validate_config: will convert $native_fmt -> $ext_normalized via $converter after download"
+          fi
+        fi
+      fi
+      ;;
+    tiff|tif)
+      log_warn "Output format .$ext may not be supported by all providers; PNG/JPG recommended for best compatibility"
+      ;;
+  esac
+
+  return 0
+}
+
+# ============================================================================
+# CACHE AND METADATA FUNCTIONS
+# ============================================================================
+
+# Generate cache key: SHA-256 hash of relevant configuration
+compute_cache_key() {
+  local prompt="$1"
+  local negative_prompt="$2"
+  local width="$3"
+  local height="$4"
+  local quality="$5"
+  local provider="$6"
+  local model="${7:-}"
+
+  # Concatenate inputs and hash
+  local input="${prompt}|${negative_prompt}|${width}|${height}|${quality}|${provider}|${model}"
+  if command -v sha256sum >/dev/null 2>&1; then
+    echo -n "$input" | sha256sum | cut -d' ' -f1
+  elif command -v shasum >/dev/null 2>&1; then
+    echo -n "$input" | shasum -a 256 | cut -d' ' -f1
+  else
+    log_warn "No SHA-256 tool available, using fallback hash"
+    # Fallback: simple hash (not secure, but deterministic)
+    echo -n "$input" | cksum | cut -d' ' -f1
+  fi
+}
+
+# Check cache for existing image
+cache_lookup() {
+  local cache_key="$1"
+  local output_path="$2"
+
+  local cache_file="${CACHE_DIR}/${cache_key}"
+  local metadata_file="${cache_file}.metadata"
+
+  if [[ -f "$cache_file" && -f "$metadata_file" ]]; then
+    # Check if metadata hash matches
+    local stored_hash
+    stored_hash="$(jq -r '.cache_key // empty' "$metadata_file" 2>/dev/null)"
+    if [[ "$stored_hash" == "$cache_key" ]]; then
+      log_debug "Cache hit: copying from $cache_file to $output_path"
+      if cp "$cache_file" "$output_path"; then
+        # Also restore YAML sidecar if cached
+        local cache_yaml="${cache_file}.yaml"
+        if [[ -f "$cache_yaml" ]]; then
+          local output_yaml="${output_path%.*}.yaml"
+          cp "$cache_yaml" "$output_yaml" 2>/dev/null || true
+          log_debug "Restored cached YAML sidecar to $output_yaml"
+        fi
+        log_info "Image retrieved from cache"
+        return 0
+      fi
+    fi
+  fi
+
+  return 1  # Cache miss
+}
+
+# Store image in cache with metadata
+cache_store() {
+  local cache_key="$1"
+  local output_path="$2"
+  local prompt="$3"
+  local negative_prompt="$4"
+  local width="$5"
+  local height="$6"
+  local quality="$7"
+  local provider="$8"
+  local model="$9"
+  local timestamp
+  timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+  local cache_file="${CACHE_DIR}/${cache_key}"
+  local metadata_file="${cache_file}.metadata"
+
+  # Copy image to cache
+  if cp "$output_path" "$cache_file"; then
+    # Create metadata JSON
+    local metadata
+    metadata="$(_jq -n \
+      --arg cache_key "$cache_key" \
+      --arg timestamp "$timestamp" \
+      --arg provider "$provider" \
+      --arg model "$model" \
+      --arg prompt "$prompt" \
+      --arg negative_prompt "$negative_prompt" \
+      --arg width "$width" \
+      --arg height "$height" \
+      --arg quality "$quality" \
+      '{cache_key: $cache_key, timestamp: $timestamp, provider: $provider, model: $model, prompt: $prompt, negative_prompt: $negative_prompt, width: ($width|tonumber), height: ($height|tonumber), quality: $quality}' 2>/dev/null)"
+
+    if echo "$metadata" > "$metadata_file"; then
+      # Also cache YAML sidecar if it exists
+      local output_yaml="${output_path%.*}.yaml"
+      if [[ -f "$output_yaml" ]]; then
+        cp "$output_yaml" "${cache_file}.yaml" 2>/dev/null || true
+      fi
+      log_debug "Image cached with key $cache_key"
+      return 0
+    fi
+  fi
+
+  log_warn "Failed to cache image"
+  return 1
+}
+
+# Embed metadata in image or create sidecar
+embed_metadata() {
+  local output_path="$1"
+  local artist="$2"
+  local copyright="$3"
+  local keywords="$4"
+  local description="$5"
+  local prompt="$6"
+  local provider="$7"
+
+  local sidecar_file="${output_path}.metadata"
+
+  if command -v exiftool >/dev/null 2>&1; then
+    # Try to embed in image
+    local exif_args=()
+    [[ -n "$artist" ]] && exif_args+=(-Artist="$artist")
+    [[ -n "$copyright" ]] && exif_args+=(-Copyright="$copyright")
+    [[ -n "$keywords" ]] && exif_args+=(-Keywords="$keywords")
+    [[ -n "$description" ]] && exif_args+=(-Description="$description")
+    [[ -n "$prompt" ]] && exif_args+=(-Comment="Prompt: $prompt")
+    [[ -n "$provider" ]] && exif_args+=(-Software="$provider")
+
+    if _exiftool "${exif_args[@]}" "$output_path" >/dev/null 2>&1; then
+      log_debug "Metadata embedded in image using exiftool"
+      return 0
+    else
+      log_debug "Failed to embed metadata in image, using sidecar"
+    fi
+  fi
+
+  # Fallback: create sidecar JSON
+  local metadata
+  metadata="$(_jq -n \
+    --arg artist "$artist" \
+    --arg copyright "$copyright" \
+    --arg keywords "$keywords" \
+    --arg description "$description" \
+    --arg prompt "$prompt" \
+    --arg provider "$provider" \
+    '{artist: $artist, copyright: $copyright, keywords: $keywords, description: $description, prompt: $prompt, provider: $provider}' 2>/dev/null)"
+
+  if echo "$metadata" > "$sidecar_file"; then
+    log_debug "Metadata saved to sidecar file $sidecar_file"
+    return 0
+  fi
+
+  log_warn "Failed to save metadata"
+  return 1
+}
+
+# ============================================================================
+# BATCH PROCESSING FUNCTIONS
+# ============================================================================
+
+# Process batch jobs sequentially
+process_batch_sequential() {
+  local jobs="$1"  # JSON array of jobs
+
+  local total_jobs
+  total_jobs="$(echo "$jobs" | _jq length)"
+  local success_count=0
+  local failure_count=0
+  local results=()
+
+  log_info "Starting sequential batch processing of $total_jobs jobs"
+
+  for (( i=0; i<total_jobs; i++ )); do
+    local job
+    job="$(echo "$jobs" | _jq ".[$i]")"
+
+    local prompt output quality width height negative_prompt artist copyright keywords description embed_metadata provider model
+    prompt="$(echo "$job" | _jq -r '.prompt // empty')"
+    output="$(echo "$job" | _jq -r '.output // empty')"
+    quality="$(echo "$job" | _jq -r '.quality // "high"')"
+    width="$(echo "$job" | _jq -r '.width // 1024')"
+    height="$(echo "$job" | _jq -r '.height // 1024')"
+    negative_prompt="$(echo "$job" | _jq -r '.negative_prompt // empty')"
+    embed_metadata="$(echo "$job" | _jq -r '.embed_metadata // "false"')"
+    artist="$(echo "$job" | _jq -r '.artist // empty')"
+    copyright="$(echo "$job" | _jq -r '.copyright // empty')"
+    keywords="$(echo "$job" | _jq -r '.keywords // empty')"
+    description="$(echo "$job" | _jq -r '.description // empty')"
+    provider="$(echo "$job" | _jq -r '.provider // empty')"
+    model="$(echo "$job" | _jq -r '.model // empty')"
+
+    log_info "Processing job $((i+1))/$total_jobs: $output"
+
+    # Override globals for this job
+    local old_embed="${EMBED_METADATA:-}" old_artist="${ARTIST:-}" old_copyright="${COPYRIGHT:-}" old_keywords="${KEYWORDS:-}" old_desc="${DESCRIPTION:-}"
+    EMBED_METADATA="$embed_metadata"
+    ARTIST="$artist"
+    COPYRIGHT="$copyright"
+    KEYWORDS="$keywords"
+    DESCRIPTION="$description"
+
+    # Set job log file
+    local job_log_file="${JOB_LOG_DIR}/$(basename "${output%.*}").log"
+    JOB_LOG_FILE="$job_log_file"
+
+      if timeout_wrapper 60 generate_image "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$output" "$provider" "$model"; then
+      results+=("SUCCESS: $output")
+      (( success_count++ ))
+    else
+      local exit_code=$?
+      if (( exit_code == 124 )); then
+        log_err "Job timed out: $output"
+        results+=("TIMEOUT: $output")
+      else
+        results+=("FAILED ($exit_code): $output")
+      fi
+      (( failure_count++ ))
+    fi
+
+    # Restore
+    EMBED_METADATA="$old_embed"
+    ARTIST="$old_artist"
+    COPYRIGHT="$old_copyright"
+    KEYWORDS="$old_keywords"
+    DESCRIPTION="$old_desc"
+    unset JOB_LOG_FILE
+  done
+
+  # Summary
+  log_info "Batch completed: $success_count succeeded, $failure_count failed"
+  if [[ "$OUTPUT_FORMAT" == "json" ]]; then
+    local json_results
+    json_results="$(printf '%s\n' "${results[@]}" | _jq -R -s 'split("\n")[:-1] | map(split(": ")) | map({status: .[0], output: .[1]})' 2>/dev/null)"
+    echo "{\"batch_summary\": {\"total\": $total_jobs, \"success\": $success_count, \"failure\": $failure_count}, \"results\": $json_results}"
+  else
+    printf '%s\n' "${results[@]}"
+  fi
+
+  if (( failure_count > 0 )); then
+    return "$EXIT_BATCH_PARTIAL_FAILURE"
+  fi
+  return "$EXIT_SUCCESS"
+}
+
+# Process batch jobs in parallel
+process_batch_parallel() {
+  local jobs="$1"  # JSON array of jobs
+  local max_parallel="${MAX_PARALLEL:-$(nproc 2>/dev/null || echo 4)}"
+
+  local total_jobs
+  total_jobs="$(echo "$jobs" | _jq length)"
+  log_info "Starting parallel batch processing of $total_jobs jobs (max $max_parallel concurrent)"
+
+  # Create temp files for results
+  local results_file
+  results_file="$(mktemp)"
+
+  # Run jobs in parallel
+  local pids=()
+  local job_count=0
+  for (( i=0; i<total_jobs; i++ )); do
+    local job
+    job="$(echo "$jobs" | _jq ".[$i]")"
+
+    # Extract job params
+    local prompt output quality width height negative_prompt embed_metadata artist copyright keywords description provider model
+    prompt="$(echo "$job" | _jq -r '.prompt // empty')"
+    output="$(echo "$job" | _jq -r '.output // empty')"
+    quality="$(echo "$job" | _jq -r '.quality // "high"')"
+    width="$(echo "$job" | _jq -r '.width // 1024')"
+    height="$(echo "$job" | _jq -r '.height // 1024')"
+    negative_prompt="$(echo "$job" | _jq -r '.negative_prompt // empty')"
+    embed_metadata="$(echo "$job" | _jq -r '.embed_metadata // "false"')"
+    artist="$(echo "$job" | _jq -r '.artist // empty')"
+    copyright="$(echo "$job" | _jq -r '.copyright // empty')"
+    keywords="$(echo "$job" | _jq -r '.keywords // empty')"
+    description="$(echo "$job" | _jq -r '.description // empty')"
+    provider="$(echo "$job" | _jq -r '.provider // empty')"
+    model="$(echo "$job" | _jq -r '.model // empty')"
+
+    # Run in background
+    (
+      log_info "Starting parallel job $((i+1)): $output"
+      # Set job log file
+      local job_log_file="${JOB_LOG_DIR}/$(basename "${output%.*}").log"
+      JOB_LOG_FILE="$job_log_file"
+      # Set metadata variables for this job
+      EMBED_METADATA="$embed_metadata"
+      ARTIST="$artist"
+      COPYRIGHT="$copyright"
+      KEYWORDS="$keywords"
+      DESCRIPTION="$description"
+    if timeout_wrapper 60 generate_image "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$output" "$provider" "$model"; then
+        echo "SUCCESS: $output" >> "$results_file"
+      else
+        local exit_code=$?
+        if (( exit_code == 124 )); then
+          log_err "Job timed out: $output"
+          echo "TIMEOUT: $output" >> "$results_file"
+        else
+          echo "FAILED ($exit_code): $output" >> "$results_file"
+        fi
+      fi
+    ) &
+    pids+=($!)
+
+    (( job_count++ ))
+
+    # Limit concurrent jobs
+    if (( job_count >= max_parallel )); then
+      wait "${pids[0]}"
+      pids=("${pids[@]:1}")
+      (( job_count-- ))
+    fi
+  done
+
+  # Wait for remaining jobs
+  for pid in "${pids[@]}"; do
+    wait "$pid"
+  done
+
+  # Collect results
+  local results
+  mapfile -t results < "$results_file"
+  rm -f "$results_file"
+
+  local success_count=0 failure_count=0
+  for result in "${results[@]}"; do
+    if [[ "$result" =~ ^SUCCESS ]]; then
+      (( success_count++ ))
+    else
+      (( failure_count++ ))
+    fi
+  done
+
+  # Summary
+  log_info "Batch completed: $success_count succeeded, $failure_count failed"
+  if [[ "$OUTPUT_FORMAT" == "json" ]]; then
+    local json_results
+    json_results="$(printf '%s\n' "${results[@]}" | _jq -R -s 'split("\n")[:-1] | map(split(": ")) | map({status: .[0], output: .[1]})' 2>/dev/null)"
+    echo "{\"batch_summary\": {\"total\": $total_jobs, \"success\": $success_count, \"failure\": $failure_count}, \"results\": $json_results}"
+  else
+    printf '%s\n' "${results[@]}"
+  fi
+
+  if (( failure_count > 0 )); then
+    return "$EXIT_BATCH_PARTIAL_FAILURE"
+  fi
+  return "$EXIT_SUCCESS"
+}
+
+# Optional cache cleanup: remove oldest files if cache size exceeds limit
+cache_cleanup() {
+  local max_size_mb="${CACHE_MAX_SIZE_MB:-100}"  # Default 100MB
+  local current_size
+  current_size="$(du -sm "$CACHE_DIR" 2>/dev/null | cut -f1 || echo 0)"
+
+  if (( current_size > max_size_mb )); then
+    log_info "Cache size ${current_size}MB exceeds limit ${max_size_mb}MB, cleaning up"
+    # Remove oldest files (by mtime)
+    find "$CACHE_DIR" -type f -name "*.metadata" -printf '%T@ %p\n' 2>/dev/null | sort -n | head -n 10 | cut -d' ' -f2- | while read -r metadata_file; do
+      local cache_file="${metadata_file%.metadata}"
+      rm -f "$cache_file" "$metadata_file" "${cache_file}.yaml"
+    done
+  fi
+}
+
+# ============================================================================
+# CLI
+# ============================================================================
+show_version() {
+  cat <<EOF
+${APP_NAME} ${APP_VERSION}
+Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+MIT License - see LICENSE file for full terms
+Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/tools/${APP_NAME}
+EOF
+}
+
+show_help() {
+  cat <<EOF
+${APP_NAME} ${APP_VERSION} — Generate images from text prompts using multiple AI providers
+
+Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+MIT License - see LICENSE file for full terms
+Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/tools/${APP_NAME}
+
+USAGE:
+  ${APP_NAME} [OPTIONS]
+
+EXAMPLES:
+  ${APP_NAME} --prompt "sunset over mountains" --output sunset.png
+  ${APP_NAME} --prompt "cyberpunk city" --quality medium --width 512 --height 512 --output city.png
+  ${APP_NAME} --prompt "portrait" --provider openai --model dall-e-3 --output portrait.png
+  ${APP_NAME} --prompt "gourmet dish" --provider google --output dish.png
+  ${APP_NAME} --list-models --output-format json
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -V, --version                 Show version and exit
+  -n, --dry-run                 Show what would be done without executing API calls
+  -v, --verbose                 Enable debug logging
+  --prompt TEXT                 Text prompt for image generation (required, supports spaces)
+  --output FILE                 Output image file path (required, supports: .png, .jpg, .webp, .avif)
+  --quality high|medium|low     Quality profile (default: high)
+                                 - high: OpenAI → Stability → Google
+                                 - medium: Stability → OpenAI → Replicate
+                                 - low: Hugging Face → Stability → SiliconFlow
+  --width PIXELS                Image width (default: 1024, min: 256, max: 2048)
+  --height PIXELS               Image height (default: 1024, min: 256, max: 2048)
+  --negative-prompt TEXT        Negative prompt to avoid certain elements
+  --config YAML                 YAML configuration file for batch processing
+  --parallel                    Enable parallel batch processing
+  --max-parallel NUM            Max parallel jobs (default: CPU cores)
+  --force                       Force regeneration (bypass cache)
+  --metadata                    Embed metadata in generated image
+  --artist TEXT                 Artist metadata for embedding
+  --copyright TEXT              Copyright metadata for embedding
+  --keywords TEXT               Keywords metadata for embedding
+  --description TEXT            Description metadata for embedding
+  --provider PROVIDER           Specify provider: openai, stability, google, huggingface, bfl, replicate, siliconflow
+  --model MODEL                 Specify model ID (e.g., dall-e-3, imagen-4.0-generate-001)
+  --models MODELS               Comma-separated list for multi-model comparison
+  --google-credentials FILE     Path to Google service account JSON key file
+  --google-location REGION      Google Cloud region (default: us-central1)
+  --google-auth-method METHOD   Google auth: auto, json, service-account, gcloud, api-key (default: auto)
+  --no-generation-info          Disable YAML sidecar with request/response details (enabled by default)
+  --list-models                 List available models for configured providers
+  --all-models                  List all known models (including those without API keys)
+  --output-format text|json     Output format (default: text)
+
+DOCUMENTATION:
+  Full guide: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/tools/${APP_NAME}.md
+
+SIDECAR OUTPUT:
+  Every generation writes a .yaml sidecar alongside the output image (e.g., img.avif -> img.yaml).
+  Contains: full request payload, response body, HTTP code, timing, provider/model, error details.
+  On errors, the sidecar is still written for debugging — inspect generation.status and response fields.
+  Use --no-generation-info to disable sidecar creation.
+
+EXIT CODES:
+  0 - Success
+  1 - General error
+  2 - Invalid parameters
+  3 - Authentication failed
+  4 - Rate limit exceeded
+  5 - Server error
+  6 - Network error
+  7 - File system error
+  8 - Config error
+  9 - Batch partial failure
+  100 - Unknown error
+EOF
+}
+
+parse_args() {
+  while (($#)); do
+    case "$1" in
+      -h|--help) show_help; exit 0 ;;
+      -V|--version) show_version; exit 0 ;;
+      -n|--dry-run) DRY_RUN=true ;;
+      -v|--verbose) VERBOSE=true ;;
+      --prompt) shift; PROMPT="${1:-}" ;;
+      --output) shift; OUTPUT="${1:-}" ;;
+      --quality) shift; QUALITY="${1:-high}" ;;
+      --config|--batch) shift; CONFIG_FILE="${1:-}" ;;
+      --parallel) PARALLEL=true ;;
+      --max-parallel) shift; MAX_PARALLEL="${1:-}" ;;
+      --force) FORCE=true ;;
+      --metadata) EMBED_METADATA=true ;;
+      --artist) shift; ARTIST="${1:-}" ;;
+      --copyright) shift; COPYRIGHT="${1:-}" ;;
+      --keywords) shift; KEYWORDS="${1:-}" ;;
+      --description) shift; DESCRIPTION="${1:-}" ;;
+      --width) shift; WIDTH="${1:-1024}" ;;
+      --height) shift; HEIGHT="${1:-1024}" ;;
+      --negative-prompt) shift; NEGATIVE_PROMPT="${1:-}" ;;
+      --output-format) shift; OUTPUT_FORMAT="${1:-text}" ;;
+      --provider) shift; PROVIDER="${1:-}" ;;
+      --model) shift; MODEL="${1:-}" ;;
+      --models) shift; MODELS="${1:-}" ;;
+      --google-credentials) shift; GOOGLE_CREDENTIALS="${1:-}" ;;
+      --google-location) shift; GOOGLE_LOCATION="${1:-us-central1}" ;;
+      --google-auth-method) shift; GOOGLE_AUTH_METHOD="${1:-auto}" ;;
+      --no-generation-info) SAVE_GENERATION_INFO=false ;;
+      --list-models) LIST_MODELS=true ;;
+      --all-models) ALL_MODELS=true ;;
+      --) shift; break ;;
+      -*) die "Unknown option: $1" ;;
+      *) die "Unexpected positional argument: $1" ;;
+    esac
+    shift
+  done
+}
+
+list_models() {
+  local all_models="${1:-false}"
+  
+  # Model data: provider|model_id|model_name|description|quality_tier|cost_per_image|limitations|native_format
+  local models_data='
+openai|dall-e-3|DALL-E 3|OpenAI latest image generation model|high|~$0.040|1024x1024 max, no negative prompt|png
+openai|dall-e-2|DALL-E 2|OpenAI previous generation model|medium|~$0.020|512x512 max, lower quality|png
+stability|stable-diffusion-xl-1024-v1-0|SDXL 1024|Legacy v1 engine, best quality|high|~$0.004|Legacy, 1024x1024 optimal|png
+google|imagen-4.0-generate-001|Imagen 4 Standard|Google Imagen 4 standard generation|high|~$0.040|Vertex AI, service account or gcloud auth|png
+google|imagen-4.0-ultra-generate-001|Imagen 4 Ultra|Google Imagen 4 ultra-high quality|high|~$0.080|Vertex AI, service account or gcloud auth|png
+google|imagen-4.0-fast-generate-001|Imagen 4 Fast|Google Imagen 4 fast generation|medium|~$0.020|Vertex AI, service account or gcloud auth|png
+google|imagen-3.0-generate-001|Imagen 3|Google Imagen 3 generation model|high|~$0.050|Vertex AI, service account or gcloud auth|png
+huggingface|stabilityai/stable-diffusion-2-1|Stable Diffusion 2.1|Open source model via HF Inference|low|Free tier limited|Rate limited, slow|png
+huggingface|runwayml/stable-diffusion-v1-5|Stable Diffusion 1.5|Older but reliable|low|Free tier limited|Rate limited|png
+huggingface|black-forest-labs/flux-1.1-pro|FLUX 1.1 Pro|Via Hugging Face|high|~$0.010|Requires HF API key|webp
+bfl|flux-1.1-pro|FLUX 1.1 Pro|Black Forest Labs flagship model|high|~$0.015|Fast, high quality|jpg
+bfl|flux-1.0-pro|FLUX 1.0 Pro|Previous version|medium|~$0.010|Good quality|jpg
+replicate|stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b|SDXL|Stability AI SDXL on Replicate|medium|~$0.005|Per-second billing|png
+replicate|black-forest-labs/flux-1.1-pro|FLUX 1.1 Pro|BFL FLUX via Replicate|high|~$0.020|Per-second billing|webp
+siliconflow|stabilityai/stable-diffusion-3-medium|SD3 Medium|SiliconFlow hosted SD3|high|~$0.003|Chinese provider|png
+siliconflow|stabilityai/stable-diffusion-xl-1.0|SDXL 1.0|SiliconFlow hosted SDXL|medium|~$0.002|Chinese provider|png
+'
+  
+  # Determine which providers have API keys
+  local available_providers=()
+  [[ -n "${OPENAI_API_KEY:-}" ]] && available_providers+=("openai")
+  [[ -n "${STABILITY_API_KEY:-}" ]] && available_providers+=("stability")
+  # Google supports multiple auth methods
+  if [[ -n "${GOOGLE_CREDENTIALS:-}" && -f "${GOOGLE_CREDENTIALS:-}" ]] || \
+     [[ -n "${GOOGLE_API_KEY:-}" && -n "${GOOGLE_PROJECT_ID:-}" ]] || \
+     command -v gcloud >/dev/null 2>&1; then
+    available_providers+=("google")
+  fi
+  [[ -n "${HF_API_KEY:-}" ]] && available_providers+=("huggingface")
+  [[ -n "${BFL_API_KEY:-}" ]] && available_providers+=("bfl")
+  [[ -n "${REPLICATE_API_TOKEN:-}" ]] && available_providers+=("replicate")
+  [[ -n "${SILICONFLOW_API_KEY:-}" ]] && available_providers+=("siliconflow")
+  
+  # Filter models
+  local filtered_data=""
+  while IFS='|' read -r provider model_id model_name description quality cost limits native_fmt; do
+    # Skip empty lines
+    [[ -z "$provider" ]] && continue
+    # Skip comment lines
+    [[ "$provider" == \#* ]] && continue
+    
+    if [[ "$all_models" == "true" ]]; then
+      filtered_data+="$provider|$model_id|$model_name|$description|$quality|$cost|$limits|$native_fmt"$'\n'
+    else
+      # Check if provider is available
+      for avail in "${available_providers[@]}"; do
+        if [[ "$avail" == "$provider" ]]; then
+          filtered_data+="$provider|$model_id|$model_name|$description|$quality|$cost|$limits|$native_fmt"$'\n'
+          break
+        fi
+      done
+    fi
+  done <<< "$models_data"
+  
+  # Output format
+  if [[ "${OUTPUT_FORMAT:-text}" == "json" ]]; then
+    # JSON output
+    local json_output="["
+    local first=true
+    while IFS='|' read -r provider model_id model_name description quality cost limits native_fmt; do
+      [[ -z "$provider" ]] && continue
+      local is_configured=false
+      for avail in "${available_providers[@]}"; do
+        if [[ "$avail" == "$provider" ]]; then
+          is_configured=true
+          break
+        fi
+      done
+      local configured_val
+      if [[ "$all_models" == "true" ]]; then
+        configured_val="$is_configured"
+      else
+        configured_val="true"
+      fi
+      [[ "$first" == "true" ]] && first=false || json_output+=","
+      json_output+="$(_jq -n \
+        --arg provider "$provider" \
+        --arg model "$model_id" \
+        --arg name "$model_name" \
+        --arg description "$description" \
+        --arg quality "$quality" \
+        --arg cost "$cost" \
+        --arg limitations "$limits" \
+        --arg format "${native_fmt:-png}" \
+        --argjson configured "$configured_val" \
+        '{provider:$provider,model:$model,name:$name,description:$description,quality:$quality,cost:$cost,limitations:$limitations,format:$format,configured:$configured}')"
+    done <<< "$filtered_data"
+    json_output+="]"
+    echo "$json_output"
+  else
+    # ASCII table output
+    echo "Available AI Image Generation Models"
+    echo "====================================="
+    if [[ "$all_models" != "true" && ${#available_providers[@]} -eq 0 ]]; then
+      echo "No API keys detected. Use --all-models to see all available models."
+      echo "Set environment variables for providers to see their models."
+    fi
+    echo ""
+    
+    # Column widths
+    local -r col_status=6 col_provider=12 col_model=40 col_fmt=4 col_quality=8 col_cost=15 col_desc=40
+
+    # Helper: build separator line with + at intersections
+    _repeat_char() { local -r ch="$1" n="$2"; printf '%*s' "$n" '' | tr ' ' "$ch"; }
+
+    local separator
+    if [[ "$all_models" == "true" ]]; then
+      separator="$(_repeat_char '-' "$col_status")+$(_repeat_char '-' "$((col_provider + 2))")+$(_repeat_char '-' "$((col_model + 2))")+$(_repeat_char '-' "$((col_fmt + 2))")+$(_repeat_char '-' "$((col_quality + 2))")+$(_repeat_char '-' "$((col_cost + 2))")+$(_repeat_char '-' "$((col_desc + 2))")"
+    else
+      separator="$(_repeat_char '-' "$col_provider")+$(_repeat_char '-' "$((col_model + 2))")+$(_repeat_char '-' "$((col_fmt + 2))")+$(_repeat_char '-' "$((col_quality + 2))")+$(_repeat_char '-' "$((col_cost + 2))")+$(_repeat_char '-' "$((col_desc + 2))")"
+    fi
+
+    # Print table header
+    if [[ "$all_models" == "true" ]]; then
+      printf "%-${col_status}s | %-${col_provider}s | %-${col_model}s | %-${col_fmt}s | %-${col_quality}s | %-${col_cost}s | %-${col_desc}s\n" \
+        "Status" "Provider" "Model ID" "Fmt" "Quality" "Cost" "Description"
+    else
+      printf "%-${col_provider}s | %-${col_model}s | %-${col_fmt}s | %-${col_quality}s | %-${col_cost}s | %-${col_desc}s\n" \
+        "Provider" "Model ID" "Fmt" "Quality" "Cost" "Description"
+    fi
+    printf '%s\n' "$separator"
+    
+    while IFS='|' read -r provider model_id model_name description quality cost limits native_fmt; do
+      [[ -z "$provider" ]] && continue
+      # Truncate description if too long
+      local short_desc="${description:0:${col_desc}}"
+      [[ ${#description} -gt $col_desc ]] && short_desc="${description:0:$((col_desc - 2))}.."
+      # Truncate model ID if too long
+      local short_model_id="$model_id"
+      if [[ ${#model_id} -gt $col_model ]]; then
+        short_model_id="${model_id:0:$((col_model - 3))}..."
+      fi
+      # Truncate cost if too long
+      local short_cost="${cost:0:${col_cost}}"
+      [[ ${#cost} -gt $col_cost ]] && short_cost="${cost:0:$((col_cost - 2))}.."
+      local fmt="${native_fmt:-png}"
+      if [[ "$all_models" == "true" ]]; then
+        local status_icon="[ ]"
+        local is_configured
+        is_configured=false
+        for avail in "${available_providers[@]}"; do
+          if [[ "$avail" == "$provider" ]]; then
+            is_configured=true
+            break
+          fi
+        done
+        [[ "$is_configured" == "true" ]] && status_icon="[x]"
+        printf " %-5s | %-${col_provider}s | %-${col_model}s | %-${col_fmt}s | %-${col_quality}s | %-${col_cost}s | %s\n" \
+          "$status_icon" "$provider" "$short_model_id" "$fmt" "$quality" "$short_cost" "$short_desc"
+      else
+        printf "%-${col_provider}s | %-${col_model}s | %-${col_fmt}s | %-${col_quality}s | %-${col_cost}s | %s\n" \
+          "$provider" "$short_model_id" "$fmt" "$quality" "$short_cost" "$short_desc"
+      fi
+    done <<< "$filtered_data"
+    
+    if [[ "$all_models" != "true" ]]; then
+      echo ""
+      echo "Available providers (with API keys): ${available_providers[*]:-none}"
+      echo "Use --all-models to see all models across all providers."
+    fi
+  fi
+  exit 0
+}
+
+# ============================================================================
+# MAIN
+# ============================================================================
+main() {
+  parse_args "$@"
+
+  # Set defaults for optional variables to avoid nounset errors
+  CONFIG_FILE="${CONFIG_FILE:-}"
+  PARALLEL="${PARALLEL:-false}"
+  FORCE="${FORCE:-false}"
+  EMBED_METADATA="${EMBED_METADATA:-false}"
+  MAX_PARALLEL="${MAX_PARALLEL:-}"
+  ARTIST="${ARTIST:-}"
+  COPYRIGHT="${COPYRIGHT:-}"
+  KEYWORDS="${KEYWORDS:-}"
+  DESCRIPTION="${DESCRIPTION:-}"
+  OUTPUT_FORMAT="${OUTPUT_FORMAT:-text}"
+  PROVIDER="${PROVIDER:-}"
+  MODEL="${MODEL:-}"
+  MODELS="${MODELS:-}"
+  LIST_MODELS="${LIST_MODELS:-false}"
+  ALL_MODELS="${ALL_MODELS:-false}"
+  GOOGLE_CREDENTIALS="${GOOGLE_CREDENTIALS:-}"
+  GOOGLE_LOCATION="${GOOGLE_LOCATION:-us-central1}"
+  GOOGLE_AUTH_METHOD="${GOOGLE_AUTH_METHOD:-auto}"
+  SAVE_GENERATION_INFO="${SAVE_GENERATION_INFO:-true}"
+
+  # Create directory structure
+  ensure_directories
+
+  # Ensure required commands
+  require_cmd curl
+
+  # Load .env if exists
+  load_dotenv
+
+  if [[ "$LIST_MODELS" == "true" ]]; then
+    list_models "$ALL_MODELS"
+    exit 0
+  fi
+
+  # Automatic version check (silent, non-blocking)
+  _check_version
+
+  # Merge config
+  local config
+  config="$(merge_config)"
+
+  # Extract values
+  local prompt output quality parallel max_parallel force embed_metadata artist copyright keywords description width height negative_prompt output_format provider model models save_generation_info
+  eval "$config"
+
+  # Set OUTPUT_FORMAT consistently
+  OUTPUT_FORMAT="$output_format"
+  SAVE_GENERATION_INFO="$save_generation_info"
+
+  # Auto-append native format extension if output has no recognized image extension
+  if [[ -n "$output" ]]; then
+    output="$(resolve_output_extension "$output" "$provider" "$model" "$quality")"
+  fi
+
+  # Check for batch mode: if config file has jobs array
+  local is_batch=false
+  if [[ -n "$CONFIG_FILE" ]]; then
+    local yaml_content
+    yaml_content="$(parse_yaml "$CONFIG_FILE")"
+    if echo "$yaml_content" | _jq -e '.jobs' >/dev/null 2>&1; then
+      is_batch=true
+      log_info "Batch mode detected in $CONFIG_FILE"
+    fi
+  fi
+
+  if [[ "$is_batch" == "true" ]]; then
+    # Batch processing
+    local yaml_content
+    yaml_content="$(parse_yaml "$CONFIG_FILE")"
+    local jobs
+    jobs="$(echo "$yaml_content" | _jq '.jobs')"
+
+    if [[ "$parallel" == "true" ]]; then
+      process_batch_parallel "$jobs"
+    else
+      process_batch_sequential "$jobs"
+    fi
+    exit $?
+  else
+    # Single image generation
+    # Validate config
+    if ! validate_config "$prompt" "$output" "$quality" "$width" "$height"; then
+      if [[ "$OUTPUT_FORMAT" == "json" ]]; then
+        output_json_error "Validation failed" "$EXIT_INVALID_PARAMS"
+      fi
+      exit "$EXIT_INVALID_PARAMS"
+    fi
+
+    log_info "Configuration validated: prompt='$prompt', output='$output', quality='$quality', size=${width}x${height}"
+    
+    # Multiple models support
+    if [[ -n "$models" ]]; then
+      local model_list
+      IFS=',' read -ra model_list <<< "$models"
+      local results=()
+      local success_count=0
+      local failure_count=0
+      
+      for model_item in "${model_list[@]}"; do
+        # Trim whitespace
+        model_item="$(echo "$model_item" | xargs)"
+        [[ -z "$model_item" ]] && continue
+        
+        # Generate output filename with model suffix
+        local base="${output%.*}"
+        local ext="${output##*.}"
+        local model_output="${base}-${model_item}.${ext}"
+        
+        log_info "Generating image with model: $model_item"
+        if generate_image "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$model_output" "$provider" "$model_item"; then
+          results+=("SUCCESS: $model_output")
+          (( success_count++ ))
+        else
+          local exit_code=$?
+          results+=("FAILED ($exit_code): $model_item")
+          (( failure_count++ ))
+        fi
+      done
+      
+      # Summary
+      log_info "Multiple model generation completed: $success_count succeeded, $failure_count failed"
+      if [[ "$OUTPUT_FORMAT" == "json" ]]; then
+        local json_results
+        json_results="$(printf '%s\n' "${results[@]}" | _jq -R -s 'split("\n")[:-1] | map(split(": ")) | map({status: .[0], output: .[1]})' 2>/dev/null)"
+        echo "{\"status\":\"partial\",\"summary\": {\"total\": ${#model_list[@]}, \"success\": $success_count, \"failure\": $failure_count}, \"results\": $json_results}"
+      else
+        printf '%s\n' "${results[@]}"
+      fi
+      
+      if (( failure_count > 0 )); then
+        exit "$EXIT_BATCH_PARTIAL_FAILURE"
+      fi
+    else
+      # Single model generation
+      if generate_image "$prompt" "$negative_prompt" "$width" "$height" "$quality" "$output" "$provider" "$model"; then
+        log_info "Image generation completed successfully"
+        if [[ "$OUTPUT_FORMAT" == "json" ]]; then
+          echo "{\"status\":\"success\",\"output\":\"$output\"}"
+        fi
+      else
+        local exit_code=$?
+        log_err "Image generation failed"
+        if [[ "$OUTPUT_FORMAT" == "json" ]]; then
+          echo "{\"status\":\"error\",\"message\":\"Image generation failed\",\"exit_code\":$exit_code}"
+        fi
+        exit "$exit_code"
+      fi
+    fi
+  fi
+}
+
+# Testable main guard
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi

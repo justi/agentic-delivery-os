@@ -1,0 +1,138 @@
+change_id: GH-26
+title: "Add text-to-image CLI tool to ADOS toolbox and tune @image-generator agent"
+phases:
+  clarify_scope: { started: "2026-03-06", completed: "2026-03-07" }
+  specification: { started: "2026-03-07", completed: "2026-03-07" }
+  test_planning: { started: "2026-03-07", completed: "2026-03-07" }
+  delivery_planning: { started: "2026-03-07", completed: "2026-03-07" }
+  delivery: { started: "2026-03-07", completed: "2026-03-07" }
+  system_spec_update: { started: "2026-03-07", completed: "2026-03-07" }
+  review_fix: { started: "2026-03-07", completed: "2026-03-07" }
+  quality_gates: { started: "2026-03-07", completed: "2026-03-07" }
+  dod_check: { started: "2026-03-07", completed: "2026-03-07" }
+  pr_creation: { started: "2026-03-07", completed: "2026-03-07", url: "https://github.com/juliusz-cwiakalski/agentic-delivery-os/pull/30" }
+decisions:
+  - text: "Tool location: tools/ directory for PATH-able CLIs (no .sh extension); scripts/ stays for repo-internal automation"
+    date: "2026-03-06"
+  - text: "AGENTS.md split into separate ticket GH-27, delivered first to establish conventions"
+    date: "2026-03-06"
+  - text: "Agent tuning scope: model discovery (--list-models with availability check), task-based routing table (production vs draft), updated CLI reference"
+    date: "2026-03-06"
+  - text: "add-header-location.sh enhancement: detect bash scripts by .sh extension or shebang line"
+    date: "2026-03-06"
+  - text: "License header: standard ADOS copyright+MIT+latest-version-URL, same as agent prompts"
+    date: "2026-03-06"
+  - text: "Config dir renamed to ~/.ai/text-to-image/ (consistent with tool name)"
+    date: "2026-03-07"
+  - text: "--version output: multi-line with name+version, copyright, MIT, latest-version URL"
+    date: "2026-03-07"
+  - text: "--help output: includes basic examples, link to doc on GitHub, and license info at bottom"
+    date: "2026-03-07"
+  - text: "User doc (doc/tools/text-to-image.md): per-provider setup with sign-up URL, console URL, env var, gotchas, pricing. Stable markdown headings for deterministic GitHub anchors."
+    date: "2026-03-07"
+  - text: "Script error messages for unconfigured providers link to provider-specific doc section on GitHub"
+    date: "2026-03-07"
+  - text: "Version check: auto-check from GitHub raw, 24h cache in config dir, silent failure, opt-out via TEXT_TO_IMAGE_NO_VERSION_CHECK=true"
+    date: "2026-03-07"
+  - text: "Doc versioning: version near top linking to changelog subsection; each version is a subsection in changelog"
+    date: "2026-03-07"
+  - text: "Tools convention guide: doc/guides/tools-convention.md — PM writes initial version directly to preserve context; part of GH-26"
+    date: "2026-03-07"
+  - text: "Design principle: tools are standalone, agent-agnostic CLIs. Not coupled to OpenCode, Claude Code, or any specific AI tool. Any user or agent can invoke from terminal."
+    date: "2026-03-07"
+open_questions: []
+blockers:
+  - text: "Blocked on GH-27 (AGENTS.md) which establishes tools/ convention"
+    date: "2026-03-06"
+    resolved_date: "2026-03-07"
+notes:
+  - text: "Blueprint from private menuvivo project (PDEV-29). Script ~2100 lines, battle-tested with 15 phases of review. Tests: 26 unit, 6 integration, 4 performance."
+    type: info
+    date: "2026-03-06"
+  - text: "Clarify scope complete: all user questions resolved, GH-26 description updated, GH-27 created as dependency"
+    type: info
+    date: "2026-03-06"
+  - text: "Second clarify round (2026-03-07): added user doc with provider guides, --help/--version license info, version check feature, tools convention guide. All confirmed by user."
+    type: info
+    date: "2026-03-07"
+  - text: "Spec created by @spec-writer: 17 AC, 12 functional capabilities, 10 NFRs, 6 risks."
+    type: info
+    date: "2026-03-07"
+  - text: "Test plan created by @test-plan-writer: 71 test scenarios across 9 categories, all 17 AC covered."
+    type: info
+    date: "2026-03-07"
+  - text: "Implementation plan created by @plan-writer: 6 phases, all tasks mapped to spec ACs."
+    type: info
+    date: "2026-03-07"
+  - text: "Delivery: all 6 plan phases completed by @coder. 10 commits. All 17 AC verified."
+    type: info
+    date: "2026-03-07"
+  - text: "Doc-syncer: created feature-text-to-image-tool.md, feature-license-header-script.md, test-spec-text-to-image-tool.md. Updated documentation-handbook.md."
+    type: info
+    date: "2026-03-07"
+  - text: "Review: PASS — 17/17 AC verified, 58/58 plan tasks done, 0 findings, no remediation needed."
+    type: info
+    date: "2026-03-07"
+  - text: "Quality gates: ALL PASS — unit 52/52, integration 21/21, performance 8/8, header 18/18. Executable OK, --help OK, --version OK. No private refs."
+    type: info
+    date: "2026-03-07"
+  - text: "DoD check: all phases completed, all AC satisfied, all plan tasks done. Ready for PR."
+    type: info
+    date: "2026-03-07"
+  - text: "Post-PR fixes: (1) improved API error diagnostics — extract_api_error() helper, retry_curl outputs response on failure. (2) Fixed garbled verbose output — log calls inside retry_curl now redirect to stderr. (3) Fixed empty negative prompt causing Stability API rejection. (4) Removed invalid stable-diffusion-3-medium from model list (v2beta-only model). Changed Stability default to SDXL."
+    type: info
+    date: "2026-03-07"
+  - text: "Created follow-up GH-31: Add Stability AI v2beta API support (SD3.5, Stable Image Core/Ultra). Deferred from GH-26 to avoid scope creep."
+    type: decision
+    date: "2026-03-07"
+  - text: "Post-PR fix round 2: (1) Fixed --list-models execution order bug — moved ensure_directories + load_dotenv before list_models early-exit in main(), so providers from .env are detected. (2) Added Status column (✓/-) to --list-models --all-models showing configured vs unconfigured providers. (3) Fixed critical log_info/log_warn/log_debug writing to stdout instead of stderr — caused Google Imagen auth failure when VERBOSE=true because debug messages polluted access_token captured via $(). All 83 tests pass. Real API tests: OpenAI ✓, Stability ✓, Google Imagen ✓."
+    type: info
+    date: "2026-03-07"
+  - text: "log_info/log_warn/log_debug were writing to stdout, not stderr. Only log_err had >&2. This is a systemic issue — any log call inside $() subshell pollutes captured return value. Diagnosed via bash xtrace showing access_token='[DEBUG] Auto-detected gcloud CLI...' instead of the actual token. Should have been caught in original delivery — blueprint source had same bug."
+    type: retro
+    date: "2026-03-07"
+  - text: "BUG: Replicate FLUX 1.1 Pro returns WebP image data but tool saves with .png extension (user-requested format). File is 243KB (WebP compression) vs 1.7-3.0MB for actual PNGs. Discovered when image-reviewer rejected the file: 'image was specified using image/png media type, but appears to be image/webp'. Root cause: providers return whatever native format they choose; tool blindly saves to user-specified path without format verification."
+    type: info
+    date: "2026-03-07"
+  - text: "Decision: auto-convert downloaded images to match user-requested format. Detect actual format via `file --mime-type`, convert via ImageMagick `convert` if mismatch. Graceful degradation: if conversion tool not installed, warn and save with correct extension for actual format. Conversion point: in generate_image() after provider succeeds, before cache_store and embed_metadata."
+    type: decision
+    date: "2026-03-07"
+  - text: "Post-PR fix round 3: Added ensure_output_format() — detects actual image format via file(1), converts via ImageMagick if mismatch, graceful degradation if ImageMagick not installed. 8 new unit tests (62 total). All 91 tests pass (62 unit + 21 integration + 8 performance). Commit d21991d."
+    type: info
+    date: "2026-03-07"
+  - text: "Post-PR fix round 4: Native format registry (16 provider+model combos mapped to png/jpg/webp), AVIF/WebP output support, pre-validation with actionable errors. All 91 tests pass. Commit 536e3d0."
+    type: info
+    date: "2026-03-08"
+  - text: "Post-PR fix round 5: Auto-append native extension when no ext specified; fix --list-models table alignment (ASCII [x]/[ ], truncate long IDs, dynamic separator). All 91 tests pass. Commit 29e0841."
+    type: info
+    date: "2026-03-08"
+  - text: "Post-PR fix round 6: E2E battle-test suite — 4 web-dev use cases x 2 settings (default + max), --use-case/--settings/--dry-run/--list-cases options. 56 images generated, all YAML sidecars created. Commit 11b6a96."
+    type: info
+    date: "2026-03-08"
+  - text: "Post-PR fix round 7: YAML sidecar metadata — full audit trail with request/response/timing/image-metadata for every generated image. 4 new unit tests (95 total). All 124 tests pass (95 unit + 21 integration + 8 performance). Commit 327e992."
+    type: info
+    date: "2026-03-08"
+  - text: "Post-PR fix round 8: Fix YAML sidecar not created on cache hits. cache_store() now caches YAML sidecar alongside image; cache_lookup() restores it; old cache entries get back-filled basic YAML. All 124 tests pass. Commit db27cc0."
+    type: info
+    date: "2026-03-08"
+  - text: "YAML sidecar cache gap was a design oversight — cache_store/cache_lookup only handled image files, not the YAML metadata. Discovered during E2E suite re-runs where cached images had no sidecar. Required cache architecture change (store/restore/backfill). Should have been considered when YAML sidecar feature was designed in round 7."
+    type: retro
+    date: "2026-03-08"
+  - text: "Post-PR fix round 9: Added --force-refresh to E2E suite (passes --force to tool, bypasses both tool cache and file-existence skip). Fixed providers script file-existence guard to respect FORCE env var. Re-ran full suite: 112 GENERATING attempts, 0 SKIPPED, 56 images + 56 YAMLs with complete request/response/timing data. Commit 01cd1fe."
+    type: info
+    date: "2026-03-08"
+  - text: "Post-PR fix round 10: Extended E2E suite from 4 to 24 use cases across 3 tiers (12 Tier 1 core, 6 Tier 2 marketing, 6 Tier 3 specialty). Added --tier filter (1/2/3/all, default: tier 1). Created evaluation workflow: evaluate-e2e-images.md (8-category scoring rubric for @image-reviewer) and generate-e2e-report.sh (HTML visual comparison + Markdown scoring reports from .eval.yaml files). Commit 6f496de."
+    type: info
+    date: "2026-03-09"
+  - text: "Post-PR fix round 10.1: Show generation prompt per use case in reports (both HTML and Markdown). Commit 1cddc87."
+    type: info
+    date: "2026-03-09"
+  - text: "Post-PR fix round 11: Write YAML sidecar even on generation errors (status: error, with error details). Added raw request/response logging in sidecar for debugging failed API calls. All 134 tests pass (105 unit + 21 integration + 8 performance). Commit 2b48659."
+    type: info
+    date: "2026-03-10"
+  - text: "Post-PR fix round 12: Evidence-based @image-generator agent rewrite. Evaluated 168 images across 12 Tier 1 use cases × 7 providers × 2 resolutions. Agent now uses explicit --provider/--model routing based on real evaluation data instead of quality profiles. Key finding: built-in quality profiles are wrong (put weakest models first). Google Imagen 4.0 Ultra (80.2%) and Fast (79.4%) dominate; OpenAI DALL-E 3 (61.0%) is mediocre. Updated doc/tools/text-to-image.md with quality profile advisory and evaluation results. Updated --help text. Commit 335ab0e."
+    type: info
+    date: "2026-03-10"
+  - text: "Quality profiles (high/medium/low) in the tool are based on assumptions, not data. E2E evaluation of 168 images showed the default 'high' chain (OpenAI→Stability→Google) puts the weakest models first. Agent prompt was rewritten to bypass profiles entirely and use explicit provider+model. Quality profiles should be reworked in a future change based on evaluation data."
+    type: retro
+    date: "2026-03-10"
