@@ -29,6 +29,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 ## Agents
 
 - `architect`: architecture decisions and ADR authoring
+- `bootstrapper`: automate ADOS adoption for existing projects
 - `coder`: implement plan phases by writing code for a change
 - `committer`: create one Conventional Commit
 - `designer`: apply visual design system
@@ -49,6 +50,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 
 ## Commands
 
+- `/bootstrap`: scaffold ADOS artifacts for an existing project
 - `/check`: run quality gates (no fixes)
 - `/check-fix`: run quality gates and fix failures
 - `/commit`: delegate a single Conventional Commit

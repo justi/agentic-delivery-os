@@ -329,21 +329,21 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 **Tasks**:
 
-- [ ] **5.1** Delegate to `@toolsmith`: Create `.opencode/agent/bootstrapper.md` — the bootstrapper agent. Must define:
+- [x] **5.1** Create `.opencode/agent/bootstrapper.md` — multi-session workflow with 6 phases, persistent state schema, security constraints — the bootstrapper agent. Must define:
   - Multi-session workflow with phases: repo scan → confidence assessment → human interview → draft → review → write
   - Persistent state at `.ai/local/bootstrapper-context.yaml` (schema: project metadata, interview history, confidence scores, artifact status, session timestamps)
   - Generated artifacts: `AGENTS.md` (project-specific), `.ai/agent/pm-instructions.md` (with tracker config), `doc/documentation-handbook.md` (copy as-is per OQ-1), at least one feature spec
   - Security constraint: state file must NOT contain secrets, tokens, or credentials
   - The agent should reference `doc/guides/onboarding-existing-project.md` for the manual adoption path
   - The agent should reference `doc/templates/` for structural templates when generating artifacts
-- [ ] **5.2** Delegate to `@toolsmith`: Create `.opencode/command/bootstrap.md` — thin entry point to `@bootstrapper`. Must:
+- [x] **5.2** Create `.opencode/command/bootstrap.md` — thin entry point, subtask: false, optional project-name arg — thin entry point to `@bootstrapper`. Must:
   - Accept an optional project-name argument
   - Delegate to `@bootstrapper` agent
   - Be a `subtask: false` command (multi-session workflow needs main context)
-- [ ] **5.3** Update `.opencode/README.md`:
+- [x] **5.3** Update `.opencode/README.md` — bootstrapper in Agents, /bootstrap in Commands
   - Add `bootstrapper` to the Agents section (alphabetical order) with description: `bootstrapper: automate ADOS adoption for existing projects`
   - Add `/bootstrap` to the Commands section (alphabetical order) with description: `/bootstrap: scaffold ADOS artifacts for an existing project`
-- [ ] **5.4** Update `AGENTS.md`:
+- [x] **5.4** Update `AGENTS.md` — Onboarding subsection, /bootstrap command, 19 agents / 16 commands
   - Add `bootstrapper` to the Agent team section under a new "Onboarding" subsection (between "Orchestration" and "Artifact creation")
   - Add `/bootstrap` to the Commands table
   - Update the agent/command counts in "What this repo is" (18→19 agents, 15→16 commands)
@@ -494,5 +494,5 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 | 2 | Complete | 2026-03-10 | 2026-03-10 | | Guide, template, index, agent/command updates |
 | 3 | Complete | 2026-03-10 | 2026-03-10 | | 5 templates created, 4 agents updated for template reading |
 | 4 | Complete | 2026-03-10 | 2026-03-10 | | Onboarding guide with all mandatory/optional artifacts |
-| 5 | Pending | | | | |
+| 5 | Complete | 2026-03-10 | 2026-03-10 | | @bootstrapper agent + /bootstrap command + inventory updates |
 | 6 | Pending | | | | |

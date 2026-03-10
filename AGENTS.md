@@ -9,9 +9,11 @@ Quick-reference for AI coding agents and human contributors working in this repo
 
 ## What this repo is
 
-Agentic Delivery OS is a spec-driven software delivery system: a team of 18 AI agents and 15 commands that turn a ticket into a reviewed, tested PR through a deterministic 10-phase workflow.
+Agentic Delivery OS is a spec-driven software delivery system: a team of 19 AI agents and 16 commands that turn a ticket into a reviewed, tested PR through a deterministic 10-phase workflow.
 
 The agents and their prompt definitions (`.opencode/agent/*.md`, `.opencode/command/*.md`) **are the product**. A degraded prompt degrades everything downstream — treat them with the same rigor as production code. The delivery process is used to deliver improvements to itself.
+
+> **New to ADOS?** See [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md) or run `/bootstrap` to get started.
 
 ## Delivery process
 
@@ -37,6 +39,9 @@ Detail: [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 ### Orchestration
 - `pm` — orchestrate changes; manage tickets via MCP; never implements code
 - `architect` — architecture decisions and ADR authoring
+
+### Onboarding
+- `bootstrapper` — automate ADOS adoption for existing projects
 
 ### Artifact creation
 - `spec-writer` — author change specifications
@@ -70,6 +75,7 @@ Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.ope
 
 | Command | Purpose |
 |---------|---------|
+| `/bootstrap` | Scaffold ADOS artifacts for an existing project |
 | `/plan-change` | Interactive planning session (prep context for /write-spec) |
 | `/write-spec <ref>` | Generate change specification |
 | `/write-test-plan <ref>` | Generate test plan |
@@ -137,8 +143,8 @@ Detail: [doc/guides/unified-change-convention-tracker-agnostic-specification.md]
 .
 ├── AGENTS.md             # this file — delivery system bootstrap
 ├── .opencode/            # agent and command definitions (THE product)
-│   ├── agent/            # 18 agents (one .md each)
-│   └── command/          # 15 commands (one .md each)
+│   ├── agent/            # 19 agents (one .md each)
+│   └── command/          # 16 commands (one .md each)
 ├── .ai/
 │   ├── agent/            # PM tracker config (pm-instructions.md)
 │   ├── local/            # git-ignored ephemeral state
