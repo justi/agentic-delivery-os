@@ -165,7 +165,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 **Tasks**:
 
-- [ ] **2.1** Create `doc/guides/decision-records-management.md` — the decision records management guide. Adapt from Menuvivo MVDR system but generalized for ADOS (tracker-agnostic, not Jira-specific). Must define:
+- [x] **2.1** Create `doc/guides/decision-records-management.md` — the decision records management guide. Adapt from Menuvivo MVDR system but generalized for ADOS (tracker-agnostic, not Jira-specific). Must define:
   - Decision types: ADR (Architecture), PDR (Product), TDR (Technical), BDR (Business), ODR (Operational)
   - Location: `doc/decisions/` (flat directory, all types co-located)
   - Naming convention: `<TYPE>-<zeroPad4>-<slug>.md` (e.g., `ADR-0001-event-bus-selection.md`, `PDR-0001-free-tier-scope.md`) — per OQ-3 resolution: type prefix + zero-padded 4-digit
@@ -174,15 +174,15 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
   - Governance: who can propose, review, accept, and supersede decisions
   - Index file: `doc/decisions/00-index.md` (manual or auto-generated)
   - Relationship to changes: how decisions link to change specs via front-matter
-- [ ] **2.2** Create `doc/templates/decision-record-template.md` — the decision record template usable for all 5 types. Adapt from Menuvivo ADR template. Must include:
+- [x] **2.2** Create `doc/templates/decision-record-template.md` — the decision record template usable for all 5 types. Adapt from Menuvivo ADR template. Must include:
   - Front-matter skeleton with all required keys (id, status, created, decision_date, owners, service, decision_type, links)
   - All required sections: Context, Drivers, Options Considered, Decision, Rationale, Consequences (Positive/Negative), Verification, References
   - Inline authoring guidance as HTML comments
   - Placeholder content showing expected level of detail
-- [ ] **2.3** Create `doc/decisions/00-index.md` — decision records index (initially empty table with column headers).
-- [ ] **2.4** Update `@architect` agent (`.opencode/agent/architect.md`) to support the new naming convention. In Phase 1 we updated paths from `doc/adr/` to `doc/decisions/`. In this phase, update the naming logic from `ADR-<zeroPad4>-<slug>.md` to `<TYPE>-<zeroPad4>-<slug>.md`, and add awareness of multiple decision types (currently the agent only knows about ADRs).
-- [ ] **2.5** Update `/write-adr` command (`.opencode/command/write-adr.md`) to use the new naming convention `<TYPE>-<zeroPad4>-<slug>.md` and reference `doc/templates/decision-record-template.md` for structure guidance.
-- [ ] **2.6** Update `/plan-decision` command (`.opencode/command/plan-decision.md`) to use the new naming convention and scan `doc/decisions/` for existing records of all types (not just ADRs).
+- [x] **2.3** Create `doc/decisions/00-index.md` — decision records index (initially empty table with column headers).
+- [x] **2.4** Update `@architect` agent (`.opencode/agent/architect.md`) to support the new naming convention. In Phase 1 we updated paths from `doc/adr/` to `doc/decisions/`. In this phase, update the naming logic from `ADR-<zeroPad4>-<slug>.md` to `<TYPE>-<zeroPad4>-<slug>.md`, and add awareness of multiple decision types (currently the agent only knows about ADRs).
+- [x] **2.5** Update `/write-adr` command (`.opencode/command/write-adr.md`) to use the new naming convention `<TYPE>-<zeroPad4>-<slug>.md` and reference `doc/templates/decision-record-template.md` for structure guidance.
+- [x] **2.6** Update `/plan-decision` command (`.opencode/command/plan-decision.md`) to use the new naming convention and scan `doc/decisions/` for existing records of all types (not just ADRs).
 
 **Acceptance Criteria**:
 
@@ -491,7 +491,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 | Phase | Status | Started | Completed | Commit | Notes |
 |-------|--------|---------|-----------|--------|-------|
 | 1 | Complete | 2026-03-10 | 2026-03-10 | | Ghost refs, stale paths, missing dirs fixed |
-| 2 | Pending | | | | |
+| 2 | Complete | 2026-03-10 | 2026-03-10 | | Guide, template, index, agent/command updates |
 | 3 | Pending | | | | |
 | 4 | Pending | | | | |
 | 5 | Pending | | | | |

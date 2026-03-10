@@ -10,7 +10,7 @@ agent: architect
 <purpose>
 Guide the user through a structured, interactive technical-decision conversation that transforms an initial architectural question or proposal into a complete, implementation-agnostic planning context for a single numbered Architecture Decision Record (ADR). The command:
 
-- Discovers or confirms the ADR number (e.g. 0007) by scanning existing ADRs in doc/decisions/.
+- Discovers or confirms the decision record number (e.g. 0007) by scanning existing records in doc/decisions/ for the relevant type (ADR, PDR, TDR, BDR, ODR; defaults to ADR).
 - Orients itself in the current repository and high-level documentation under doc/spec/, doc/overview/, doc/changes/, and doc/contracts/.
 - Systematically elicits and refines all information needed by /write-adr (context, problem framing, decision drivers, alternatives, trade-offs, assumptions, verification criteria, etc.), without generating the ADR file itself.
 - Applies Archie-style decision-making discipline (clarify problem → confirm drivers → explore options → recommend) without exposing internal mechanics unless asked.
@@ -64,9 +64,9 @@ Resolution rules:
    - Treat this as the proposed ADR number; ask the user to confirm or override.
 
 2. If no adrNumberHint:
-   - Discover existing ADRs by scanning for files matching: `doc/decisions/ADR-*-*.md`.
-   - For each match, parse the numeric segment immediately after `ADR-` up to the next `-` or `.md` (e.g. ADR-0001-short-title.md → 1, ADR-0042-something.md → 42).
-   - If no existing ADRs are found, propose `0001` as the first ADR number.
+   - Discover existing decision records by scanning for files matching: `doc/decisions/<TYPE>-*-*.md` (where TYPE defaults to ADR).
+   - For each match, parse the numeric segment immediately after the type prefix (e.g. ADR-0001-short-title.md → 1, TDR-0042-something.md → 42).
+   - If no existing records of this type are found, propose `0001` as the first number.
    - Otherwise, let maxExisting be the highest parsed number; propose candidate = maxExisting + 1.
    - Normalize candidate to zeroPad4 as above.
    - Present the candidate to the user as the default (e.g. "Based on existing ADRs, I propose using ADR number 0007."); allow the user to accept or override with any other integer.
