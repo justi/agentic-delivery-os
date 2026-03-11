@@ -13,15 +13,30 @@
 
 ## Getting ADOS
 
-Clone the ADOS repository to use as your source for templates and configuration files:
+**One-liner global install** (recommended — gives you ADOS agents in every project):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main/scripts/install.sh | bash -s -- --global
+```
+
+This clones ADOS to `~/.ados/repo/` and installs all agent and command definitions globally.
+
+**Then set up a specific project:**
+
+```bash
+~/.ados/repo/scripts/install.sh --local
+```
+
+This copies mandatory ADOS artifacts (templates, handbook, directory structure) into your current project.
+
+**Alternative — manual clone:**
 
 ```bash
 git clone --depth=1 https://github.com/juliusz-cwiakalski/agentic-delivery-os.git /tmp/ados-source
 ```
 
-You will copy files from this clone during setup. Alternatively, use `/bootstrap` for automated setup (see below).
-
-> **Tip:** If you already have ADOS installed as an AI coding agent extension, skip the clone — the agent can generate files directly.
+> **Tip:** Use `--dry-run` with either install mode to preview changes before applying them.
+> To remove ADOS later, run `scripts/uninstall.sh --global` or `scripts/uninstall.sh --local`.
 
 ---
 

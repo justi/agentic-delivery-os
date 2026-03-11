@@ -94,6 +94,25 @@ Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.ope
 
 Full definitions: `.opencode/command/*.md`
 
+## Quick start
+
+**Global install** (one-liner — gives you ADOS agents in every project):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main/scripts/install.sh | bash -s -- --global
+```
+
+**Set up a specific project:**
+
+```bash
+~/.ados/repo/scripts/install.sh --local    # copy artifacts into current project
+/bootstrap                                  # AI-guided configuration
+```
+
+**Uninstall:** `scripts/uninstall.sh --global` or `scripts/uninstall.sh --local`
+
+> Full guide: [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
+
 ## Using the system
 
 **Autopilot** (recommended) — `@pm` orchestrates all 10 phases:
