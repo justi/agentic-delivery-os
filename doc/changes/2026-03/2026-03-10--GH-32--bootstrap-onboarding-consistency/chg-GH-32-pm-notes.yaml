@@ -10,7 +10,7 @@ phases:
   review_fix: { started: "2026-03-10T20:56:00Z", completed: "2026-03-10T21:10:00Z" }
   quality_gates: { started: "2026-03-10T21:11:00Z", completed: "2026-03-10T21:20:00Z" }
   dod_check: { started: "2026-03-10T21:21:00Z", completed: "2026-03-10T21:25:00Z" }
-  pr_creation: { started: null, completed: null, url: null }
+  pr_creation: { started: "2026-03-10T21:26:00Z", completed: "2026-03-10T21:30:00Z", url: "https://github.com/juliusz-cwiakalski/agentic-delivery-os/pull/34" }
 decisions:
   - text: "5-part scope: (1) cross-doc consistency fixes, (2) decision records standard, (3) document templates, (4) onboarding guide, (5) bootstrap agent+command"
     date: "2026-03-10"
