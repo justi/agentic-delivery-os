@@ -58,3 +58,12 @@ notes:
   - text: "DoD check: PASS. All phases complete, all 26 AC met, all 36 plan tasks checked, all deliverables verified."
     type: info
     date: "2026-03-10"
+  - text: "North star template added (7th template) — synthesized from 20 real-world north star docs across DaySync, FlagshipX, Menuvivo, Planora. Key innovations: North Star Metric, Decision Filter, explicit scope boundaries."
+    type: info
+    date: "2026-03-11"
+  - text: "Red team review (8 specialists, 22 findings, 4 consensus findings). All 10 prioritized action items implemented: security hardening (trust boundary, write allowlist, credential scan), template count fix, AGENTS.md tree update, onboarding guide restructure (/bootstrap as primary path), code-block label fix, broken link fix, test coverage additions, time estimates. Commit: 1074be9."
+    type: info
+    date: "2026-03-11"
+  - text: "Retro: Red team caught real issues — stale AGENTS.md tree (agents read this first!), buried /bootstrap path, and bootstrapper missing trust boundary. These should have been caught during initial review. The template count drift (CF-1) was caused by post-delivery north-star addition without updating spec/test-plan — need discipline to update all artifacts when scope changes."
+    type: retro
+    date: "2026-03-11"
