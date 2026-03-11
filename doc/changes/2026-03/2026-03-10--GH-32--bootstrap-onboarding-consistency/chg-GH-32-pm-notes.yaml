@@ -67,3 +67,9 @@ notes:
   - text: "Retro: Red team caught real issues — stale AGENTS.md tree (agents read this first!), buried /bootstrap path, and bootstrapper missing trust boundary. These should have been caught during initial review. The template count drift (CF-1) was caused by post-delivery north-star addition without updating spec/test-plan — need discipline to update all artifacts when scope changes."
     type: retro
     date: "2026-03-11"
+  - text: "install.sh update behavior added: copy_updatable_file() for shared files (templates, handbook, doc index) that always track upstream in local mode. Project-specific files (pm-instructions.md) preserved. Version reporting in clone_or_update_repo. Test fix: renamed test to test_local_install_preserves_project_specific_files, added test_local_install_updates_shared_files. 29/29 install tests pass. Commit: 2560e2d."
+    type: info
+    date: "2026-03-11"
+  - text: "Final quality gates: 29/29 install, 22/22 uninstall, 18/18 header tests — all pass. text-to-image tests not on this branch (delivered in GH-26, separate PR)."
+    type: info
+    date: "2026-03-11"
