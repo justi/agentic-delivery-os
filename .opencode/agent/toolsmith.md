@@ -10,9 +10,7 @@ model: anthropic/claude-opus-4-6
 #model: anthropic/claude-opus-4-5
 temperature: 0.2
 
-# at this moment not sure which parameter is supported regardign reasoning effort so setting all I've found
-# in general we want toolsmith to be as capabple as possible as it's quality directly impacts all other tooling, 
-# so we set the highest level for all reasoning effort parameters, but this may be adjusted in the future based on observed performance and cost trade-offs
+# Reasoning effort set to maximum — toolsmith quality directly impacts all downstream tooling
 #reasoningEffort: high
 reasoningEffort: xhigh
 effort: high

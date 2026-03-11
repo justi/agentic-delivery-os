@@ -155,13 +155,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 **Goal**: Establish the decision records standard with a guide and template, building on the `doc/decisions/` directory created in Phase 1.
 
-**Source material** (local filesystem, for @coder reference):
-
-- Decision management instructions: `/home/juliusz/git/menuvivo/menuvivo-docs/doc/decisions/project-decision-management-instructions.md`
-- ADR template (Menuvivo): `/home/juliusz/git/menuvivo/menuvivo-docs/doc/decisions/adr-template.md`
-- Decision records index: `/home/juliusz/git/menuvivo/menuvivo-docs/doc/decisions/00-index.md`
-- Decision record with management approach: `/home/juliusz/git/menuvivo/menuvivo-docs/doc/decisions/MVDR-1-adr-decision-records-management-approach.md`
-- By-repo index: `/home/juliusz/git/menuvivo/menuvivo-docs/doc/decisions/01-by-repo.md`
+**Source material**: Synthesized from best-of-breed decision management systems across multiple projects.
 
 **Tasks**:
 
@@ -216,13 +210,7 @@ Each part builds on the previous: consistency fixes establish a trustworthy base
 
 **Goal**: Create the 6 document templates in `doc/templates/` and update agent prompts to read templates at runtime with fallback to embedded defaults.
 
-**Source material** (local filesystem, for @coder reference):
-
-- Decision record template: `/home/juliusz/git/menuvivo/menuvivo-docs/doc/templates/adr-template.md` (already adapted in Phase 2)
-- Change spec template: `/home/juliusz/git/flagshipx/flagshipx/doc/templates/change-spec-template.md`
-- Feature spec template: `/home/juliusz/git/flagshipx/flagshipx/doc/templates/feature-specification-template.md`
-- Test plan template: `/home/juliusz/git/flagshipx/flagshipx/doc/templates/test-plan-template.md`
-- Test spec template: `/home/juliusz/git/menuvivo/menuvivo-recipes-service/doc/templates/test-spec-template.md`
+**Source material**: Synthesized from best-of-breed templates across multiple projects.
 
 **Tasks**:
 

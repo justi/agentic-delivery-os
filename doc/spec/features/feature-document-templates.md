@@ -95,7 +95,7 @@ Every template follows a consistent pattern:
 
 | Path | Component | Responsibility |
 |------|-----------|----------------|
-| `doc/templates/` | Templates directory | Contains all 6 templates and a README |
+| `doc/templates/` | Templates directory | Contains all 7 templates and a README |
 | `doc/templates/README.md` | Directory overview | Purpose, template inventory, usage instructions |
 | `doc/templates/change-spec-template.md` | Change spec template | 25-section structure matching the change spec standard |
 | `doc/templates/implementation-plan-template.md` | Plan template | Phased implementation plan structure |
@@ -119,7 +119,7 @@ The fallback-to-defaults pattern ensures agents work correctly even when templat
 
 | ID | Category | Requirement | Threshold |
 |----|----------|-------------|-----------|
-| NFR-1 | Completeness | All 6 templates exist in `doc/templates/` | 6/6 present |
+| NFR-1 | Completeness | All 7 templates exist in `doc/templates/` | 7/7 present |
 | NFR-2 | Validity | Each template renders as valid GitHub-flavored Markdown | All sections render |
 | NFR-3 | Guidance | Each template contains inline HTML-comment guidance for every section | 100% section coverage |
 | NFR-4 | Fallback | Agents produce valid documents when templates are absent | No errors, default structure used |

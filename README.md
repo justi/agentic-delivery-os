@@ -46,6 +46,8 @@ Agentic Delivery OS codifies a predictable pipeline where quality and traceabili
 
 ## Quick start
 
+> **Requires:** [OpenCode](https://opencode.ai) — the AI coding agent that runs ADOS agents and commands.
+
 **Global install** (one-liner — gives you ADOS agents in every project):
 
 ```bash
@@ -65,6 +67,8 @@ Then in your AI coding agent:
 ```
 
 **Uninstall:** `~/.ados/repo/scripts/uninstall.sh --global` or `~/.ados/repo/scripts/uninstall.sh --local`
+
+> **Update:** Re-run the same install commands to update to the latest version.
 
 > Full guide: [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
 

@@ -472,7 +472,7 @@ Sync ticket status at lifecycle milestones:
 **Examples of good comments:**
 - "Decided to fix both issues in one PR since they share the same component and deployment. Splitting would duplicate testing."
 - "Blocked: Need UX confirmation on button padding when text wraps to 2 lines. @designer please advise."
-- "For menuvivo-web-page: search input must use same `SearchInput` component from listing page to maintain consistency."
+- "For frontend-app: search input must use same `SearchInput` component from listing page to maintain consistency."
 
 **Examples of bad comments (do not add):**
 - "Planning Complete – Ready for Implementation. Labels added: change, todo-docs..."

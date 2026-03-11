@@ -35,7 +35,7 @@ This change delivers five interconnected parts that together close the gap betwe
 
 ### 2.1 Current State Snapshot
 
-- ADOS has a mature 10-phase delivery process, 18 agents, and 15 commands — all tuned for internal use.
+- ADOS has a mature 10-phase delivery process, 19 agents and 16 commands — all tuned for internal use.
 - The Documentation Handbook (`doc/documentation-handbook.md`) defines a standard tree that references directories and files that do not exist in this repo (`doc/overview/`, `doc/00-index.md`, `doc/templates/`, `doc/adr/`, `/.ai/context-maps/coding-agent-index.md`).
 - The `@architect` agent and `/write-adr` command write ADRs to `doc/adr/` — a directory that does not exist and whose naming supports only one decision type (architectural).
 - Agent prompts embed document structure inline rather than reading from templates, creating a drift risk between what agents produce and what the handbook prescribes.

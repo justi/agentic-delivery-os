@@ -78,7 +78,7 @@ The guide references and links to:
 - `doc/00-index.md` — documentation landing page
 - `doc/overview/` — project overview documents
 - `doc/spec/features/` — feature specifications
-- `doc/templates/` — document templates (6 files)
+- `doc/templates/` — document templates (7 files)
 - `doc/decisions/` — decision records directory
 - `doc/guides/decision-records-management.md` — decision records standard
 
