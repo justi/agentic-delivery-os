@@ -570,6 +570,7 @@ A: The **producer** (the service that exposes the API or publishes the event). C
 - `doc/templates/test-spec-template.md`
 - `doc/templates/test-plan-template.md`
 - `doc/templates/implementation-plan-template.md`
+- `doc/templates/north-star-template.md`
 
 (Keep these **shared** and versioned; link to canonical sources.)
 
