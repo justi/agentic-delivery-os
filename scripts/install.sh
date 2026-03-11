@@ -2,16 +2,19 @@
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
 # Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/scripts/install.sh
-# install.sh — Install Agentic Delivery OS (ADOS) globally or into a local project
+# install.sh — Install or update Agentic Delivery OS (ADOS) globally or into a local project
 #
 # Dependencies: bash>=4, git, diff, cp, mkdir
 # Usage: ./install.sh [--global|--local] [options]
 #
-# Two modes:
+# Three modes:
 #   --global (-g)  Clone ADOS repo to ~/.ados/ and install agent+command definitions
 #                  to ~/.config/opencode/ so they're available in every project.
+#                  Re-running --global updates to the latest version (idempotent).
 #   --local  (-l)  Copy ADOS artifacts into the CURRENT project directory.
 #                  This is the default mode when neither flag is specified.
+#                  Re-running --local updates templates and handbook while preserving
+#                  project-specific files (pm-instructions.md).
 #
 # One-liner install:
 #   curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main/scripts/install.sh | bash -s -- --global
@@ -155,12 +158,16 @@ copy_file_with_diff() {
       log_debug "skip   ${label} (already up to date)"
       ((_unchanged++)) || true
     else
-      if [[ "${FORCE}" == "true" || "${INSTALL_MODE}" == "global" ]]; then
+      # In global mode: always update (agents/commands should track upstream)
+      # In local mode with --force: always update
+      # In local mode with updatable files: update (templates, handbook)
+      # In local mode with project-specific files: skip (pm-instructions, etc.)
+      if [[ "${FORCE}" == "true" || "${INSTALL_MODE}" == "global" || "${_updatable:-false}" == "true" ]]; then
         run_cmd _cp "${src}" "${dest}"
         log_info "update ${label}"
         ((_updated++)) || true
       else
-        log_info "skip   ${label} (exists; use --force to overwrite)"
+        log_info "skip   ${label} (exists, has local changes; use --force to overwrite)"
         ((_unchanged++)) || true
       fi
     fi
@@ -170,6 +177,12 @@ copy_file_with_diff() {
     log_info "add    ${label}"
     ((_added++)) || true
   fi
+}
+
+# Copy a file that should always be updated to match upstream (templates, handbook)
+copy_updatable_file() {
+  local _updatable=true
+  copy_file_with_diff "$@"
 }
 
 # Ensure a directory exists; create stub if missing
@@ -222,13 +235,29 @@ ensure_gitignore_entry() {
 # ============================================================================
 
 clone_or_update_repo() {
+  local before_sha=""
+
   if [[ -d "${ADOS_REPO_DIR}/.git" ]]; then
-    log_info "Updating existing ADOS repo at ${ADOS_REPO_DIR}"
+    before_sha="$(_git -C "${ADOS_REPO_DIR}" rev-parse --short HEAD 2>/dev/null || true)"
+    log_info "Updating existing ADOS repo at ${ADOS_REPO_DIR} (current: ${before_sha:-unknown})"
     run_cmd _git -C "${ADOS_REPO_DIR}" pull --ff-only
   else
     log_info "Cloning ADOS repo to ${ADOS_REPO_DIR}"
     run_cmd _mkdir -p "${ADOS_HOME}"
     run_cmd _git clone "${ADOS_REPO_URL}" "${ADOS_REPO_DIR}"
+  fi
+
+  # Report installed version
+  if [[ -d "${ADOS_REPO_DIR}/.git" && "${DRY_RUN}" != "true" ]]; then
+    local after_sha
+    after_sha="$(_git -C "${ADOS_REPO_DIR}" rev-parse --short HEAD 2>/dev/null || true)"
+    if [[ -n "${before_sha}" && "${before_sha}" != "${after_sha}" ]]; then
+      log_info "Updated: ${before_sha} → ${after_sha}"
+    elif [[ -z "${before_sha}" ]]; then
+      log_info "Installed at: ${after_sha:-unknown}"
+    else
+      log_info "Already at latest: ${after_sha}"
+    fi
   fi
 }
 
@@ -282,10 +311,10 @@ do_global_install() {
 
   printf '\n'
   log_info "Done — ${_added} added, ${_updated} updated, ${_unchanged} unchanged"
-  log_info "ADOS agents and commands are now available globally via OpenCode"
+  log_info "ADOS agents and commands are now available globally"
   printf '\n'
-  log_info "Tip: re-run this script after pulling updates to sync changes"
-  log_info "Tip: run '${ADOS_REPO_DIR}/scripts/install.sh --local' in a project to set it up for ADOS"
+  log_info "To update: re-run this same command (idempotent — only changed files are updated)"
+  log_info "To set up a project: run '${ADOS_REPO_DIR}/scripts/install.sh --local' in a project root"
 }
 
 # ============================================================================
@@ -334,26 +363,26 @@ require_project_root() {
 install_local_files() {
   local -r source_dir="$1"
 
-  # --- Mandatory file copies ---
-  # .ai/agent/pm-instructions.md (template version)
+  # --- Project-specific files (preserve local edits, skip if exists) ---
+  # These are customized per-project; don't overwrite on update
   copy_file_with_diff \
     "${source_dir}/.ai/agent/pm-instructions.md" \
     ".ai/agent/pm-instructions.md" \
     ".ai/agent/pm-instructions.md"
 
-  # doc/documentation-handbook.md
-  copy_file_with_diff \
+  # --- Shared files (always update to match upstream ADOS) ---
+  # These should track upstream; projects should not customize them
+  copy_updatable_file \
     "${source_dir}/doc/documentation-handbook.md" \
     "doc/documentation-handbook.md" \
     "doc/documentation-handbook.md"
 
-  # doc/00-index.md (template version)
-  copy_file_with_diff \
+  copy_updatable_file \
     "${source_dir}/doc/00-index.md" \
     "doc/00-index.md" \
     "doc/00-index.md"
 
-  # doc/templates/ (all templates)
+  # doc/templates/ (always update to latest)
   if [[ -d "${source_dir}/doc/templates" ]]; then
     ensure_dir "doc/templates" "doc/templates"
     local tmpl_file
@@ -361,7 +390,7 @@ install_local_files() {
       [[ -f "${tmpl_file}" ]] || continue
       local name
       name="$(basename "${tmpl_file}")"
-      copy_file_with_diff "${tmpl_file}" "doc/templates/${name}" "doc/templates/${name}"
+      copy_updatable_file "${tmpl_file}" "doc/templates/${name}" "doc/templates/${name}"
     done
   else
     log_warn "Templates directory not found: ${source_dir}/doc/templates"
@@ -397,7 +426,12 @@ do_local_install() {
   printf '\n'
   log_info "Done — ${_added} added, ${_updated} updated, ${_unchanged} unchanged"
   printf '\n'
-  log_info "Run /bootstrap to complete setup with AI-guided configuration"
+  if [[ "${_added}" -gt 0 ]]; then
+    log_info "Run /bootstrap to complete setup with AI-guided configuration"
+  else
+    log_info "Project artifacts updated to latest ADOS version"
+    log_info "Templates and handbook updated; project-specific files preserved"
+  fi
 }
 
 # ============================================================================
@@ -407,12 +441,16 @@ usage() {
   cat <<EOF
 Usage: ${APP_NAME} [--global|--local] [options]
 
-Install Agentic Delivery OS (ADOS) globally or into a local project.
+Install or update Agentic Delivery OS (ADOS) globally or into a local project.
+Re-running is safe and idempotent — only changed files are updated.
 
 Modes:
-  -g, --global    Clone ADOS repo to ~/.ados/ and install agent/command
-                  definitions to ~/.config/opencode/ (available everywhere)
-  -l, --local     Copy ADOS artifacts into the current project (default)
+  -g, --global    Clone/update ADOS repo at ~/.ados/ and install agent/command
+                  definitions to ~/.config/opencode/ (available everywhere).
+                  Re-running pulls latest changes and updates all definitions.
+  -l, --local     Copy ADOS artifacts into the current project (default).
+                  Re-running updates templates and handbook to latest ADOS
+                  while preserving project-specific files (pm-instructions.md).
 
 Options:
   -h, --help      Show this help message
