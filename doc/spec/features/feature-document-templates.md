@@ -14,14 +14,14 @@ links:
   guides:
     - "doc/documentation-handbook.md"
     - "doc/guides/onboarding-existing-project.md"
-summary: "Six document templates in doc/templates/ that agents read at runtime for structural guidance and humans use for manual authoring, with graceful fallback to embedded defaults."
+summary: "Seven document templates in doc/templates/ that agents read at runtime for structural guidance and humans use for manual authoring, with graceful fallback to embedded defaults."
 ---
 
 # Feature: Document Templates
 
 ## Overview
 
-ADOS maintains a set of six document templates in `doc/templates/` that serve as the structural source of truth for the core document types produced during the change delivery lifecycle. Agents read these templates at runtime to guide document structure; if a template is absent, agents fall back gracefully to their embedded default structures. Humans use the same templates for manual authoring.
+ADOS maintains a set of seven document templates in `doc/templates/` that serve as the structural source of truth for the core document types produced during the change delivery lifecycle and project-level artifacts. Agents read these templates at runtime to guide document structure; if a template is absent, agents fall back gracefully to their embedded default structures. Humans use the same templates for manual authoring.
 
 ## Business Context
 
@@ -34,7 +34,7 @@ ADOS maintains a set of six document templates in `doc/templates/` that serve as
 ### Goals & Success Metrics
 
 - **Primary Goal:** Single source of structural truth for all core ADOS document types, readable by both agents and humans.
-- **KPIs:** All 6 templates exist, render as valid GitHub-flavored Markdown, and are referenced by the corresponding agents.
+- **KPIs:** All 7 templates exist, render as valid GitHub-flavored Markdown, and are referenced by the corresponding agents or guides.
 
 ## User Experience & Functionality
 
@@ -48,6 +48,7 @@ ADOS maintains a set of six document templates in `doc/templates/` that serve as
 | `feature-spec-template.md` | Feature specification for `doc/spec/features/` | `@doc-syncer` |
 | `decision-record-template.md` | Decision record (all types) | `@architect` |
 | `test-spec-template.md` | Test specification for `doc/quality/test-specs/` | `@doc-syncer` |
+| `north-star-template.md` | Product north star document for `doc/overview/01-north-star.md` | `@bootstrapper` |
 
 ### Capabilities
 
