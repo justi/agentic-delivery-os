@@ -154,7 +154,7 @@ After the change is implemented and accepted, the workflow reconciles the "curre
 
 Branches follow conventional-commit-aligned types:
 
-- `<type>/<workItemRef>/<slug>` (for example `feat/PDEV-123/responsive-recipes-images`)
+- `<type>/<workItemRef>/<slug>` (for example `feat/PDEV-123/responsive-product-images`)
 
 ## Repo structure
 

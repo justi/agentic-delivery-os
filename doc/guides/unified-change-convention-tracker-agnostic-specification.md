@@ -83,7 +83,7 @@ Within a month folder, each change folder is:
 - `YYYY-MM-DD--<workItemRef>--<slug>/`
 
 Example:
-- `doc/changes/2026-01/2026-01-22--PDEV-123--responsive-recipes-images/`
+- `doc/changes/2026-01/2026-01-22--PDEV-123--responsive-product-images/`
 - `doc/changes/2026-01/2026-01-22--GH-456--inventory-bugfix/`
 
 #### Same-day parallel starts
@@ -167,9 +167,9 @@ Branches are named to be:
 - `<type>/<workItemRef>/<slug>`
 
 Examples:
-- `feat/PDEV-123/responsive-recipes-images`
+- `feat/PDEV-123/responsive-product-images`
 - `fix/GH-456/inventory-bugfix`
-- `refactor/PDEV-789/recipe-service-cleanup`
+- `refactor/PDEV-789/user-service-cleanup`
 
 ### Allowed branch types
 Use conventional commit types (recommended set):
@@ -296,10 +296,10 @@ Minimum recommended sections:
 
 ### Jira feature
 Path:
-- `doc/changes/2026-01/2026-01-22--PDEV-123--responsive-recipes-images/`
+- `doc/changes/2026-01/2026-01-22--PDEV-123--responsive-product-images/`
 
 Branch:
-- `feat/PDEV-123/responsive-recipes-images`
+- `feat/PDEV-123/responsive-product-images`
 
 Files:
 - `chg-PDEV-123-spec.md`

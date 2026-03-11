@@ -4,7 +4,7 @@
 # Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/design.md
 #
 description: Generate and update visual design assets per the project's design system.
-agent: build
+agent: designer
 ---
 
 # Visual Design Command

@@ -214,7 +214,7 @@ Title rules (match `@committer` heuristics):
 Ticket-in-title rule:
 
 - If `workItemRef` is detected (see work_item_ref_detection), the subject MUST start with `<workItemRef> `.
-  Example: `feat(recipes): PDEV-4 add createdAt field to recipes`
+  Example: `feat(users): PDEV-4 add createdAt field to user profiles`
 
 Body guidance (use only sections that apply; keep it tight):
 

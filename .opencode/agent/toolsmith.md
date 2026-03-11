@@ -166,7 +166,7 @@ If you include examples in a created artifact prompt, add a rule: "Follow the pa
 If the agent/command/skill you create is meant for long-running work that risks context overload, must track progress across sessions, or needs a durable state machine.
 </when_to_use>
 <where_to_store>
-.ai/context/{agent|command|skill}/<name>.yaml
+.ai/local/<name>-context.yaml (git-ignored)
 </where_to_store>
 <how_to_apply>
 Embed in the created artifact explicit instructions to read/update this YAML at defined milestones.
@@ -583,16 +583,16 @@ artifacts: []
 </process>
 
 <model_profiles>
-<model id="claude-opus-4.5">
+<model id="claude-opus-4-6">
 <primary_format>XML</primary_format>
 <secondary_format>JSON</secondary_format>
-<best_for>Code generation (80.9% SWE-bench), multi-step reasoning, complex constraint adherence, verification loops</best_for>
+<best_for>Code generation, multi-step reasoning, complex constraint adherence, verification loops</best_for>
 <performance>95/100</performance>
 <cost>$$$</cost>
 <speed>slow (50 tok/s)</speed>
 <notes>Avoid ALL CAPS emphasis; use conditional logic; combine with few-shot for precision</notes>
 </model>
-<model id="claude-sonnet-4.5">
+<model id="claude-sonnet-4-6">
 <primary_format>XML</primary_format>
 <secondary_format>JSON</secondary_format>
 <best_for>Same as Opus but cost-sensitive; good balance of accuracy and cost</best_for>

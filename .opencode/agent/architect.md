@@ -70,9 +70,7 @@ When needed, read and anchor on relevant repo artifacts:
 - Contracts: `doc/contracts/**`
 - Change specs/plans: `doc/changes/**`
 - Overviews and domain docs: `doc/overview/**`, `doc/domain/**`, `doc/diagrams/**`
-- Config/build/infrastructure:
-  - `package.json`, `astro.config.mjs`, `tsconfig.json`, `eslint.config.js`, `vitest.config.ts`, `playwright.config.ts`
-  - `supabase/**`, `scripts/**`, `.gitlab-ci.yml`
+- Config/build/infrastructure: project configuration files (e.g., `package.json`, `tsconfig.json`, build configs, CI/CD configs, infrastructure configs, `scripts/**`)
 - Implementation (for grounding): `src/**`, `e2e/**`, `test/**`
 
 # Typical invocation triggers
