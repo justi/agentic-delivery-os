@@ -79,3 +79,15 @@ notes:
   - text: "Post-v2 quality gates: 30/30 install, 25/25 uninstall, 18/18 header — all 73 tests pass."
     type: info
     date: "2026-03-11"
+  - text: "Human feedback (01-misc.md): 3 items — (1) OpenCode dependency clarity, (2) update path documentation, (3) cross-document consistency. Items 1+2 partially addressed in v2 (onboarding guide only); v3 review covers item 3 comprehensively."
+    type: info
+    date: "2026-03-11"
+  - text: "Red team v3 review (comprehensive pre-public audit). 13 findings: 5 must-fix + 8 should-fix. All 13 addressed. Must-fix: removed menuvivo-web-page from pm.md, private paths from plan, FlagshipX from designer.md + design.md (generalized to project-agnostic), fixed X handle in runner.md, cleaned toolsmith dev notes. Should-fix: collapsed .opencode/README refactoring history into <details>, added @bootstrapper/@external-researcher//bootstrap to OpenCode guide, added OpenCode prerequisite + update path to README/AGENTS Quick Start, fixed template counts 6→7 in feature specs, fixed agent/command counts 18/15→19/16 in change spec. Commit: ed4f959."
+    type: info
+    date: "2026-03-11"
+  - text: "Post-v3 quality gates: 30/30 install, 25/25 uninstall, 18/18 header — all 73 tests pass."
+    type: info
+    date: "2026-03-11"
+  - text: "Retro: Three rounds of red team review (v1→v2→v3) caught progressively finer issues. v1 found structural gaps (security, consistency). v2 found the README blind spot. v3 found private project names leaking through agent definitions — these should have been caught in the initial cross-document audit. The design.md command was entirely FlagshipX-specific — should have been flagged during delivery review. Lesson: when shipping framework tooling, every file that gets copied to user projects needs a 'would this make sense in someone else's repo?' check."
+    type: retro
+    date: "2026-03-11"
