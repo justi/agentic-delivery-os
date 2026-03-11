@@ -11,6 +11,20 @@
 
 ---
 
+## Getting ADOS
+
+Clone the ADOS repository to use as your source for templates and configuration files:
+
+```bash
+git clone --depth=1 https://github.com/juliusz-cwiakalski/agentic-delivery-os.git /tmp/ados-source
+```
+
+You will copy files from this clone during setup. Alternatively, use `/bootstrap` for automated setup (see below).
+
+> **Tip:** If you already have ADOS installed as an AI coding agent extension, skip the clone — the agent can generate files directly.
+
+---
+
 ## Prerequisites
 
 Before starting, ensure you have:
@@ -20,9 +34,45 @@ Before starting, ensure you have:
 - Basic familiarity with ADOS concepts (see [Agents & Commands Guide](opencode-agents-and-commands-guide.md))
 - Access to your team's issue tracker (GitHub Issues or Jira)
 
+> **What to expect:**
+> - **Automated bootstrap:** ~15 minutes (scan + interview + review)
+> - **Manual setup:** ~30 minutes (copy files, configure tracker, create stubs)
+> - **First change (full 10-phase workflow):** ~1 hour
+> - **Ongoing changes:** 15-30 minutes each (agents handle most phases automatically)
+
 ---
 
-## Step 1: Mandatory Artifacts
+## Choose Your Setup Path
+
+> **Automated (recommended):** Run `/bootstrap` and the `@bootstrapper` agent will scan your repo, ask targeted questions, and generate all required artifacts with your approval. Takes ~15 minutes.
+>
+> **Manual (full control):** Follow Steps 1-5 below to set up each artifact individually. Takes ~30 minutes.
+>
+> **Skip to:** [Automated Bootstrap](#automated-bootstrap) | [Manual Setup](#manual-setup-step-by-step)
+
+---
+
+## Automated Bootstrap
+
+```
+/bootstrap
+```
+
+The `@bootstrapper` agent will:
+
+1. **Scan** your repo structure, tech stack, and existing docs
+2. **Assess** what it can infer vs. what needs your input
+3. **Interview** you with targeted questions (~3-7 per round)
+4. **Draft** all required ADOS artifacts for your review
+5. **Write** final artifacts upon your approval
+
+After bootstrap completes, jump to [First Change Walkthrough](#first-change-walkthrough) to validate your setup.
+
+---
+
+## Manual Setup (Step-by-Step)
+
+### Step 1: Mandatory Artifacts
 
 These three files are **required** for ADOS to function. Without them, agents cannot orchestrate changes.
 
@@ -55,7 +105,7 @@ Configures the `@pm` agent for your specific issue tracker and workflow.
 
 **Setup for GitHub Issues:**
 
-```yaml
+```markdown
 # .ai/agent/pm-instructions.md
 
 ## Tracker Configuration
@@ -83,9 +133,11 @@ repo: <your-repo-name>
 - Branch naming: `<type>/GH-<number>/<slug>`
 ```
 
+*Note: This file uses Markdown format despite containing YAML-like configuration tables.*
+
 **Setup for Jira:**
 
-```yaml
+```markdown
 # .ai/agent/pm-instructions.md
 
 ## Tracker Configuration
@@ -111,6 +163,8 @@ base_url: https://<your-domain>.atlassian.net
 - workItemRef format: `<PROJECT>-<number>` (e.g., `PDEV-123`)
 - Branch naming: `<type>/<PROJECT>-<number>/<slug>`
 ```
+
+*Note: This file uses Markdown format despite containing YAML-like configuration tables.*
 
 ### 1.3 `doc/documentation-handbook.md`
 
@@ -229,26 +283,6 @@ The `@pm` agent will orchestrate all 10 phases:
 /check
 /pr
 ```
-
----
-
-## Step 5: Automated Bootstrap (Alternative)
-
-For an automated approach, use the `@bootstrapper` agent:
-
-```
-/bootstrap
-```
-
-The `@bootstrapper` will:
-
-1. Scan your repo structure and tech stack
-2. Assess what it can infer vs. what needs human input
-3. Ask targeted questions about your project
-4. Generate draft artifacts for your review
-5. Write final artifacts upon approval
-
-See the `@bootstrapper` agent documentation for details.
 
 ---
 

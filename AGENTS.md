@@ -38,7 +38,7 @@ Detail: [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 
 ### Orchestration
 - `pm` — orchestrate changes; manage tickets via MCP; never implements code
-- `architect` — architecture decisions and ADR authoring
+- `architect` — architecture decisions and decision record authoring (ADR/PDR/TDR/BDR/ODR)
 
 ### Onboarding
 - `bootstrapper` — automate ADOS adoption for existing projects
@@ -154,9 +154,15 @@ Detail: [doc/guides/unified-change-convention-tracker-agnostic-specification.md]
 ├── tools/                # PATH-able CLI utilities (no .sh extension)
 │   └── .tests/           # test files for tools (test-*.sh)
 └── doc/
-    ├── changes/          # change artifacts (spec, plan, test-plan per workItemRef)
-    ├── guides/           # how-to guides
-    ├── spec/             # current system spec (reconciled after each change)
+    ├── 00-index.md           # documentation landing page
+    ├── changes/              # change artifacts (spec, plan, test-plan per workItemRef)
+    ├── decisions/            # decision records (ADR/PDR/TDR/BDR/ODR)
+    ├── guides/               # how-to guides
+    ├── overview/             # north star, architecture, glossary
+    ├── planning/             # product decisions
+    ├── spec/                 # current system spec (reconciled after each change)
+    ├── templates/            # document templates (7 templates)
+    ├── tools/                # CLI tool user guides
     └── documentation-handbook.md
 ```
 

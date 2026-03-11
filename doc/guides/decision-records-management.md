@@ -254,4 +254,4 @@ For automated creation, use `/plan-decision` to shape the decision context, then
 - [Decision Record Template](../templates/decision-record-template.md)
 - [Decision Records Directory](../decisions/)
 - [Documentation Handbook](../documentation-handbook.md) — §3 standard tree, §6 lifecycle
-- [`@architect` Agent](.opencode/agent/architect.md) — decision workflow
+- [`@architect` Agent](../../.opencode/agent/architect.md) — decision workflow

@@ -29,7 +29,7 @@ This test plan covers all 5 parts of GH-32:
 
 1. **Part 1 — Cross-document consistency**: Ghost reference removal, stale path fixes, missing directory stubs, documentation landing page, `doc/adr/` → `doc/decisions/` migration, handbook reconciliation.
 2. **Part 2 — Decision records**: Management guide, decision record template, agent/command path updates.
-3. **Part 3 — Document templates**: Six templates in `doc/templates/`, agent prompt updates for template reading with fallback.
+3. **Part 3 — Document templates**: Seven templates in `doc/templates/`, agent prompt updates for template reading with fallback.
 4. **Part 4 — Onboarding guide**: Step-by-step ADOS adoption guide for existing projects.
 5. **Part 5 — Bootstrap agent and command**: `@bootstrapper` agent, `/bootstrap` command, `.opencode/README.md` and `AGENTS.md` inventory updates.
 
@@ -76,8 +76,8 @@ This is a **documentation and agent prompt change only** — there is no applica
 | F-6 | Reconcile Handbook §3 standard tree | AC-F6-1 | TC-HBOOK-001 | Covered |
 | F-7 | Decision records management guide | AC-F7-1 | TC-DREC-001 | Covered |
 | F-8 | Decision record template | AC-F8-1 | TC-DREC-002 | Covered |
-| F-9 | Update `@architect`, `/write-adr`, `/plan-decision` | AC-F9-1, AC-F9-2 | TC-DREC-003, TC-DREC-004 | Covered |
-| F-10 | Six document templates | AC-F10-1, AC-F10-2 | TC-TMPL-001, TC-TMPL-002 | Covered |
+| F-9 | Update `@architect`, `/write-adr`, `/plan-decision`, `@pm`, `/plan-change` | AC-F9-1, AC-F9-2 | TC-DREC-003, TC-DREC-004, TC-DREC-005, TC-DREC-006 | Covered |
+| F-10 | Seven document templates | AC-F10-1, AC-F10-2 | TC-TMPL-001, TC-TMPL-002 | Covered |
 | F-11 | Agent template reading with fallback | AC-F11-1, AC-F11-2, AC-F11-3 | TC-TMPL-003, TC-TMPL-004, TC-TMPL-005 | Covered |
 | F-12 | Onboarding guide | AC-F12-1, AC-F12-2, AC-F12-3, AC-F12-4 | TC-ONBRD-001, TC-ONBRD-002, TC-ONBRD-003, TC-ONBRD-004 | Covered |
 | F-13 | `@bootstrapper` agent | AC-F13-1, AC-F13-2, AC-F13-3 | TC-BOOT-001, TC-BOOT-002, TC-BOOT-003 | Covered |
@@ -134,7 +134,9 @@ There are **no unit tests, integration tests, E2E tests, or performance tests** 
 | TC-DREC-002 | Decision record template completeness | Happy Path | High | AC-F8-1 |
 | TC-DREC-003 | `@architect` targets `doc/decisions/` | Happy Path | High | AC-F9-1 |
 | TC-DREC-004 | `/write-adr` and `/plan-decision` use `doc/decisions/` | Happy Path | High | AC-F9-2 |
-| TC-TMPL-001 | Six templates exist in `doc/templates/` | Happy Path | High | AC-F10-1 |
+| TC-DREC-005 | `@pm` agent references `doc/decisions/` correctly | Happy Path | High | AC-F9-1 |
+| TC-DREC-006 | `/plan-change` command references `doc/decisions/` correctly | Happy Path | High | AC-F9-2 |
+| TC-TMPL-001 | Seven templates exist in `doc/templates/` | Happy Path | High | AC-F10-1 |
 | TC-TMPL-002 | Templates are valid GFM with required sections | Happy Path | Medium | AC-F10-2, NFR-2 |
 | TC-TMPL-003 | `@spec-writer` reads template at runtime | Happy Path | High | AC-F11-1 |
 | TC-TMPL-004 | `@spec-writer` fallback when template absent | Edge Case | High | AC-F11-2, NFR-5 |
@@ -479,7 +481,59 @@ There are **no unit tests, integration tests, E2E tests, or performance tests** 
 
 ---
 
-#### TC-TMPL-001 - Six templates exist in `doc/templates/`
+#### TC-DREC-005 - `@pm` agent references `doc/decisions/` correctly
+
+**Scenario Type**: Happy Path
+**Impact Level**: Critical
+**Priority**: High
+**Related IDs**: F-9, AC-F9-1
+**Test Type(s)**: Agent Prompt Review
+**Automation Level**: Semi-automated
+**Target Layer / Location**: `.opencode/agent/pm.md`
+**Tags**: @agent-prompt, @decision-records
+
+**Preconditions**:
+
+- Part 2 deliverables committed.
+
+**Steps**:
+
+1. Verify `@pm` references `doc/decisions/`: `grep -c "doc/decisions" .opencode/agent/pm.md` — expect >= 1.
+2. Verify `@pm` does NOT reference `doc/adr/`: `grep -c "doc/adr" .opencode/agent/pm.md` — expect 0.
+
+**Expected Outcome**:
+
+- `@pm` agent prompt references `doc/decisions/` and does NOT reference `doc/adr/`.
+
+---
+
+#### TC-DREC-006 - `/plan-change` command references `doc/decisions/` correctly
+
+**Scenario Type**: Happy Path
+**Impact Level**: Critical
+**Priority**: High
+**Related IDs**: F-9, AC-F9-2
+**Test Type(s)**: Agent Prompt Review
+**Automation Level**: Semi-automated
+**Target Layer / Location**: `.opencode/command/plan-change.md`
+**Tags**: @agent-prompt, @decision-records
+
+**Preconditions**:
+
+- Part 2 deliverables committed.
+
+**Steps**:
+
+1. Verify `/plan-change` references `doc/decisions/`: `grep -c "doc/decisions" .opencode/command/plan-change.md` — expect >= 1.
+2. Verify `/plan-change` does NOT reference `doc/adr/`: `grep -c "doc/adr" .opencode/command/plan-change.md` — expect 0.
+
+**Expected Outcome**:
+
+- `/plan-change` command references `doc/decisions/` and does NOT reference `doc/adr/`.
+
+---
+
+#### TC-TMPL-001 - Seven templates exist in `doc/templates/`
 
 **Scenario Type**: Happy Path
 **Impact Level**: Critical
@@ -500,10 +554,11 @@ There are **no unit tests, integration tests, E2E tests, or performance tests** 
    - `test -f doc/templates/change-spec-template.md && echo OK`
    - `test -f doc/templates/decision-record-template.md && echo OK`
    - `test -f doc/templates/feature-spec-template.md && echo OK`
+   - `test -f doc/templates/north-star-template.md && echo OK`
    - `test -f doc/templates/test-spec-template.md && echo OK`
    - `test -f doc/templates/test-plan-template.md && echo OK`
    - `test -f doc/templates/implementation-plan-template.md && echo OK`
-2. Verify exactly 6 templates (plus README): `ls doc/templates/*.md | wc -l` — expect 7 (6 templates + README.md).
+2. Verify exactly 7 templates (plus README): `ls doc/templates/*.md | wc -l` — expect 8 (7 templates + README.md).
 
 **Expected Outcome**:
 

@@ -94,7 +94,7 @@ ADOS cannot be adopted by external teams because: (1) its own documentation cont
 | F-7 | Create `doc/guides/decision-records-management.md` defining the decision records standard | Establishes lifecycle, naming, types, and governance for all decision records |
 | F-8 | Create `doc/templates/decision-record-template.md` | Provides a reusable template for all decision record types (ADR/PDR/TDR/BDR/ODR) |
 | F-9 | Update `@architect` agent and `/write-adr` + `/plan-decision` commands to use `doc/decisions/` | Aligns tooling with the new decision records standard |
-| F-10 | Create six document templates in `doc/templates/` | Fulfills handbook §17 and provides runtime-readable templates for agents |
+| F-10 | Create seven document templates in `doc/templates/` | Fulfills handbook §17 and provides runtime-readable templates for agents |
 | F-11 | Update `@spec-writer`, `@plan-writer`, `@test-plan-writer`, `@doc-syncer` to read templates at runtime with fallback to embedded defaults | Ensures template-agent alignment with graceful degradation |
 | F-12 | Create `doc/guides/onboarding-existing-project.md` | Guides teams through ADOS adoption with minimum viable doc inventory |
 | F-13 | Create `@bootstrapper` agent with stateful, multi-session workflow | Automates ADOS adoption via repo scan → confidence assessment → human interview → draft → review → write |
@@ -129,13 +129,14 @@ The guide must define:
 - **Governance**: who can propose, review, accept, and supersede decisions
 
 **F-10 — Document templates**
-Six templates covering the core ADOS document types:
+Seven templates covering the core ADOS document types:
 1. `change-spec-template.md` — change specification
 2. `decision-record-template.md` — decision record (all types)
 3. `feature-spec-template.md` — feature specification for `doc/spec/features/`
-4. `test-spec-template.md` — test specification for `doc/quality/test-specs/`
-5. `test-plan-template.md` — per-change test plan
-6. `implementation-plan-template.md` — per-change implementation plan
+4. `north-star-template.md` — product north star document
+5. `test-spec-template.md` — test specification for `doc/quality/test-specs/`
+6. `test-plan-template.md` — per-change test plan
+7. `implementation-plan-template.md` — per-change implementation plan
 
 Each template includes: front-matter skeleton, all required sections, inline guidance (as HTML comments), and placeholder content showing expected level of detail.
 
@@ -382,7 +383,7 @@ N/A — documentation and agent prompt changes only; no runtime telemetry applic
 
 | ID | Criterion | Linked |
 |----|-----------|--------|
-| AC-F10-1 | **Given** `doc/templates/`, **then** it contains exactly 6 templates: `change-spec-template.md`, `decision-record-template.md`, `feature-spec-template.md`, `test-spec-template.md`, `test-plan-template.md`, `implementation-plan-template.md`. | F-10 |
+| AC-F10-1 | **Given** `doc/templates/`, **then** it contains exactly 7 templates: `change-spec-template.md`, `decision-record-template.md`, `feature-spec-template.md`, `north-star-template.md`, `test-spec-template.md`, `test-plan-template.md`, `implementation-plan-template.md`. | F-10 |
 | AC-F10-2 | **Given** any template file, **when** rendered as GitHub-flavored Markdown, **then** it is valid and contains all required sections with inline guidance as HTML comments. | F-10 |
 | AC-F11-1 | **Given** `@spec-writer`, **when** `doc/templates/change-spec-template.md` exists, **then** the agent reads it to guide document structure. | F-11 |
 | AC-F11-2 | **Given** `@spec-writer`, **when** `doc/templates/change-spec-template.md` does NOT exist, **then** the agent falls back to its embedded default structure with no errors. | F-11 |

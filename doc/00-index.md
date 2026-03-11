@@ -39,6 +39,7 @@
 | [Change Spec](templates/change-spec-template.md) | Change specification |
 | [Decision Record](templates/decision-record-template.md) | Decision records (ADR/PDR/TDR/BDR/ODR) |
 | [Feature Spec](templates/feature-spec-template.md) | Feature specifications |
+| [North Star](templates/north-star-template.md) | Product north star document |
 | [Test Spec](templates/test-spec-template.md) | Test specifications |
 | [Test Plan](templates/test-plan-template.md) | Per-change test plans |
 | [Implementation Plan](templates/implementation-plan-template.md) | Per-change implementation plans |
