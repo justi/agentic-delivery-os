@@ -39,6 +39,8 @@ State is persisted at `.ai/local/bootstrapper-context.yaml` (git-ignored).
 Schema:
 
 ```yaml
+schema_version: 1
+
 project:
   name: <project-name>
   description: <brief-description>
@@ -192,7 +194,10 @@ Write approved artifacts to the filesystem:
 On invocation:
 
 1. Check for existing state at `.ai/local/bootstrapper-context.yaml`
-2. If state exists: read it, determine current phase, and resume
+2. If state exists:
+   a. Verify `schema_version` matches expected version (currently: 1)
+   b. If version mismatch: warn user, offer to migrate or start fresh
+   c. If version matches: determine current phase and resume
 3. If no state: start fresh from Phase 1 (repo scan)
 4. Always show the human what phase we're in and what's been done so far
 </resume_behavior>

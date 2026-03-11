@@ -106,10 +106,15 @@ curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery
 
 ```bash
 ~/.ados/repo/scripts/install.sh --local    # copy artifacts into current project
+```
+
+Then in your AI coding agent:
+
+```text
 /bootstrap                                  # AI-guided configuration
 ```
 
-**Uninstall:** `scripts/uninstall.sh --global` or `scripts/uninstall.sh --local`
+**Uninstall:** `~/.ados/repo/scripts/uninstall.sh --global` or `~/.ados/repo/scripts/uninstall.sh --local`
 
 > Full guide: [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
 

@@ -167,9 +167,28 @@ safe_rmdir() {
   local -r dir="$1"
   local -r label="${2:-${dir}}"
 
+  # Safety: refuse empty path
+  if [[ -z "${dir}" ]]; then
+    log_err "Refusing to remove dangerous path: ''"
+    return "${EXIT_RUNTIME}"
+  fi
+
+  # Canonicalize paths for safe comparison (resolve trailing slashes, dots, symlinks)
+  local canonical_dir canonical_home
+  canonical_dir="$(realpath -m "${dir}" 2>/dev/null || readlink -m "${dir}" 2>/dev/null || printf '%s' "${dir}")"
+  canonical_home="$(realpath -m "${HOME}" 2>/dev/null || readlink -m "${HOME}" 2>/dev/null || printf '%s' "${HOME}")"
+
   # Safety: never rm root or home
-  if [[ -z "${dir}" || "${dir}" == "/" || "${dir}" == "${HOME}" ]]; then
+  if [[ "${canonical_dir}" == "/" || "${canonical_dir}" == "${canonical_home}" ]]; then
     log_err "Refusing to remove dangerous path: '${dir}'"
+    return "${EXIT_RUNTIME}"
+  fi
+
+  # Safety: minimum path depth (at least 3 components like /home/user/dir)
+  local depth
+  depth="$(printf '%s' "${canonical_dir}" | tr -cd '/' | wc -c)"
+  if [[ "${depth}" -lt 3 ]]; then
+    log_err "Refusing to remove shallow path (depth ${depth}): '${dir}'"
     return "${EXIT_RUNTIME}"
   fi
 

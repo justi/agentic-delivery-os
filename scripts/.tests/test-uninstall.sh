@@ -301,6 +301,24 @@ test_safe_rmdir_dry_run() {
   assert_dir_exists "${dir}" "Directory should NOT be removed in dry-run"
 }
 
+test_safe_rmdir_refuses_trailing_slash_home() {
+  local exit_code=0
+  safe_rmdir "${HOME}/" "home-trailing" || exit_code=$?
+  assert_exit_code "${EXIT_RUNTIME}" "${exit_code}" "Should refuse HOME with trailing slash"
+}
+
+test_safe_rmdir_refuses_dot_suffix_home() {
+  local exit_code=0
+  safe_rmdir "${HOME}/." "home-dot" || exit_code=$?
+  assert_exit_code "${EXIT_RUNTIME}" "${exit_code}" "Should refuse HOME with dot suffix"
+}
+
+test_safe_rmdir_refuses_shallow_path() {
+  local exit_code=0
+  safe_rmdir "/tmp" "shallow-path" || exit_code=$?
+  assert_exit_code "${EXIT_RUNTIME}" "${exit_code}" "Should refuse shallow path (depth < 3)"
+}
+
 # ============================================================================
 # INTEGRATION TESTS — Global uninstall
 # ============================================================================
@@ -501,6 +519,9 @@ main() {
   run_test "safe_rmdir refuses empty path" test_safe_rmdir_refuses_empty
   run_test "safe_rmdir refuses root path" test_safe_rmdir_refuses_root
   run_test "safe_rmdir respects dry-run" test_safe_rmdir_dry_run
+  run_test "safe_rmdir refuses HOME with trailing slash" test_safe_rmdir_refuses_trailing_slash_home
+  run_test "safe_rmdir refuses HOME with dot suffix" test_safe_rmdir_refuses_dot_suffix_home
+  run_test "safe_rmdir refuses shallow path" test_safe_rmdir_refuses_shallow_path
 
   # Global uninstall tests
   run_test "global uninstall removes agent files" test_global_uninstall_removes_agents

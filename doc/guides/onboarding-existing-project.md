@@ -36,7 +36,7 @@ git clone --depth=1 https://github.com/juliusz-cwiakalski/agentic-delivery-os.gi
 ```
 
 > **Tip:** Use `--dry-run` with either install mode to preview changes before applying them.
-> To remove ADOS later, run `scripts/uninstall.sh --global` or `scripts/uninstall.sh --local`.
+> To remove ADOS later, run `~/.ados/repo/scripts/uninstall.sh --global` or `~/.ados/repo/scripts/uninstall.sh --local`.
 
 ---
 
@@ -45,7 +45,8 @@ git clone --depth=1 https://github.com/juliusz-cwiakalski/agentic-delivery-os.gi
 Before starting, ensure you have:
 
 - A **git repository** for your project
-- An **AI coding agent** that supports ADOS (e.g., Claude Code with OpenCode, Cursor, Windsurf)
+- **[OpenCode](https://opencode.ai)** — the AI coding agent that ADOS currently targets. OpenCode provides the agent/command framework that ADOS definitions use. Other tools (Claude Code CLI, Cursor, Windsurf) may work with manual configuration but are not officially tested.
+- An **AI provider API key** — OpenCode requires access to an LLM provider (e.g., Anthropic API key for Claude). See [OpenCode docs](https://opencode.ai) for setup.
 - Basic familiarity with ADOS concepts (see [Agents & Commands Guide](opencode-agents-and-commands-guide.md))
 - Access to your team's issue tracker (GitHub Issues or Jira)
 
@@ -226,6 +227,7 @@ Copy the templates directory from ADOS:
 - `test-spec-template.md`
 - `test-plan-template.md`
 - `implementation-plan-template.md`
+- `north-star-template.md`
 
 Agents read these at runtime to guide document structure.
 

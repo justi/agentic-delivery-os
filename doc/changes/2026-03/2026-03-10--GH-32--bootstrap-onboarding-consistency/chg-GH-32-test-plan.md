@@ -1,6 +1,6 @@
 ---
 id: chg-GH-32-test-plan
-status: Proposed
+status: Delivered
 created: "2026-03-10T20:00:00Z"
 last_updated: "2026-03-10T20:00:00Z"
 owners: [juliusz-cwiakalski]

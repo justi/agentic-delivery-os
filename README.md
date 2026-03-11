@@ -39,10 +39,34 @@ Agentic Delivery OS codifies a predictable pipeline where quality and traceabili
 
 ## What this gives you
 
-- A small "virtual team" of repo-local OpenCode agents aligned to SDLC roles (PM, spec writer, planner, coder, reviewer).
+- A team of 19 repo-local agents aligned to SDLC roles (PM, spec writer, planner, coder, reviewer, bootstrapper, and more).
 - A standard artifact set (spec, implementation plan, test plan) stored under `doc/changes/` using stable, tracker-linked names.
 - A versioned, human-readable system spec under `doc/spec/**` that acts as the baseline input for planning the next change (kept up to date via [`/sync-docs`](.opencode/command/sync-docs.md)).
 - Commands that compose those agents into repeatable workflows (manual or autopilot).
+
+## Quick start
+
+**Global install** (one-liner — gives you ADOS agents in every project):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main/scripts/install.sh | bash -s -- --global
+```
+
+**Set up a specific project:**
+
+```bash
+~/.ados/repo/scripts/install.sh --local    # copy artifacts into current project
+```
+
+Then in your AI coding agent:
+
+```text
+/bootstrap                                  # AI-guided configuration
+```
+
+**Uninstall:** `~/.ados/repo/scripts/uninstall.sh --global` or `~/.ados/repo/scripts/uninstall.sh --local`
+
+> Full guide: [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
 
 ## Benefits
 
@@ -54,9 +78,9 @@ Agentic Delivery OS codifies a predictable pipeline where quality and traceabili
 - Better auditability: tickets link to change folders, branches, PR descriptions, and logs.
 - Less noise: in autopilot mode, the tracker is the interface; the [@pm](.opencode/agent/pm.md) agent pings you only when decisions/clarifications/reviews are needed.
 
-## Intention (why I use this)
+## Intention
 
-I use this repo to evolve and validate an AI-native delivery operating model on real work: reduce "prompt roulette", keep humans accountable, and make shipping faster without lowering quality.
+This project exists to evolve and validate an AI-native delivery operating model on real work: reduce "prompt roulette", keep humans accountable, and make shipping faster without lowering quality.
 
 ## Docs at a glance
 
@@ -67,15 +91,16 @@ I use this repo to evolve and validate an AI-native delivery operating model on 
 - Broader docs layout standard (some details may differ per repo): [doc/documentation-handbook.md](doc/documentation-handbook.md)
 - Tooling definitions (agents/commands): [.opencode/README.md](.opencode/README.md)
 - Tracker/PM setup for autopilot mode: [.ai/agent/pm-instructions.md](.ai/agent/pm-instructions.md)
+- Onboarding guide (adopt ADOS in your project): [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
 
 ## What is implemented here
 
 OpenCode tooling (see [.opencode/README.md](.opencode/README.md) for the authoritative list):
 
-- Agents for common SDLC roles:
-  - [@pm](.opencode/agent/pm.md), [@coder](.opencode/agent/coder.md), [@spec-writer](.opencode/agent/spec-writer.md), [@plan-writer](.opencode/agent/plan-writer.md), [@test-plan-writer](.opencode/agent/test-plan-writer.md), [@reviewer](.opencode/agent/reviewer.md), [@doc-syncer](.opencode/agent/doc-syncer.md), [@pr-manager](.opencode/agent/pr-manager.md), [@runner](.opencode/agent/runner.md), [@fixer](.opencode/agent/fixer.md), [@committer](.opencode/agent/committer.md), [@architect](.opencode/agent/architect.md), [@editor](.opencode/agent/editor.md), [@designer](.opencode/agent/designer.md), [@image-generator](.opencode/agent/image-generator.md), [@image-reviewer](.opencode/agent/image-reviewer.md).
-- Commands that compose them into a repeatable workflow:
-  - [/plan-change](.opencode/command/plan-change.md), [/write-spec](.opencode/command/write-spec.md), [/write-plan](.opencode/command/write-plan.md), [/write-test-plan](.opencode/command/write-test-plan.md), [/run-plan](.opencode/command/run-plan.md), [/review](.opencode/command/review.md), [/review-deep](.opencode/command/review-deep.md), [/sync-docs](.opencode/command/sync-docs.md), [/check](.opencode/command/check.md), [/check-fix](.opencode/command/check-fix.md), [/pr](.opencode/command/pr.md), [/commit](.opencode/command/commit.md), [/plan-decision](.opencode/command/plan-decision.md), [/write-adr](.opencode/command/write-adr.md).
+- **19 agents** for SDLC roles:
+  - [@pm](.opencode/agent/pm.md), [@coder](.opencode/agent/coder.md), [@spec-writer](.opencode/agent/spec-writer.md), [@plan-writer](.opencode/agent/plan-writer.md), [@test-plan-writer](.opencode/agent/test-plan-writer.md), [@reviewer](.opencode/agent/reviewer.md), [@doc-syncer](.opencode/agent/doc-syncer.md), [@pr-manager](.opencode/agent/pr-manager.md), [@runner](.opencode/agent/runner.md), [@fixer](.opencode/agent/fixer.md), [@committer](.opencode/agent/committer.md), [@architect](.opencode/agent/architect.md), [@editor](.opencode/agent/editor.md), [@designer](.opencode/agent/designer.md), [@image-generator](.opencode/agent/image-generator.md), [@image-reviewer](.opencode/agent/image-reviewer.md), [@bootstrapper](.opencode/agent/bootstrapper.md), [@external-researcher](.opencode/agent/external-researcher.md), [@toolsmith](.opencode/agent/toolsmith.md).
+- **16 commands** that compose them into a repeatable workflow:
+  - [/plan-change](.opencode/command/plan-change.md), [/write-spec](.opencode/command/write-spec.md), [/write-plan](.opencode/command/write-plan.md), [/write-test-plan](.opencode/command/write-test-plan.md), [/run-plan](.opencode/command/run-plan.md), [/review](.opencode/command/review.md), [/review-deep](.opencode/command/review-deep.md), [/sync-docs](.opencode/command/sync-docs.md), [/check](.opencode/command/check.md), [/check-fix](.opencode/command/check-fix.md), [/pr](.opencode/command/pr.md), [/commit](.opencode/command/commit.md), [/plan-decision](.opencode/command/plan-decision.md), [/write-adr](.opencode/command/write-adr.md), [/bootstrap](.opencode/command/bootstrap.md), [/design](.opencode/command/design.md).
 
 ## Autopilot (PM-driven)
 
@@ -84,7 +109,7 @@ Autopilot mode is a high-level handoff: you provide a ticket reference (or URL) 
 Example prompt:
 
 ```text
-@pm deliver change https://menuvivo.atlassian.net/browse/PDEV-29
+@pm deliver change GH-456
 ```
 
 (You can also use a GitHub issue URL or a `workItemRef` like `GH-456`.)
@@ -133,17 +158,26 @@ Branches follow conventional-commit-aligned types:
 .
 ├── AGENTS.md             # delivery system bootstrap (start here)
 ├── .opencode/            # agent and command definitions (THE product)
-│   ├── agent/            # 18 agents (one .md each)
-│   └── command/          # 15 commands (one .md each)
+│   ├── agent/            # 19 agents (one .md each)
+│   └── command/          # 16 commands (one .md each)
 ├── .ai/
 │   ├── agent/            # PM tracker config (pm-instructions.md)
+│   ├── local/            # git-ignored ephemeral state
 │   └── rules/            # language/tool rules (bash.md)
 ├── scripts/              # repo-internal automation (.sh extension)
 │   └── .tests/           # test files for scripts (test-*.sh)
+├── tools/                # PATH-able CLI utilities (no .sh extension)
+│   └── .tests/           # test files for tools (test-*.sh)
 └── doc/
-    ├── changes/          # change artifacts (spec, plan, test-plan per workItemRef)
-    ├── guides/           # how-to guides (OpenCode workflow, naming conventions)
-    ├── spec/             # current system spec (reconciled after each accepted change)
+    ├── 00-index.md           # documentation landing page
+    ├── changes/              # change artifacts (spec, plan, test-plan per workItemRef)
+    ├── decisions/            # decision records (ADR/PDR/TDR/BDR/ODR)
+    ├── guides/               # how-to guides
+    ├── overview/             # north star, architecture, glossary
+    ├── planning/             # product decisions
+    ├── spec/                 # current system spec (reconciled after each change)
+    ├── templates/            # document templates (7 templates)
+    ├── tools/                # CLI tool user guides
     └── documentation-handbook.md
 ```
 

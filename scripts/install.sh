@@ -230,6 +230,31 @@ ensure_gitignore_entry() {
   log_info "add    .gitignore entry '${entry}'"
 }
 
+# Validate that configurable paths are safe
+validate_paths() {
+  local canonical_home
+  canonical_home="$(realpath -m "${HOME}" 2>/dev/null || readlink -m "${HOME}" 2>/dev/null || printf '%s' "${HOME}")"
+
+  # Validate ADOS_HOME is under $HOME
+  local canonical_ados_home
+  canonical_ados_home="$(realpath -m "${ADOS_HOME}" 2>/dev/null || readlink -m "${ADOS_HOME}" 2>/dev/null || printf '%s' "${ADOS_HOME}")"
+  if [[ "${canonical_ados_home}" != "${canonical_home}"/* ]]; then
+    log_warn "ADOS_HOME is outside \$HOME: ${ADOS_HOME}"
+  fi
+
+  # Validate OPENCODE_GLOBAL_DIR is under $HOME
+  local canonical_opencode
+  canonical_opencode="$(realpath -m "${OPENCODE_GLOBAL_DIR}" 2>/dev/null || readlink -m "${OPENCODE_GLOBAL_DIR}" 2>/dev/null || printf '%s' "${OPENCODE_GLOBAL_DIR}")"
+  if [[ "${canonical_opencode}" != "${canonical_home}"/* ]]; then
+    log_warn "OPENCODE_GLOBAL_DIR is outside \$HOME: ${OPENCODE_GLOBAL_DIR}"
+  fi
+
+  # Validate ADOS_REPO_URL scheme (warn on non-https)
+  if [[ -n "${ADOS_REPO_URL:-}" && "${ADOS_REPO_URL}" != https://* ]]; then
+    log_warn "ADOS_REPO_URL does not use HTTPS: ${ADOS_REPO_URL}"
+  fi
+}
+
 # ============================================================================
 # DOMAIN FUNCTIONS — Global Install
 # ============================================================================
@@ -299,6 +324,7 @@ install_global_files() {
 
 do_global_install() {
   require_cmd git
+  validate_paths
 
   log_info "=== ADOS Global Install ==="
   log_info "ADOS_HOME:          ${ADOS_HOME}"
@@ -411,6 +437,7 @@ install_local_files() {
 
 do_local_install() {
   require_project_root
+  validate_paths
 
   local source_dir
   source_dir="$(resolve_source_dir)" || exit $?

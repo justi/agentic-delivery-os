@@ -2,7 +2,7 @@
 change:
   ref: GH-32
   type: feat
-  status: Proposed
+  status: Delivered
   slug: bootstrap-onboarding-consistency
   title: "Bootstrap agent + onboarding guide + cross-document consistency fixes"
   owners: [juliusz-cwiakalski]

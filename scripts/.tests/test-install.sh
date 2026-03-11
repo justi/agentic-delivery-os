@@ -316,6 +316,24 @@ test_copy_file_missing_source() {
   assert_eq "1" "${exit_code}" "Should return 1 for missing source"
 }
 
+test_copy_updatable_file_updates_without_force() {
+  local src="${_test_tmpdir}/src.md"
+  local dest="${_test_tmpdir}/dest.md"
+  printf '# Updated content\n' > "${src}"
+  printf '# Old content\n' > "${dest}"
+
+  INSTALL_MODE="local"
+  FORCE=false
+  reset_counters
+  copy_updatable_file "${src}" "${dest}" "test.md"
+
+  assert_eq "1" "${_updated}" "Should count as updated (updatable file)"
+
+  local content
+  content="$(cat "${dest}")"
+  assert_eq "# Updated content" "${content}" "Content should be updated without --force"
+}
+
 # ============================================================================
 # INTEGRATION TESTS — ensure_dir
 # ============================================================================
@@ -670,6 +688,7 @@ main() {
   run_test "copy_file_with_diff overwrites in local mode with force" test_copy_file_different_local_force
   run_test "copy_file_with_diff replaces symlink" test_copy_file_symlink_replaced
   run_test "copy_file_with_diff handles missing source" test_copy_file_missing_source
+  run_test "copy_updatable_file updates without --force" test_copy_updatable_file_updates_without_force
 
   # ensure_dir tests
   run_test "ensure_dir creates new directory" test_ensure_dir_creates
