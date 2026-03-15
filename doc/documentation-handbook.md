@@ -258,7 +258,7 @@ summary: "Unify units display across UI using unit IDs + i18n."
 
 1. **Propose a change** in `/doc/changes/YYYY-MM/YYYY-MM-DD--<workItemRef>--<slug>/chg-<workItemRef>-spec.md` (or via `/write-spec <workItemRef>`).
 2. **Discuss & revise** until Accepted/Rejected.
-3. **If the change settles a decision**, write a decision record under `/doc/decisions/` (or use `/plan-decision` + `/write-adr`) and link it from the change.
+3. **If the change settles a decision**, write a decision record under `/doc/decisions/` (or use `/plan-decision` + `/write-decision`) and link it from the change.
 4. **Create or update the per-change TEST PLAN** alongside the spec as `chg-<workItemRef>-test-plan.md` (or via `/write-test-plan <workItemRef>`).
 5. **Create or update the IMPLEMENTATION PLAN** alongside the spec as `chg-<workItemRef>-plan.md` (or via `/write-plan <workItemRef>`).
 6. **Update `/doc/spec/`** to reflect the _final_, coherent behavior (ideally via `/sync-docs <workItemRef>`).

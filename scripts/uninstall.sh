@@ -66,7 +66,7 @@ readonly ADOS_AGENT_FILES=(
 
 # Known ADOS command files (installed globally)
 readonly ADOS_COMMAND_FILES=(
-  bootstrap.md plan-decision.md write-adr.md plan-change.md review.md
+  bootstrap.md plan-decision.md write-decision.md plan-change.md review.md
   commit.md pr.md run-plan.md check.md design.md write-spec.md
   review-deep.md write-plan.md write-test-plan.md sync-docs.md check-fix.md
 )

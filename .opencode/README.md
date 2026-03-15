@@ -62,7 +62,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 - `/review-deep`: deeper review vs spec/plan
 - `/run-plan`: execute an implementation plan
 - `/sync-docs`: reconcile system specs from a change
-- `/write-adr`: write an ADR from planning context
+- `/write-decision`: write a decision record (ADR/PDR/TDR/BDR/ODR) from planning context
 - `/write-plan`: generate an implementation plan
 - `/write-spec`: generate a change spec
 - `/write-test-plan`: generate a change test plan
@@ -112,6 +112,6 @@ Agent and command names were standardized in January 2026. Old-to-new mapping is
 | `/create-pr` | `/pr` | Shorter |
 | `/create-commit` | `/commit` | Shorter |
 | `/plan-architecture-decision` | `/plan-decision` | Shorter |
-| `/write-architecture-decision-record` | `/write-adr` | Shorter |
+| `/write-architecture-decision-record` | `/write-decision` | Generic — supports all decision types |
 
 </details>

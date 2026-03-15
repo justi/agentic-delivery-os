@@ -67,7 +67,7 @@ Use these when you want to trigger a specific step in the process.
 | `/pr`                    | Creates/updates a PR/MR and syncs title + description.        | When preparing for review/merge.           |
 | `/design`                | Generate/update visual identity and UX assets.                | When working on UI/brand assets.           |
 | `/plan-decision`         | Interactive session for architectural decisions.              | When a complex trade-off needs an ADR.     |
-| `/write-adr`             | Generates the formal ADR document.                            | After the decision session.                |
+| `/write-decision`        | Generates the formal decision record (ADR/PDR/TDR/BDR/ODR).  | After the decision session.                |
 | `/bootstrap`             | AI-guided project setup for ADOS adoption.                    | When onboarding a new project to ADOS.     |
 | `/check`                 | Runs quality gates and summarizes logs to files.              | When you need clean, shareable results.    |
 | `/check-fix`             | Runs quality gates and auto-fixes failures.                   | When you want automatic remediation.       |

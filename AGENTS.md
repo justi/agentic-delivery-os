@@ -89,7 +89,7 @@ Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.ope
 | `/commit` | Create one Conventional Commit |
 | `/pr` | Create/update PR/MR |
 | `/plan-decision` | Interactive architecture decision session |
-| `/write-adr` | Generate Architecture Decision Record |
+| `/write-decision` | Generate Decision Record (ADR/PDR/TDR/BDR/ODR) |
 | `/design` | Generate/update visual design assets |
 
 Full definitions: `.opencode/command/*.md`

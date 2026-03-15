@@ -260,7 +260,7 @@ If your project makes architectural, product, or technical decisions, set up dec
    - Naming convention (`<TYPE>-<zeroPad4>-<slug>.md`)
    - Lifecycle (Proposed → Under Review → Accepted)
    - Governance (who proposes, reviews, accepts)
-3. Use `/plan-decision` + `/write-adr` to create your first decision record
+3. Use `/plan-decision` + `/write-decision` to create your first decision record
 
 ---
 

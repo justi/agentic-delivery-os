@@ -224,7 +224,7 @@ Decision records and change specs are complementary:
 
 The `@architect` agent owns the decision workflow for ADR and TDR types. It can:
 
-- Create decision records via the `/plan-decision` + `/write-adr` workflow
+- Create decision records via the `/plan-decision` + `/write-decision` workflow
 - Scan `doc/decisions/` for existing records to inform new decisions
 - Link decision records to change specs
 
@@ -245,7 +245,7 @@ The `@architect` agent owns the decision workflow for ADR and TDR types. It can:
 5. **Accept**: Update status to `Accepted` and set `decision_date`
 6. **Update index**: Add the record to `doc/decisions/00-index.md`
 
-For automated creation, use `/plan-decision` to shape the decision context, then `/write-adr` to generate the record.
+For automated creation, use `/plan-decision` to shape the decision context, then `/write-decision` to generate the record.
 
 ---
 

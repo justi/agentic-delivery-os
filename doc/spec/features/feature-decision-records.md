@@ -33,7 +33,7 @@ ADOS provides a tracker-agnostic standard for recording and managing significant
 ### Goals & Success Metrics
 
 - **Primary Goal:** Every precedent-setting decision has a discoverable, structured record with context, alternatives, and rationale.
-- **KPIs:** Decision records directory exists and is integrated with agent tooling (`@architect`, `/plan-decision`, `/write-adr`).
+- **KPIs:** Decision records directory exists and is integrated with agent tooling (`@architect`, `/plan-decision`, `/write-decision`).
 
 ## User Experience & Functionality
 
@@ -53,7 +53,7 @@ ADOS provides a tracker-agnostic standard for recording and managing significant
 - **Lifecycle management (F-2):** Status transitions from Proposed → Under Review → Accepted → (Deprecated | Superseded).
 - **Immutability after acceptance (F-3):** Accepted decisions are not modified; changes create new superseding records.
 - **Cross-linking (F-4):** Decision records link to change specs via `links.related_changes` and vice versa via `links.decisions`.
-- **Agent integration (F-5):** `@architect` creates records via `/plan-decision` + `/write-adr`; records target `doc/decisions/`.
+- **Agent integration (F-5):** `@architect` creates records via `/plan-decision` + `/write-decision`; records target `doc/decisions/`.
 - **Index maintenance (F-6):** `doc/decisions/00-index.md` provides a table of all records.
 
 ### Naming Convention
@@ -108,7 +108,7 @@ Create a record when a decision is hard to reverse, has cross-component impact, 
 | `doc/guides/decision-records-management.md` | Management guide | Full standard: types, naming, lifecycle, front matter, required sections, governance |
 | `doc/templates/decision-record-template.md` | Authoring template | Reusable template with front-matter skeleton, all sections, and inline HTML-comment guidance |
 | `.opencode/agent/architect.md` | Architect agent | Creates decision records; targets `doc/decisions/` |
-| `.opencode/command/write-adr.md` | Write ADR command | Generates decision record from planning context |
+| `.opencode/command/write-decision.md` | Write Decision command | Generates decision record from planning context |
 | `.opencode/command/plan-decision.md` | Plan Decision command | Interactive decision planning session |
 
 ### Front Matter Schema
@@ -152,7 +152,7 @@ links:
 |----|----------|-------------|-----------|
 | NFR-1 | Completeness | Guide defines all 5 decision types with lifecycle, naming, and governance | 100% coverage |
 | NFR-2 | Template validity | Template renders as valid GitHub-flavored Markdown | All sections present |
-| NFR-3 | Agent alignment | `@architect`, `/write-adr`, `/plan-decision` all target `doc/decisions/` | Zero references to `doc/adr/` |
+| NFR-3 | Agent alignment | `@architect`, `/write-decision`, `/plan-decision` all target `doc/decisions/` | Zero references to `doc/adr/` |
 
 ## Quality Assurance Strategy
 
@@ -161,7 +161,7 @@ links:
 | Level | Scope | Notes |
 |-------|-------|-------|
 | Manual | Template validation | Copy template to `doc/decisions/`; verify all sections render correctly |
-| Manual | Agent workflow | Run `/plan-decision` + `/write-adr`; verify output lands in `doc/decisions/` with correct naming |
+| Manual | Agent workflow | Run `/plan-decision` + `/write-decision`; verify output lands in `doc/decisions/` with correct naming |
 | Search | Reference consistency | Grep for `doc/adr/` across repo; expect zero matches |
 
 ## Dependencies & Risks

@@ -3,7 +3,7 @@
 # MIT License - see LICENSE file for full terms
 # Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/plan-decision.md
 #
-description: Interactive technical-decision planning session to prepare canonical context and ADR number for /write-adr.
+description: Interactive technical-decision planning session to prepare canonical context and decision number for /write-decision.
 agent: architect
 ---
 
@@ -12,9 +12,9 @@ Guide the user through a structured, interactive technical-decision conversation
 
 - Discovers or confirms the decision record number (e.g. 0007) by scanning existing records in doc/decisions/ for the relevant type (ADR, PDR, TDR, BDR, ODR; defaults to ADR).
 - Orients itself in the current repository and high-level documentation under doc/spec/, doc/overview/, doc/changes/, and doc/contracts/.
-- Systematically elicits and refines all information needed by /write-adr (context, problem framing, decision drivers, alternatives, trade-offs, assumptions, verification criteria, etc.), without generating the ADR file itself.
+- Systematically elicits and refines all information needed by /write-decision (context, problem framing, decision drivers, alternatives, trade-offs, assumptions, verification criteria, etc.), without generating the decision record file itself.
 - Applies Archie-style decision-making discipline (clarify problem → confirm drivers → explore options → recommend) without exposing internal mechanics unless asked.
-- Concludes with a compact, machine- and human-friendly planning summary block plus a clear recommendation to invoke `/write-adr <adrNumber>` and, where relevant, to link back to related changes (workItemRef).
+- Concludes with a compact, machine- and human-friendly planning summary block plus a clear recommendation to invoke `/write-decision <number>` and, where relevant, to link back to related changes (workItemRef).
 
 This command never writes files or modifies Git state; it operates purely via conversational planning and read-only repository inspection.
 </purpose>
@@ -75,9 +75,9 @@ Resolution rules:
    - adrNumber (integer form).
    - zeroPad4 (string form, exactly 4 digits; e.g. "0007").
 
-4. Use zeroPad4 consistently when referencing this ADR in summaries, e.g. `ADR-<zeroPad4>` and `/write-adr <zeroPad4>`.
+4. Use zeroPad4 consistently when referencing this decision record in summaries, e.g. `<TYPE>-<zeroPad4>` and `/write-decision <zeroPad4>`.
 
-This command MUST NOT create folders or files in doc/decisions/; it only proposes and confirms the numeric identifier for use by downstream commands.
+This command MUST NOT create folders or files in doc/decisions/; it only proposes and confirms the numeric identifier for use by `/write-decision`.
 </adr_number_resolution>
 
 <context_sources>
@@ -161,7 +161,7 @@ Overall planning session flow (per ADR number):
    - Before concluding, review all captured elements with the user and:
      - Resolve as many open questions as possible via further targeted questions.
      - For remaining questions, confirm BLOCKING vs NON-BLOCKING and that the user is comfortable proceeding to ADR drafting with those unresolved items.
-   - Only then synthesize the final planning summary for /write-adr and suggest running that command.
+    - Only then synthesize the final planning summary for /write-decision and suggest running that command.
      </session_flow>
 
 <questioning_strategy>
@@ -182,13 +182,13 @@ The command must enforce disciplined, high-signal questioning inspired by the Ar
   - "What we know so far" (context, drivers, candidate options).
   - "Options and trade-offs" (structured comparison).
   - "Open questions" (blocking/non-blocking, with owners).
-- If the user asks to "just write the ADR" before enough context is gathered, respond by explaining what key pieces are still missing and ask for them explicitly instead of proceeding with guesswork.
+- If the user asks to "just write the decision record" before enough context is gathered, respond by explaining what key pieces are still missing and ask for them explicitly instead of proceeding with guesswork.
   </questioning_strategy>
 
 <planning_summary_structure>
-When the user confirms that planning feels complete enough to draft the ADR, synthesize a compact, structured planning summary that is easy for both humans and the /write-adr command to consume.
+When the user confirms that planning feels complete enough to draft the decision record, synthesize a compact, structured planning summary that is easy for both humans and the /write-decision command to consume.
 
-The final message of a completed planning session MUST include a block in this form (field order and naming must match exactly; values are illustrative):
+The final message of a completed planning session MUST include a block in this form (field order and naming must match exactly; values are illustrative; `/write-decision` consumes this block directly):
 
 ```md
 <technical_decision_planning_summary>
@@ -296,29 +296,30 @@ Notes:
 - It is acceptable for some lists to be empty if the user explicitly confirms that the aspect is not applicable (e.g., no related changes). Do not invent content.
 - Open questions must retain their blocking flag; do not silently drop unresolved items.
 - This summary block must reflect what the user has actually agreed upon; if something remains uncertain, state it as an assumption, open question, or explicitly deferred item.
+- The `decision_type` field determines which TYPE prefix `/write-decision` will use (defaults to ADR).
   </planning_summary_structure>
 
-<handoff_to_adr>
+<handoff_to_write_decision>
 After emitting the `<technical_decision_planning_summary>` block:
 
 1. Immediately output a concise, human-readable recap, for example:
-   - "Planning for ADR-0007 looks complete. I have synthesized the planning summary above, which /write-adr will use to generate the canonical Architecture Decision Record."
+   - "Planning for ADR-0007 looks complete. I have synthesized the planning summary above, which /write-decision will use to generate the canonical decision record."
 
 2. Recommend the exact next command, using the confirmed zeroPad4 number:
-   - `Next step: run "/write-adr <zeroPad4>" to generate the canonical ADR from this planning context.`
+   - `Next step: run "/write-decision <zeroPad4>" to generate the canonical decision record from this planning context.`
 
-3. If the decision is clearly linked to one or more changes (workItemRef), also recommend ensuring that the corresponding change spec front-matter links back to this ADR once created.
+3. If the decision is clearly linked to one or more changes (workItemRef), also recommend ensuring that the corresponding change spec front-matter links back to this decision record once created.
 
-4. Do NOT call `/write-adr` automatically. The user must trigger this command when ready.
+4. Do NOT call `/write-decision` automatically. The user must trigger this command when ready.
 
-5. Do NOT output the full ADR template as the final answer; only the `<technical_decision_planning_summary>` block is treated as the authoritative planning snapshot for downstream commands.
-   </handoff_to_adr>
+5. Do NOT output the full decision record template as the final answer; only the `<technical_decision_planning_summary>` block is treated as the authoritative planning snapshot for downstream commands.
+   </handoff_to_write_decision>
 
 <constraints>
 - Never generate or suggest code.
 - Never propose or rely on exact file paths or concrete class/module names; always use logical component names that a coding agent can later map to actual files.
 - Do not create, edit, or commit any files; this command is read-only with respect to the filesystem and Git.
-- Do not construct the canonical ADR; only gather and structure planning context for it.
+- Do not construct the canonical decision record; only gather and structure planning context for it.
 - Do not include merge request templates, git commands, or implementation task lists; those belong in change specs, implementation plans, and coding workflows.
 - Use only information available from the user and existing docs; missing details must be exposed as assumptions or open questions, not silently filled in.
 </constraints>
@@ -333,7 +334,7 @@ Example 1 — New architectural decision (no number provided):
   - Identifies decision drivers (operational burden, reliability, ecosystem fit, cost).
   - Shapes alternatives (stay on current queue, adopt Kafka, adopt managed cloud messaging) including do-nothing.
   - Compares options against drivers, highlights trade-offs and unknowns.
-  - Once the user is satisfied, produces `<technical_decision_planning_summary>` for ADR-0004 and suggests: `/write-adr 0004`.
+  - Once the user is satisfied, produces `<technical_decision_planning_summary>` for ADR-0004 and suggests: `/write-decision 0004`.
 
 Example 2 — ADR driven by an existing change:
 
@@ -345,11 +346,11 @@ Example 2 — ADR driven by an existing change:
   - Identifies drivers (correctness, operational simplicity, observability, impact on existing clients).
   - Enumerates alternatives (idempotency keys with dedupe store, exactly-once semantics via transactional outbox, best-effort with compensations), including do-nothing if relevant.
   - Records trade-offs and a recommended decision, plus verification criteria.
-  - Produces `<technical_decision_planning_summary>` for ADR-0021 with `related_changes: ["PDEV-123"]` and suggests using `/write-adr 0021` next.
+  - Produces `<technical_decision_planning_summary>` for ADR-0021 with `related_changes: ["PDEV-123"]` and suggests using `/write-decision 0021` next.
     </examples>
 
 <notes>
 - This command replaces the older free-form Archie prompt usage with a repository-aware, ADR-template–aligned planning conversation.
-- Its primary output is clarity: a structured, explicit understanding of the technical decision that /write-adr can transform into the canonical ADR without guessing.
+- Its primary output is clarity: a structured, explicit understanding of the technical decision that /write-decision can transform into the canonical decision record without guessing.
 - Always prioritize precision, traceability, and user alignment over speed. If in doubt, ask.
 </notes>

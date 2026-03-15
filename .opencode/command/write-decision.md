@@ -1,62 +1,64 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/write-adr.md
+# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/write-decision.md
 #
-description: Generate canonical Architecture Decision Record (ADR) for a given ADR number.
+description: Generate a Decision Record (ADR/PDR/TDR/BDR/ODR) from planning context.
 agent: architect
 ---
 
 <purpose>
-Generate a COMPLETE, rationale-focused Architecture Decision Record for a given ADR number, strictly from planning-session context and existing documentation.
+Generate a COMPLETE, rationale-focused Decision Record for a given decision number, strictly from planning-session context and existing documentation. Supports all five decision types: ADR (Architecture), PDR (Product), TDR (Technical), BDR (Business), and ODR (Operational).
 
 User invocation:
-/write-adr <adrNumber>
+/write-decision <number>
 
-Inputs other than <adrNumber> MUST be sourced from the active technical-decision planning context (especially the `<technical_decision_planning_summary>` block) and relevant repository docs; NOTHING may be invented.
+Inputs other than <number> MUST be sourced from the active technical-decision planning context (especially the `<technical_decision_planning_summary>` block) and relevant repository docs; NOTHING may be invented.
 
-The resulting ADR becomes the canonical record of the decision and its rationale, and should be linked from related changes and specs.
+The resulting decision record becomes the canonical record of the decision and its rationale, and should be linked from related changes and specs.
 </purpose>
 
 <inputs>
-- adrNumber='$1': string — REQUIRED (digits only; will be normalized and zero-padded to 4 digits)
-- allArguments='$ARGUMENTS': string — starts with adrNumber and may be followed by user hints (e.g., title refinements)
+- number='$1': string — REQUIRED (digits only; will be normalized and zero-padded to 4 digits)
+- allArguments='$ARGUMENTS': string — starts with number and may be followed by user hints (e.g., title refinements, decision type override)
 - previous conversation context from /plan-decision planning session, including `<technical_decision_planning_summary>`
 </inputs>
 
 <directory_rules>
 
-- Normalize adrNumber: strip non-digits; pad left with '0' to length 4.
+- Normalize number: strip non-digits; pad left with '0' to length 4.
 - groupFolder is NOT used; all decision records live directly under `doc/decisions/`.
-- decisionType defaults to ADR; may be overridden to PDR, TDR, BDR, or ODR.
+- decisionType defaults to ADR; may be overridden to PDR, TDR, BDR, or ODR based on planning context or user input.
 - slug = normalized-from-title (lowercase ASCII kebab-case, <=60 chars), derived from the decision title.
-- filename = <TYPE>-<adrNumber>-<slug>.md (e.g., ADR-0001-event-bus.md, TDR-0001-state-mgmt.md)
-- fullPath = doc/decisions/<TYPE>-<adrNumber>-<slug>.md
+- filename = <TYPE>-<number>-<slug>.md (e.g., ADR-0001-event-bus.md, TDR-0001-state-mgmt.md)
+- fullPath = doc/decisions/<TYPE>-<number>-<slug>.md
   </directory_rules>
 
 <front_matter_rules>
-A YAML front matter block MUST precede the ADR body and include at least these keys:
+A YAML front matter block MUST precede the decision record body and include at least these keys:
 
-id: ADR-<adrNumber>
-created: <YYYY-MM-DD> # UTC date when ADR file is first created
+id: <TYPE>-<number>                 # e.g., ADR-0001, PDR-0001, TDR-0001
+decision_type: <adr|pdr|tdr|bdr|odr>
+created: <YYYY-MM-DD>              # UTC date when file is first created
 decision_date: null | <YYYY-MM-DD> # Date when status changed to Accepted; may be null for Proposed
-last_updated: <YYYY-MM-DD> # UTC date of last modification
+last_updated: <YYYY-MM-DD>         # UTC date of last modification
 status: <Proposed|Accepted|Deprecated|Superseded>
 summary: <Short one-line summary of the decision>
 owners: [<at least one owner>]
 service: <primary impacted service, system, or domain>
 links:
 related_changes: ["PDEV-123", ...]
-supersedes: ["ADR-####", ...]
-superseded_by: ["ADR-####", ...]
+supersedes: ["<TYPE>-####", ...]
+superseded_by: ["<TYPE>-####", ...]
 spec: ["doc/spec/...", ...]
 contracts: ["doc/contracts/...", ...]
 diagrams: ["doc/diagrams/...", ...]
-adr: ["ADR-####", ...] # other relevant ADRs
+decisions: ["<TYPE>-####", ...]    # other relevant decision records
 
 Validation:
 
-- id MUST be exactly `ADR-<adrNumber>` where <adrNumber> is the zero-padded string form.
+- id MUST be exactly `<TYPE>-<number>` where TYPE is ADR/PDR/TDR/BDR/ODR and <number> is the zero-padded string form.
+- decision_type MUST be one of: adr, pdr, tdr, bdr, odr (lowercase).
 - created and last_updated MUST be valid dates in ISO format YYYY-MM-DD (UTC calendar date).
 - On first creation:
   - status MUST be "Proposed".
@@ -67,26 +69,26 @@ Validation:
   </front_matter_rules>
 
 <context_lookup>
-The ADR generator must base its content on:
+The decision record generator must base its content on:
 
-- The `<technical_decision_planning_summary>` block produced by `/plan-decision <adrNumber>` in the current or recent conversation.
+- The `<technical_decision_planning_summary>` block produced by `/plan-decision <number>` in the current or recent conversation.
 - Relevant change specs under `doc/changes/**/*--*--*/chg-*-spec.md` when `related_changes` are present.
 - Existing decision records under `doc/decisions/**` referenced from planning context (for supersedes/related decisions).
 - Use `doc/templates/decision-record-template.md` as the structural guide for generating the decision record body.
 - System specs under `doc/spec/**` and contracts under `doc/contracts/**` where the decision materially affects them.
 
-If a `<technical_decision_planning_summary>` for this adrNumber is NOT available in context, the command MUST:
+If a `<technical_decision_planning_summary>` for this number is NOT available in context, the command MUST:
 
 - Ask the user to either:
-  - Re-run `/plan-decision <adrNumber>` and complete the planning summary, OR
+  - Re-run `/plan-decision <number>` and complete the planning summary, OR
   - Provide the missing fields explicitly.
-- REFUSE to generate the ADR purely from vague or partial inputs.
+- REFUSE to generate the decision record purely from vague or partial inputs.
   </context_lookup>
 
-<adr_structure>
-The ADR markdown body (after front matter) MUST follow this structure and order:
+<decision_structure>
+The decision record markdown body (after front matter) MUST follow this structure and order:
 
-1. `# ADR-<adrNumber>: <Title>`
+1. `# <TYPE>-<number>: <Title>`
 2. `## Context`
 3. `## Problem Framing (Clarified)`
 4. `## Decision Drivers`
@@ -105,12 +107,12 @@ The ADR markdown body (after front matter) MUST follow this structure and order:
 17. `## References`
 
 No extra top-level sections may be introduced before or between these headings. Additional subsections may be added **within** these sections if they are clearly nested and consistent with the template.
-</adr_structure>
+</decision_structure>
 
 <authoring_rules>
 
 - Use ONLY planning context and existing documentation; do not invent new requirements, drivers, or constraints.
-- "Context" MUST describe the architectural or technical situation, why the decision is needed now, and relevant constraints.
+- "Context" MUST describe the situation (architectural, product, technical, business, or operational as appropriate to the decision type), why the decision is needed now, and relevant constraints.
 - "Problem Framing (Clarified)" MUST reframe the user problem in objective technical terms, highlighting underlying causes.
 - "Decision Drivers" MUST list explicit, prioritized drivers (business, technical, operational, organizational) that the decision optimizes for.
 - "Mental Models & Techniques Used" should summarize which reasoning tools were applied (e.g., First Principles, Inversion, Second-Order Thinking, 5 Whys) as captured in planning.
@@ -130,43 +132,44 @@ No extra top-level sections may be introduced before or between these headings. 
 - "Verification Criteria" MUST list concrete KPIs or signals, with targets and timeframes, for evaluating the impact of the decision.
 - "Confidence Rating" MUST state Low / Medium / High and be justified by reference to data, precedent, or gaps.
 - "Lessons Learned (Retrospective)" MAY initially contain a brief TODO-style note if the decision has not yet been implemented; this section is expected to evolve over time.
-- "Examples & Usage (Optional)" MAY be omitted for early ADRs, but when present should reference representative scenarios, not code internals.
-- "References" MUST link to relevant changes, specs, contracts, ADRs, and external sources.
+- "Examples & Usage (Optional)" MAY be omitted for early decision records, but when present should reference representative scenarios, not code internals.
+- "References" MUST link to relevant changes, specs, contracts, decision records, and external sources.
 - Where planning context contains explicit labels like FACT, ASSUMPTION, TO CONFIRM, these MAY be retained as bold labels in the ADR where useful.
   </authoring_rules>
 
 <placeholder_rules>
 
-- Template placeholders such as `<...>` MUST NOT appear in final ADR content.
+- Template placeholders such as `<...>` MUST NOT appear in final decision record content.
 - If required information is genuinely unavailable (e.g., decision not yet fully implemented so Lessons Learned are unknown):
   - Use explicit TODO-style sentences (e.g., "TODO: Populate lessons learned after first production rollout.").
   - Add any significant unknowns to "### Unresolved Questions" with owners where possible.
-- Under no circumstances may the ADR omit a required section; minimal but honest content is preferred over silence.
+- Under no circumstances may the decision record omit a required section; minimal but honest content is preferred over silence.
   </placeholder_rules>
 
 <process>
-1. Read `$1` as rawAdrNumber; normalize to digits-only and zero-pad to 4 digits.
-2. Obtain or reconstruct the `<technical_decision_planning_summary>` for this adrNumber from the planning session or explicit user-provided data.
+1. Read `$1` as rawNumber; normalize to digits-only and zero-pad to 4 digits.
+2. Obtain or reconstruct the `<technical_decision_planning_summary>` for this number from the planning session or explicit user-provided data.
 3. Derive:
-   - Title from `adr.title`.
-   - slugHint from `adr.slug_hint` or by slugifying the title.
+   - decisionType from planning summary `decision_type` field (defaults to ADR if not specified).
+   - Title from planning summary title field.
+   - slugHint from slug_hint or by slugifying the title.
    - owners, service, labels, related_changes, decision_scope, and other meta fields from the planning summary.
 4. Compute slug from title/slugHint; validate length (<=60 chars) and allowed charset (lowercase letters, numbers, hyphens).
-5. Compute fullPath = `doc/decisions/<TYPE>-<adrNumber>-<slug>.md` (TYPE defaults to ADR).
-6. Determine whether the ADR file already exists:
+5. Compute fullPath = `doc/decisions/<TYPE>-<number>-<slug>.md` (TYPE from step 3).
+6. Determine whether the decision record file already exists:
    - If it exists: load existing front matter and body; treat this as an UPDATE, preserving historical narrative and only appending/adjusting content where appropriate.
-   - If it does not exist: treat this as a NEW ADR.
+   - If it does not exist: treat this as a NEW decision record.
 7. Construct front matter per <front_matter_rules>:
-   - On creation: set created = today (UTC); last_updated = today; status = Proposed; decision_date = null.
+   - On creation: set created = today (UTC); last_updated = today; status = Proposed; decision_date = null; decision_type from step 3.
    - On update: preserve created; set last_updated = today; retain existing status and decision_date unless explicitly overridden by user.
-8. Generate or update ADR body using <adr_structure>, <authoring_rules>, and planning context:
-   - For NEW ADRs: synthesize complete sections from planning summary and referenced docs.
+8. Generate or update decision record body using <decision_structure>, <authoring_rules>, and planning context:
+   - For NEW records: synthesize complete sections from planning summary and referenced docs.
    - For UPDATES: merge new planning information without rewriting historical sections; append to "Unresolved Questions", "Lessons Learned", and "References" instead of erasing prior content.
-9. Write ADR markdown to fullPath.
-10. Stage ONLY this ADR file.
+9. Write decision record markdown to fullPath.
+10. Stage ONLY this decision record file.
 11. Commit with message:
-    - On creation: `docs(adr): add ADR-<adrNumber>-<slug>`
-    - On update: `docs(adr): refine ADR-<adrNumber>-<slug>`
+    - On creation: `docs(<type>): add <TYPE>-<number>-<slug>` (e.g., `docs(adr): add ADR-0001-event-bus`)
+    - On update: `docs(<type>): refine <TYPE>-<number>-<slug>`
 12. Stop. Do not modify change specs, implementation plans, or system specs in this command; those are updated via their dedicated commands.
 </process>
 
@@ -174,7 +177,8 @@ No extra top-level sections may be introduced before or between these headings. 
 
 ---
 
-id: ADR-<adrNumber>
+id: <TYPE>-<number>
+decision_type: <adr|pdr|tdr|bdr|odr>
 created: <created-date-utc>
 decision_date: <decision-date-or-null>
 last_updated: <last-updated-date-utc>
@@ -191,11 +195,11 @@ links:
   spec: []
   contracts: []
   diagrams: []
-  adr: []
+  decisions: []
 
 ---
 
-# ADR-<adrNumber>: <Title>
+# <TYPE>-<number>: <Title>
 
 ## Context
 
@@ -277,7 +281,7 @@ Objective reframing of the problem, focusing on underlying causes rather than sy
 
 ## References
 
-- Linked change specs, technical docs, diagrams, prior ADRs.
+- Linked change specs, technical docs, diagrams, prior decision records.
 - External sources or research influencing the decision.
 
 ---
@@ -288,24 +292,24 @@ Objective reframing of the problem, focusing on underlying causes rather than sy
 
 - Writes exactly one decision record file: `<TYPE>-<adrNumber>-<slug>.md`.
 - File is placed under: `doc/decisions/`.
-- Content follows <adr_structure> and is semantically aligned with `doc/templates/decision-record-template.md`.
+- Content follows <decision_structure> and is semantically aligned with `doc/templates/decision-record-template.md`.
 - No `<...>` placeholders remain; any missing information is called out explicitly as TODO or unresolved questions.
   </output_contract>
 
 <validation>
 - Directory + filename follow <directory_rules>.
 - Front matter validates per <front_matter_rules> (including allowed value sets and required keys).
-- Section order EXACT per <adr_structure> (no missing / extra top-level sections).
+- Section order EXACT per <decision_structure> (no missing / extra top-level sections).
 - Alternatives section includes at least two real options plus baseline (where applicable).
 - Decision section clearly references decision drivers.
 - Verification criteria include measurable targets and timeframes.
 - No low-level implementation tasks, file paths, or git commands appear in the body.
 - If confirmUpdate=true (optional future flag), show diff prior to write.
-- Only the target ADR file is staged & committed; abort if other staged changes exist.
+- Only the target decision record file is staged & committed; abort if other staged changes exist.
 </validation>
 
 <notes>
-- This command formalizes Archie-style technical decisions into repository-native decision records under `doc/decisions/`.
+- This command formalizes technical and non-technical decisions into repository-native decision records under `doc/decisions/`.
 - It relies on `/plan-decision` for high-quality planning context; do not bypass planning by inventing content.
-- After an ADR is Accepted, follow up with `/sync-docs <workItemRef>` (when related to a change) to reconcile `doc/spec/**` and `doc/contracts/**` with the decided architecture.
+- After a decision record is Accepted, follow up with `/sync-docs <workItemRef>` (when related to a change) to reconcile `doc/spec/**` and `doc/contracts/**` with the decided approach.
 </notes>
