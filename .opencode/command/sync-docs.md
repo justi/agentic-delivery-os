@@ -859,7 +859,7 @@ Mapping extracted change artifacts to template sections (non-invented):
 <directives_extension>
 Supported additional directives:
 
-- `full template`: generate full feature-specification-template structure.
+- `full template`: generate full feature-spec-template structure.
 - `concise`: force concise minimal feature template even if full template exists.
 - `omit technical implementation`: skip section 5 (technical) when generating full template style.
 - `omit code modules`: skip section 8.
