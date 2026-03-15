@@ -327,11 +327,11 @@ phases:
   review_fix: { started: null, completed: null }
   quality_gates: { started: null, completed: null }
   dod_check: { started: null, completed: null }
-  pr_creation: { started: null, completed: null }
+  pr_creation: { started: null, completed: null, url: null }
 decisions: []
 open_questions: []
 blockers: []
-notes: ""
+notes: [] # { text, type, date }
 ```
 
 ---
