@@ -11,7 +11,7 @@
   </a>
 </p>
 
-# Agentic Delivery OS
+# Agentic Delivery OS (ADOS)
 
 Turn AI from "chat assistance" into a repeatable, auditable delivery system:
 
