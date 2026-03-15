@@ -6,7 +6,9 @@
 description: Delegate a single Conventional Commit.
 agent: committer
 subtask: true
-model: github-copilot/gpt-4.1
+model: anthropic/claude-sonnet-4-6
+#model: github-copilot/gpt-5-mini
+#model: github-copilot/gpt-4.1
 #model: github-copilot/grok-code-fast-1
 ---
 
