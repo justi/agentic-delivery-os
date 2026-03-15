@@ -10,6 +10,7 @@
     // --- Opus: deep reasoning / orchestration / code / review ---
     "pm":               { "model": "anthropic/claude-opus-4-6" },
     "architect":        { "model": "anthropic/claude-opus-4-6" },
+    "bootstrapper":     { "model": "anthropic/claude-opus-4-6" },
     "coder":            { "model": "anthropic/claude-opus-4-6" },
     "fixer":            { "model": "anthropic/claude-opus-4-6" },
     "reviewer":         { "model": "anthropic/claude-opus-4-6" },

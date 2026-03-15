@@ -1,3 +1,8 @@
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/README.md
+---
 # OpenCode Tooling (Repo)
 
 Repo-local OpenCode agents, commands, and skills.
@@ -32,7 +37,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 - `bootstrapper`: automate ADOS adoption for existing projects
 - `coder`: implement plan phases by writing code for a change
 - `committer`: create one Conventional Commit
-- `designer`: apply visual design system
+- `designer`: visual design and UI implementation
 - `doc-syncer`: reconcile system docs with change
 - `editor`: rewrite/translate content per repo guidelines
 - `external-researcher`: research external sources via MCP (context7, deepwiki, perplexity)
@@ -53,8 +58,8 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 - `/bootstrap`: scaffold ADOS artifacts for an existing project
 - `/check`: run quality gates (no fixes)
 - `/check-fix`: run quality gates and fix failures
-- `/commit`: delegate a single Conventional Commit
-- `/design`: generate/update visual identity assets
+- `/commit`: create one Conventional Commit
+- `/design`: generate/update visual design assets
 - `/plan-change`: plan a change (prep context)
 - `/plan-decision`: plan a technical decision (prep context)
 - `/pr`: create/update PR/MR and sync title/description (`tmp/pr/<branch>/description.md`, via `@pr-manager`); fetches ticket context from Jira/GitHub when `workItemRef` is detected
