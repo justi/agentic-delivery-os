@@ -158,7 +158,7 @@ Follow the decision record rules in this prompt:
      - `created: YYYY-MM-DD` (UTC date, set once on creation)
      - `decision_date: null | YYYY-MM-DD` (UTC date; keep null until Accepted)
      - `last_updated: YYYY-MM-DD` (UTC date; update on every change)
-     - `status: Proposed|Accepted|Deprecated|Superseded` (create as Proposed)
+     - `status: Proposed|Under Review|Accepted|Deprecated|Superseded` (create as Proposed)
      - `summary: <one-line>`
      - `owners: [<at least one>]`
      - `service: <primary impacted service/domain>`
@@ -169,7 +169,7 @@ Follow the decision record rules in this prompt:
        - `spec: []`
        - `contracts: []`
        - `diagrams: []`
-       - `adr: []`
+       - `decisions: []`
    - On create: `status: Proposed`, `decision_date: null`, `created=today(UTC)`, `last_updated=today(UTC)`.
    - On update: preserve `created`; update `last_updated=today(UTC)`; do not change `status` or `decision_date` unless explicitly requested.
    - Body MUST use the exact heading order defined below (no extra top-level sections).
@@ -199,8 +199,8 @@ Follow the decision record rules in this prompt:
     - Stage ONLY the decision record file.
 
 23. **Commit**
-    - New: `docs(decision): add <TYPE>-<zeroPad4>-<slug>`
-    - Update: `docs(decision): refine <TYPE>-<zeroPad4>-<slug>`
+    - New: `docs(<type>): add <TYPE>-<zeroPad4>-<slug>` (e.g., `docs(adr): add ADR-0001-event-bus`)
+    - Update: `docs(<type>): refine <TYPE>-<zeroPad4>-<slug>`
 
 # Output expectations
 

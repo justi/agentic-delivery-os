@@ -222,7 +222,7 @@ Decision records and change specs are complementary:
 
 ### `@architect` Agent
 
-The `@architect` agent owns the decision workflow for ADR and TDR types. It can:
+The `@architect` agent owns the decision workflow for all decision types (ADR, PDR, TDR, BDR, ODR). It can:
 
 - Create decision records via the `/plan-decision` + `/write-decision` workflow
 - Scan `doc/decisions/` for existing records to inform new decisions

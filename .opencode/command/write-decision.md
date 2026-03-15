@@ -42,7 +42,7 @@ decision_type: <adr|pdr|tdr|bdr|odr>
 created: <YYYY-MM-DD>              # UTC date when file is first created
 decision_date: null | <YYYY-MM-DD> # Date when status changed to Accepted; may be null for Proposed
 last_updated: <YYYY-MM-DD>         # UTC date of last modification
-status: <Proposed|Accepted|Deprecated|Superseded>
+status: <Proposed|Under Review|Accepted|Deprecated|Superseded>
 summary: <Short one-line summary of the decision>
 owners: [<at least one owner>]
 service: <primary impacted service, system, or domain>
@@ -182,7 +182,7 @@ decision_type: <adr|pdr|tdr|bdr|odr>
 created: <created-date-utc>
 decision_date: <decision-date-or-null>
 last_updated: <last-updated-date-utc>
-status: <Proposed|Accepted|Deprecated|Superseded>
+status: <Proposed|Under Review|Accepted|Deprecated|Superseded>
 summary: <Short one-line summary of the decision>
 owners:
   - <owner-or-team>
