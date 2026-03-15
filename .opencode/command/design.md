@@ -51,6 +51,10 @@ When the user says **what to generate**, follow these formats:
 - Semantic HTML + utility classes; ensure responsive rules at `sm/md/lg`
 - Include accessible focus states and hover interactions per the design system
 
+## Image Generation
+
+When a design task requires generated images (logos, icons, illustrations, hero images), `@designer` will automatically delegate to `@image-generator`. There is no need to invoke `@image-generator` separately.
+
 ## Guardrails
 
 - **Do:** Keep contrast strong (WCAG AA+); use whitespace; prefer the documented icon style; keep motion subtle
