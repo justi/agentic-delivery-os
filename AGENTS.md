@@ -9,7 +9,7 @@ Quick-reference for AI coding agents and human contributors working in this repo
 
 ## What this repo is
 
-Agentic Delivery OS is a spec-driven software delivery system: a team of 19 AI agents and 16 commands that turn a ticket into a reviewed, tested PR through a deterministic 10-phase workflow.
+Agentic Delivery OS is a spec-driven software delivery system: a team of AI agents and commands that turn a ticket into a reviewed, tested PR through a deterministic 10-phase workflow.
 
 The agents and their prompt definitions (`.opencode/agent/*.md`, `.opencode/command/*.md`) **are the product**. A degraded prompt degrades everything downstream — treat them with the same rigor as production code. The delivery process is used to deliver improvements to itself.
 
@@ -143,8 +143,8 @@ Detail: [doc/guides/unified-change-convention-tracker-agnostic-specification.md]
 .
 ├── AGENTS.md             # this file — delivery system bootstrap
 ├── .opencode/            # agent and command definitions (THE product)
-│   ├── agent/            # 19 agents (one .md each)
-│   └── command/          # 16 commands (one .md each)
+│   ├── agent/            # agents (one .md each)
+│   └── command/          # commands (one .md each)
 ├── .ai/
 │   ├── agent/            # PM tracker config (pm-instructions.md)
 │   ├── local/            # git-ignored ephemeral state
