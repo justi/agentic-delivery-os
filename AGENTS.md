@@ -94,34 +94,6 @@ Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.ope
 
 Full definitions: `.opencode/command/*.md`
 
-## Quick start
-
-> **Requires:** [OpenCode](https://opencode.ai) — the AI coding agent that runs ADOS agents and commands.
-
-**Global install** (one-liner — gives you ADOS agents in every project):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main/scripts/install.sh | bash -s -- --global
-```
-
-**Set up a specific project:**
-
-```bash
-~/.ados/repo/scripts/install.sh --local    # copy artifacts into current project
-```
-
-Then in your AI coding agent:
-
-```text
-/bootstrap                                  # AI-guided configuration
-```
-
-**Uninstall:** `~/.ados/repo/scripts/uninstall.sh --global` or `~/.ados/repo/scripts/uninstall.sh --local`
-
-> **Update:** Re-run the same install commands to update to the latest version.
-
-> Full guide: [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
-
 ## Using the system
 
 **Autopilot** (recommended) — `@pm` orchestrates all 10 phases:
