@@ -415,8 +415,9 @@ When agents surface product decisions:
 3. Analyze decision drivers
 4. Apply mental models (paved road, least privilege, reversible decisions, etc.)
 5. Decide to unblock (mark as "PM-decided" if autonomous)
-6. Document under `doc/planning/product-decisions/` with format:
-   - Filename: `YYYY-MM-DD-<short-kebab-slug>.md`
+6. Document as a PDR (Product Decision Record) in `doc/decisions/` using naming convention `PDR-<zeroPad4>-<slug>.md`
+   - Delegate to `@architect` for creating the decision record, or create directly
+   - See `doc/guides/decision-records-management.md` for template and conventions
    - Include: Context, Decision, Options, Drivers, Reasoning, Consequences
      </product_decisions>
 

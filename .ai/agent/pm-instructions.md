@@ -85,10 +85,10 @@ When no `workItemRef` is provided:
 
 ## Decision Documentation
 
-Product decisions should be documented under:
+Product decisions should be documented as PDRs (Product Decision Records) in:
 
 ```
-doc/planning/product-decisions/YYYY-MM-DD-{short-kebab-slug}.md
+doc/decisions/PDR-<zeroPad4>-<slug>.md
 ```
 
-Include: Context, Decision, Options, Drivers, Reasoning, Consequences.
+Delegate to `@architect` for creating decision records, or create directly following `doc/guides/decision-records-management.md`. Include: Context, Decision, Options, Drivers, Reasoning, Consequences.

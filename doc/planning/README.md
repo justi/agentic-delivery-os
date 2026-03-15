@@ -5,8 +5,6 @@
 ---
 # Planning
 
-Planning artifacts for cross-change coordination and product decisions.
+Planning artifacts for cross-change coordination (e.g., temporary drafts, planning session notes).
 
-## Contents
-
-- `product-decisions/` — Product-level decisions made by `@pm` during change delivery
+> Product decisions are now documented as PDRs in `doc/decisions/`. See [doc/guides/decision-records-management.md](../guides/decision-records-management.md).
