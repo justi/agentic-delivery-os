@@ -205,6 +205,22 @@ orchestrates the "How" by coordinating other agents.
 
 Invoke the PM agent with your requirements or reference a backlog item.
 
+**Direct ticket delivery (recommended):**
+
+```
+@pm deliver change GH-123
+```
+
+Or with a Jira ticket:
+
+```
+@pm deliver change PDEV-456
+```
+
+> **Note:** Requires MCP integration with your issue tracker (GitHub or Jira) configured in `.ai/agent/pm-instructions.md`. The PM agent will fetch ticket details, orchestrate all 10 phases, and create a PR.
+
+**Free-form request (alternative):**
+
 > **User**: "Agent, please act as @pm. I want to add a new 'Dark Mode' feature to the settings page. It
 > should persist in the user profile."
 
