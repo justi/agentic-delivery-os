@@ -209,14 +209,14 @@ Before generating the test plan, attempt to read the structural template:
 2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
 3. Locate change folder, spec, and plan per <discovery_rules>
 4. Read `.ai/rules/testing-strategy.mdc`; FAIL if missing
-4. Extract fields per <field_extraction>
-5. Checkout/create branch
-6. If test plan exists → apply <update_behavior>
-7. Construct test plan using <test_plan_structure> and <authoring_rules>
-8. Write: `<changeFolder>/chg-<workItemRef>-test-plan.md`
-9. Stage ONLY this file
-10. Commit per <commit_rules>
-11. STOP
+5. Extract fields per <field_extraction>
+6. Checkout/create branch
+7. If test plan exists → apply <update_behavior>
+8. Construct test plan using <test_plan_structure> and <authoring_rules>
+9. Write: `<changeFolder>/chg-<workItemRef>-test-plan.md`
+10. Stage ONLY this file
+11. Commit per <commit_rules>
+12. STOP
 </process>
 
 <output_contract>

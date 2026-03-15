@@ -185,15 +185,15 @@ Before generating the plan, attempt to read the structural template:
 1. Parse `workItemRef` from input
 2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
 3. Locate change folder and spec file per <discovery_rules>
-3. Extract fields per <field_extraction>
-4. Validate required fields
-5. Checkout/create branch `<changeType>/<workItemRef>/<slug>`
-6. If plan exists → load for update per <update_behavior>
-7. Construct plan using <plan_structure> and <authoring_rules>
-8. Write: `<changeFolder>/chg-<workItemRef>-plan.md`
-9. Stage ONLY this file
-10. Commit per <commit_rules>
-11. STOP
+4. Extract fields per <field_extraction>
+5. Validate required fields
+6. Checkout/create branch `<changeType>/<workItemRef>/<slug>`
+7. If plan exists → load for update per <update_behavior>
+8. Construct plan using <plan_structure> and <authoring_rules>
+9. Write: `<changeFolder>/chg-<workItemRef>-plan.md`
+10. Stage ONLY this file
+11. Commit per <commit_rules>
+12. STOP
 </process>
 
 <output_contract>

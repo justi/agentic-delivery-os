@@ -38,8 +38,7 @@ summary: "Repository documentation structure, conventions, and workflow."
    - OpenCode tooling (agents/commands) lives under `/.opencode`.
    - Repo-specific agent instructions live under `/.ai/agent`.
    - Local agent context lives under `/.ai/local` and is git-ignored.
-2. **Single Source of Truth:** Contracts (OpenAPI/AsyncAPI/schemas) are canonical under `/doc/contracts` in the **owning
-   ** repo; consumers pull them as versioned artifacts.
+2. **Single Source of Truth:** Contracts (OpenAPI/AsyncAPI/schemas) are canonical under `/doc/contracts` in the **owning repo**; consumers pull them as versioned artifacts.
 3. **Evolution is Trackable:** New behavior starts as a **Change** (`/doc/changes/YYYY-MM/YYYY-MM-DD--<workItemRef>--<slug>/`), settles with a **Decision Record**, and
    updates the **Spec** (`/doc/spec`).
 4. **Predictable Conventions:** Numbering, front-matter, and naming are consistent and enforced by lightweight checks.

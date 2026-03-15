@@ -184,15 +184,15 @@ Before generating the spec, attempt to read the structural template:
 2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
 3. Gather planning-session context
 4. Compute slug from title (lowercase kebab-case, ≤60 chars)
-4. Determine change folder path per <discovery_rules>
-5. Determine `change.type` from context
-6. Assemble front matter per <front_matter_rules>
-7. Checkout/create branch `<change.type>/<workItemRef>/<slug>`
-8. Generate spec using <spec_structure> and <authoring_rules>
-9. Write file: `<changeFolder>/chg-<workItemRef>-spec.md`
-10. Stage ONLY this file
-11. Commit with: `docs(change-spec): add spec for <workItemRef>`
-12. STOP (no implementation actions)
+5. Determine change folder path per <discovery_rules>
+6. Determine `change.type` from context
+7. Assemble front matter per <front_matter_rules>
+8. Checkout/create branch `<change.type>/<workItemRef>/<slug>`
+9. Generate spec using <spec_structure> and <authoring_rules>
+10. Write file: `<changeFolder>/chg-<workItemRef>-spec.md`
+11. Stage ONLY this file
+12. Commit with: `docs(change-spec): add spec for <workItemRef>`
+13. STOP (no implementation actions)
 </process>
 
 <output_contract>
