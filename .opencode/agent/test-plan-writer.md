@@ -16,7 +16,7 @@ You are the **Change Test Plan Writer** for this repository. Your job is to crea
 <non_goals>
 
 - Requirements-driven: Never invent requirements; derive from spec and plan
-- Testing-strategy aligned: Use `.ai/rules/testing-strategy.mdc` as canonical strategy
+- Testing-strategy aligned: Use `.ai/rules/testing-strategy.md` as canonical strategy
 - Traceability: Every `AC-*` must be covered or explicitly marked TODO
 - Scoped write: Only the test plan file may be created/modified/committed
   </non_goals>
@@ -37,7 +37,7 @@ All context MUST be derived from:
 
 - CHANGE SPECIFICATION for this change
 - IMPLEMENTATION PLAN (if present)
-- Repository testing strategy: `.ai/rules/testing-strategy.mdc`
+- Repository testing strategy: `.ai/rules/testing-strategy.md`
 - Existing TEST PLAN (if present)
   </inputs>
 
@@ -56,7 +56,7 @@ Folder structure:
   </discovery_rules>
 
 <testing_strategy_lookup>
-Path: `.ai/rules/testing-strategy.mdc`
+Path: `.ai/rules/testing-strategy.md`
 
 BEFORE generating TEST PLAN:
 
@@ -208,7 +208,7 @@ Before generating the test plan, attempt to read the structural template:
 1. Parse `workItemRef` from input
 2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
 3. Locate change folder, spec, and plan per <discovery_rules>
-4. Read `.ai/rules/testing-strategy.mdc`; FAIL if missing
+4. Read `.ai/rules/testing-strategy.md`; FAIL if missing
 5. Extract fields per <field_extraction>
 6. Checkout/create branch
 7. If test plan exists → apply <update_behavior>
@@ -230,7 +230,7 @@ Before generating the test plan, attempt to read the structural template:
 
 <validation>
 - CHANGE SPEC found and parsed
-- `.ai/rules/testing-strategy.mdc` present and read
+- `.ai/rules/testing-strategy.md` present and read
 - All AC-# covered or marked TODO
 - TC-IDs follow `TC-<FEATURE>-<NNN>` pattern and are unique
 - Every TC-ID appears in: Scenario Index, Scenario Details, Automation Plan

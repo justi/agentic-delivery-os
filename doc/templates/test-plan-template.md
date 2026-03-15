@@ -14,7 +14,7 @@ summary: "<from-spec>"
 links:
   change_spec: <relative-path>           # e.g., ./chg-GH-456-spec.md
   implementation_plan: <relative-path>   # e.g., ./chg-GH-456-plan.md (if exists)
-  testing_strategy: .ai/rules/testing-strategy.mdc
+  testing_strategy: .ai/rules/testing-strategy.md
 ---
 
 <!-- TEMPLATE INSTRUCTIONS
