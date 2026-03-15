@@ -58,6 +58,32 @@ Before starting, ensure you have:
 
 ---
 
+## Artifact Checklist
+
+ADOS is both a framework you adopt **and** a system that uses itself. Some artifacts are generic (copy as-is from the ADOS repo), while others must be written specifically for your project. Use this table to plan your setup:
+
+| Artifact | Path | Action | Notes |
+|----------|------|--------|-------|
+| **Mandatory** | | | |
+| AGENTS.md | `AGENTS.md` | Copy & customize | Customize project description, repo structure, key references |
+| PM instructions | `.ai/agent/pm-instructions.md` | Create & customize | Configure your tracker (GitHub/Jira), workflow mapping, labels |
+| Documentation handbook | `doc/documentation-handbook.md` | Copy as-is | Shared standard — keep identical across repos |
+| **Recommended** | | | |
+| Documentation index | `doc/00-index.md` | Copy & customize | Update links to match your docs |
+| Document templates | `doc/templates/` | Copy as-is | 7 templates — agents read at runtime |
+| Decision records dir | `doc/decisions/` | Copy as-is | README.md + 00-index.md stubs |
+| AI rules index | `.ai/rules/README.md` | Copy & customize | Add project-specific rules to routing table |
+| **Optional (create as needed)** | | | |
+| Project overview | `doc/overview/` | Create & customize | North star, architecture, glossary |
+| Feature specs | `doc/spec/features/` | Create & customize | Current-truth feature descriptions |
+| Coding rules | `.ai/rules/<topic>.md` | Create & customize | Language/framework-specific coding standards |
+| Testing strategy | `.ai/rules/testing-strategy.md` | Create & customize | Required before `@test-plan-writer` can run |
+| Project guides | `doc/guides/` | Create & customize | Dev setup, debugging, deployment, etc. |
+
+> **Decision management:** All decisions (architecture, product, technical, business, operational) go in `doc/decisions/` — see the [Decision Records Management Guide](decision-records-management.md).
+
+---
+
 ## Choose Your Setup Path
 
 > **Automated (recommended):** Run `/bootstrap` and the `@bootstrapper` agent will scan your repo, ask targeted questions, and generate all required artifacts with your approval. Takes ~15 minutes.
