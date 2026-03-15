@@ -125,11 +125,11 @@ For the detailed walkthrough, see [doc/guides/opencode-agents-and-commands-guide
 ```text
 /plan-change <workItemRef?>
 /write-spec <workItemRef>
-/write-plan <workItemRef>
 /write-test-plan <workItemRef>
+/write-plan <workItemRef>
 /run-plan <workItemRef>
-/review <workItemRef>
 /sync-docs <workItemRef>
+/review <workItemRef>
 /check
 /pr
 ```

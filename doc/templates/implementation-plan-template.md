@@ -112,7 +112,6 @@ version_impact: <from-spec>
 
 <!-- Add more phases as needed. Final phase should include:
 - Version bump per repo conventions
-- CHANGELOG.md entry
 - Spec reconciliation
 -->
 

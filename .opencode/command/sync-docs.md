@@ -207,7 +207,7 @@ User-visible summary MUST include:
 **Metadata**
 
 - **Version:** 1.0
-- **Status:** [Draft | Implemented | Live | Deprecated]
+- **Status:** Current # Current | Deprecated
 - **Owner:** [Team/Person]
 - **Technical Lead:** [Name]
 - **Last Updated:** YYYY-MM-DD
@@ -826,7 +826,7 @@ This section is mainly for human governance; AI agents do not need to modify it 
 
 <feature_template_detection>
 
-- If repository contains `doc/templates/feature-specification-template.md`, treat that as canonical full feature spec style.
+- If repository contains `doc/templates/feature-spec-template.md`, treat that as canonical full feature spec style.
 - Existing feature files without YAML front matter but starting with `# Feature:` are preserved; do not replace leading metadata lines (Version, Last Updated, Status).
 - When creating a new feature spec in full template style: prepend YAML front matter (for machine readability) THEN retain template sections 1–9 below it.
 - If directive `full template` present: always generate full template style (even if YAML-only spec existed).

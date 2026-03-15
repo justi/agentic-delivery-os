@@ -128,7 +128,6 @@ Phase formatting:
 Final release phase MUST include:
 
 - Version bump per repo conventions
-- CHANGELOG.md entry
 - Spec reconciliation
   </authoring_rules>
 

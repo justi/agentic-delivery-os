@@ -66,7 +66,7 @@ Detail: [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 ### Specialized
 - `external-researcher` — research via MCP (context7, deepwiki, perplexity)
 - `image-generator` — generate AI images via text-to-image CLI
-- `image-reviewer` — analyze screenshots and visual artifacts (subagent)
+- `image-reviewer` — analyze images, screenshots, and visual artifacts
 - `toolsmith` — create and tune agents, commands, and skills
 
 Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.opencode/README.md)
@@ -106,7 +106,7 @@ Full definitions: `.opencode/command/*.md`
 
 ```
 /plan-change → /write-spec <ref> → /write-test-plan <ref> → /write-plan <ref>
-→ /run-plan <ref> → /review <ref> → /sync-docs <ref> → /check → /pr
+→ /run-plan <ref> → /sync-docs <ref> → /review <ref> → /check → /pr
 ```
 
 Guide: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md)
