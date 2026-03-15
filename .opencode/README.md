@@ -28,7 +28,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 
 ## Agents
 
-- `architect`: architecture decisions and ADR authoring
+- `architect`: architecture decisions and decision record authoring (ADR/PDR/TDR/BDR/ODR)
 - `bootstrapper`: automate ADOS adoption for existing projects
 - `coder`: implement plan phases by writing code for a change
 - `committer`: create one Conventional Commit

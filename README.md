@@ -178,7 +178,7 @@ Branches follow conventional-commit-aligned types:
     ├── decisions/            # decision records (ADR/PDR/TDR/BDR/ODR)
     ├── guides/               # how-to guides
     ├── overview/             # north star, architecture, glossary
-    ├── planning/             # product decisions
+    ├── planning/             # internal planning notes
     ├── spec/                 # current system spec (reconciled after each change)
     ├── templates/            # document templates (7 templates)
     ├── tools/                # CLI tool user guides
