@@ -58,6 +58,7 @@ summary: "Repository documentation structure, conventions, and workflow."
 
 /.ai/                               # Repo-specific agent config + local context
   /agent/                            # Repo-specific agent instructions (committed)
+  /checklists/                       # Review checklists (e.g., code-review.md)
   /local/                            # Local agent context (git-ignored)
   /rules/                            # Optional org-wide rules
 
