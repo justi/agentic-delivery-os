@@ -13,8 +13,16 @@
 #                  Re-running --global updates to the latest version (idempotent).
 #   --local  (-l)  Copy ADOS artifacts into the CURRENT project directory.
 #                  This is the default mode when neither flag is specified.
-#                  Re-running --local updates templates and handbook while preserving
-#                  project-specific files (pm-instructions.md).
+#                  Re-running --local updates templates, guides, and handbook while
+#                  preserving project-specific files (pm-instructions.md).
+#
+# Interactive mode:
+#   --interactive (-i)  When a file differs from upstream, show a colored unified
+#                       diff and prompt whether to overwrite or keep the local version.
+#
+# Auto-fetch:
+#   By default, --local pulls the latest ADOS source before copying files.
+#   --no-fetch disables auto-fetch (useful for offline or pinned-version installs).
 #
 # One-liner install:
 #   curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main/scripts/install.sh | bash -s -- --global
@@ -45,7 +53,7 @@ IFS=$'\n\t'
 # SETTINGS
 # ============================================================================
 readonly APP_NAME="ados-install"
-readonly APP_VERSION="1.0.0"
+readonly APP_VERSION="2.0.0"
 readonly LOG_TAG="(${APP_NAME})"
 
 # Exit codes
@@ -55,7 +63,56 @@ readonly EXIT_CONFIG=3
 readonly EXIT_RUNTIME=4
 readonly EXIT_EXTERNAL=5
 
-# Configurable via environment
+# ============================================================================
+# FILE MANIFEST — What gets installed locally
+# Review these arrays to understand exactly what ADOS copies into your project.
+# ============================================================================
+
+# Files that ALWAYS track upstream ADOS (auto-updated on re-run)
+readonly ADOS_UPDATABLE_FILES=(
+  # Documentation handbook
+  "doc/documentation-handbook.md"
+  # Documentation index
+  "doc/00-index.md"
+  # Generic ADOS guides (framework docs, not project-specific)
+  "doc/guides/change-lifecycle.md"
+  "doc/guides/unified-change-convention-tracker-agnostic-specification.md"
+  "doc/guides/decision-records-management.md"
+  "doc/guides/opencode-agents-and-commands-guide.md"
+  "doc/guides/opencode-model-configuration.md"
+  "doc/guides/tools-convention.md"
+  "doc/guides/copywriting.md"
+  "doc/guides/system-dependencies.md"
+  "doc/guides/onboarding-existing-project.md"
+  # Decision records stubs
+  "doc/decisions/README.md"
+  "doc/decisions/00-index.md"
+  # AI rules index
+  ".ai/rules/README.md"
+)
+
+# Template files (also always track upstream) — glob-copied from doc/templates/
+readonly ADOS_TEMPLATE_DIR="doc/templates"
+
+# Files that are PROJECT-SPECIFIC (skip if exists, preserve local edits)
+readonly ADOS_PROJECT_FILES=(
+  ".ai/agent/pm-instructions.md"
+)
+
+# Directories to create as empty stubs
+readonly ADOS_LOCAL_DIRS=(
+  "doc/overview"
+  "doc/spec/features"
+  "doc/decisions"
+  "doc/changes"
+  "doc/guides"
+  ".ai/local"
+  ".ai/rules"
+)
+
+# ============================================================================
+# CONFIGURABLE VIA ENVIRONMENT
+# ============================================================================
 readonly ADOS_REPO_URL="${ADOS_REPO_URL:-https://github.com/juliusz-cwiakalski/agentic-delivery-os.git}"
 readonly ADOS_RAW_URL="${ADOS_RAW_URL:-https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main}"
 readonly ADOS_HOME="${ADOS_HOME:-${HOME}/.ados}"
@@ -65,6 +122,8 @@ readonly OPENCODE_GLOBAL_DIR="${OPENCODE_GLOBAL_DIR:-${HOME}/.config/opencode}"
 DRY_RUN="${DRY_RUN:-false}"
 VERBOSE="${VERBOSE:-false}"
 FORCE="${FORCE:-false}"
+INTERACTIVE="${INTERACTIVE:-false}"
+NO_FETCH="${NO_FETCH:-false}"
 
 # Install mode: "global" or "local"
 INSTALL_MODE=""
@@ -137,6 +196,26 @@ reset_counters() {
   _unchanged=0
 }
 
+# Show a colored unified diff between local and upstream, then prompt.
+# Returns 0 (overwrite) or 1 (skip).
+prompt_diff_overwrite() {
+  local -r src="$1"
+  local -r dest="$2"
+  local -r label="${3:-$(basename "${dest}")}"
+
+  printf '\n--- %s differs from upstream ---\n' "${label}"
+  _diff --color=auto -u "${dest}" "${src}" 2>/dev/null || _diff -u "${dest}" "${src}" || true
+  printf '\n'
+
+  printf 'Overwrite %s with upstream version? [y/n]: ' "${label}"
+  local answer
+  read -r answer
+  case "${answer}" in
+    [yY]|[yY][eE][sS]) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 copy_file_with_diff() {
   local -r src="$1"
   local -r dest="$2"
@@ -158,16 +237,29 @@ copy_file_with_diff() {
       log_debug "skip   ${label} (already up to date)"
       ((_unchanged++)) || true
     else
-      # In global mode: always update (agents/commands should track upstream)
-      # In local mode with --force: always update
-      # In local mode with updatable files: update (templates, handbook)
-      # In local mode with project-specific files: skip (pm-instructions, etc.)
-      if [[ "${FORCE}" == "true" || "${INSTALL_MODE}" == "global" || "${_updatable:-false}" == "true" ]]; then
+      if [[ "${FORCE}" == "true" || "${INSTALL_MODE}" == "global" ]]; then
+        # Always update in global mode or with --force
+        run_cmd _cp "${src}" "${dest}"
+        log_info "update ${label}"
+        ((_updated++)) || true
+      elif [[ "${INTERACTIVE}" == "true" ]]; then
+        # Interactive: show diff and ask
+        if prompt_diff_overwrite "${src}" "${dest}" "${label}"; then
+          run_cmd _cp "${src}" "${dest}"
+          log_info "update ${label}"
+          ((_updated++)) || true
+        else
+          log_info "skip   ${label} (kept local version)"
+          ((_unchanged++)) || true
+        fi
+      elif [[ "${_updatable:-false}" == "true" ]]; then
+        # Updatable file: auto-update
         run_cmd _cp "${src}" "${dest}"
         log_info "update ${label}"
         ((_updated++)) || true
       else
-        log_info "skip   ${label} (exists, has local changes; use --force to overwrite)"
+        # Project-specific: preserve
+        log_info "skip   ${label} (local changes; use --force or --interactive)"
         ((_unchanged++)) || true
       fi
     fi
@@ -379,6 +471,45 @@ resolve_source_dir() {
   return "${EXIT_CONFIG}"
 }
 
+# Pull latest ADOS source before copying files (unless disabled)
+auto_fetch_source() {
+  local -r source_dir="$1"
+
+  # Skip if auto-fetch is disabled
+  if [[ "${NO_FETCH}" == "true" ]]; then
+    log_debug "Auto-fetch disabled (--no-fetch)"
+    return 0
+  fi
+
+  # Skip if ADOS_SOURCE_DIR is explicitly set (user controls source)
+  if [[ -n "${ADOS_SOURCE_DIR:-}" ]]; then
+    log_debug "Auto-fetch skipped (ADOS_SOURCE_DIR is set by user)"
+    return 0
+  fi
+
+  # Only fetch if source is a git repo
+  if [[ ! -d "${source_dir}/.git" ]]; then
+    log_debug "Auto-fetch skipped (source is not a git repo)"
+    return 0
+  fi
+
+  log_info "Fetching latest ADOS source..."
+  if run_cmd _git -C "${source_dir}" pull --ff-only 2>/dev/null; then
+    log_debug "Auto-fetch completed"
+  else
+    log_warn "Auto-fetch failed (continuing with current version; use --no-fetch to suppress)"
+  fi
+
+  # Show version info
+  if [[ "${DRY_RUN}" != "true" ]]; then
+    local short_sha
+    short_sha="$(_git -C "${source_dir}" rev-parse --short HEAD 2>/dev/null || true)"
+    if [[ -n "${short_sha}" ]]; then
+      log_info "Source version: ${short_sha}"
+    fi
+  fi
+}
+
 # Verify we're in a project root (has .git directory)
 require_project_root() {
   if [[ ! -d ".git" ]]; then
@@ -389,46 +520,36 @@ require_project_root() {
 install_local_files() {
   local -r source_dir="$1"
 
-  # --- Project-specific files (preserve local edits, skip if exists) ---
-  # These are customized per-project; don't overwrite on update
-  copy_file_with_diff \
-    "${source_dir}/.ai/agent/pm-instructions.md" \
-    ".ai/agent/pm-instructions.md" \
-    ".ai/agent/pm-instructions.md"
+  # --- Project-specific files (preserve local edits) ---
+  local file
+  for file in "${ADOS_PROJECT_FILES[@]}"; do
+    copy_file_with_diff "${source_dir}/${file}" "${file}" "${file}"
+  done
 
-  # --- Shared files (always update to match upstream ADOS) ---
-  # These should track upstream; projects should not customize them
-  copy_updatable_file \
-    "${source_dir}/doc/documentation-handbook.md" \
-    "doc/documentation-handbook.md" \
-    "doc/documentation-handbook.md"
+  # --- Updatable files (always track upstream) ---
+  for file in "${ADOS_UPDATABLE_FILES[@]}"; do
+    copy_updatable_file "${source_dir}/${file}" "${file}" "${file}"
+  done
 
-  copy_updatable_file \
-    "${source_dir}/doc/00-index.md" \
-    "doc/00-index.md" \
-    "doc/00-index.md"
-
-  # doc/templates/ (always update to latest)
-  if [[ -d "${source_dir}/doc/templates" ]]; then
-    ensure_dir "doc/templates" "doc/templates"
+  # --- Templates (always track upstream) ---
+  if [[ -d "${source_dir}/${ADOS_TEMPLATE_DIR}" ]]; then
+    ensure_dir "${ADOS_TEMPLATE_DIR}" "${ADOS_TEMPLATE_DIR}"
     local tmpl_file
-    for tmpl_file in "${source_dir}/doc/templates"/*.md; do
+    for tmpl_file in "${source_dir}/${ADOS_TEMPLATE_DIR}"/*.md; do
       [[ -f "${tmpl_file}" ]] || continue
       local name
       name="$(basename "${tmpl_file}")"
-      copy_updatable_file "${tmpl_file}" "doc/templates/${name}" "doc/templates/${name}"
+      copy_updatable_file "${tmpl_file}" "${ADOS_TEMPLATE_DIR}/${name}" "${ADOS_TEMPLATE_DIR}/${name}"
     done
   else
-    log_warn "Templates directory not found: ${source_dir}/doc/templates"
+    log_warn "Templates directory not found: ${source_dir}/${ADOS_TEMPLATE_DIR}"
   fi
 
   # --- Directory stubs ---
-  ensure_dir "doc/overview" "doc/overview"
-  ensure_dir "doc/spec/features" "doc/spec/features"
-  ensure_dir "doc/decisions" "doc/decisions"
-  ensure_dir "doc/changes" "doc/changes"
-  ensure_dir "doc/guides" "doc/guides"
-  ensure_dir ".ai/local" ".ai/local"
+  local dir
+  for dir in "${ADOS_LOCAL_DIRS[@]}"; do
+    ensure_dir "${dir}" "${dir}"
+  done
 
   # --- .gitignore entries ---
   ensure_gitignore_entry ".gitignore" ".ai/local/"
@@ -442,10 +563,14 @@ do_local_install() {
   local source_dir
   source_dir="$(resolve_source_dir)" || exit $?
 
+  # Auto-fetch latest source before installing
+  auto_fetch_source "${source_dir}"
+
   log_info "=== ADOS Local Install ==="
   log_info "Source:  ${source_dir}"
   log_info "Target:  $(pwd)"
   [[ "${FORCE}" == "true" ]] && log_info "Mode:    force (overwrite existing files)"
+  [[ "${INTERACTIVE}" == "true" ]] && log_info "Mode:    interactive (prompt on diff)"
 
   reset_counters
   install_local_files "${source_dir}"
@@ -457,7 +582,7 @@ do_local_install() {
     log_info "Run /bootstrap to complete setup with AI-guided configuration"
   else
     log_info "Project artifacts updated to latest ADOS version"
-    log_info "Templates and handbook updated; project-specific files preserved"
+    log_info "Templates, guides, and handbook updated; project-specific files preserved"
   fi
 }
 
@@ -472,19 +597,26 @@ Install or update Agentic Delivery OS (ADOS) globally or into a local project.
 Re-running is safe and idempotent — only changed files are updated.
 
 Modes:
-  -g, --global    Clone/update ADOS repo at ~/.ados/ and install agent/command
-                  definitions to ~/.config/opencode/ (available everywhere).
-                  Re-running pulls latest changes and updates all definitions.
-  -l, --local     Copy ADOS artifacts into the current project (default).
-                  Re-running updates templates and handbook to latest ADOS
-                  while preserving project-specific files (pm-instructions.md).
+  -g, --global       Clone/update ADOS repo at ~/.ados/ and install agent/command
+                     definitions to ~/.config/opencode/ (available everywhere).
+                     Re-running pulls latest changes and updates all definitions.
+  -l, --local        Copy ADOS artifacts into the current project (default).
+                     Re-running updates templates, guides, and handbook to latest
+                     ADOS while preserving project-specific files (pm-instructions.md).
 
 Options:
-  -h, --help      Show this help message
-  -V, --version   Show version
-  -n, --dry-run   Show what would be done without doing it
-  -v, --verbose   Enable debug output
-  -f, --force     Overwrite existing files during local install
+  -h, --help         Show this help message
+  -V, --version      Show version
+  -n, --dry-run      Show what would be done without doing it
+  -v, --verbose      Enable debug output
+  -f, --force        Overwrite ALL existing files (including project-specific)
+  -i, --interactive  Show diff and prompt before overwriting changed files
+      --no-fetch     Skip auto-fetching latest ADOS source before local install
+
+File handling (--local mode):
+  Updatable files (guides, templates, handbook) are auto-updated to match upstream.
+  Project-specific files (pm-instructions.md) are preserved if they exist locally.
+  Use --interactive to review each diff, or --force to overwrite everything.
 
 One-liner global install:
   curl -fsSL ${ADOS_RAW_URL}/scripts/install.sh | bash -s -- --global
@@ -497,7 +629,7 @@ Environment:
   ADOS_HOME              Override ~/.ados directory
   ADOS_REPO_DIR          Override ~/.ados/repo directory
   OPENCODE_GLOBAL_DIR    Override ~/.config/opencode directory
-  ADOS_SOURCE_DIR        Override source repo for local install
+  ADOS_SOURCE_DIR        Override source repo for local install (disables auto-fetch)
   DRY_RUN                Set to 'true' to preview changes
   VERBOSE                Set to 'true' for debug output
 EOF
@@ -513,6 +645,8 @@ parse_args() {
       -n|--dry-run) DRY_RUN=true ;;
       -v|--verbose) VERBOSE=true ;;
       -f|--force) FORCE=true ;;
+      -i|--interactive) INTERACTIVE=true ;;
+      --no-fetch) NO_FETCH=true ;;
       --) shift; break ;;
       -*) die "Unknown option: $1" ;;
       *) break ;;
@@ -536,6 +670,8 @@ main() {
   log_debug "DRY_RUN=${DRY_RUN}"
   log_debug "VERBOSE=${VERBOSE}"
   log_debug "FORCE=${FORCE}"
+  log_debug "INTERACTIVE=${INTERACTIVE}"
+  log_debug "NO_FETCH=${NO_FETCH}"
 
   case "${INSTALL_MODE}" in
     global) do_global_install ;;

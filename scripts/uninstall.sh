@@ -34,7 +34,7 @@ IFS=$'\n\t'
 # SETTINGS
 # ============================================================================
 readonly APP_NAME="ados-uninstall"
-readonly APP_VERSION="1.0.0"
+readonly APP_VERSION="2.0.0"
 readonly LOG_TAG="(${APP_NAME})"
 
 # Exit codes
@@ -71,11 +71,30 @@ readonly ADOS_COMMAND_FILES=(
   review-deep.md write-plan.md write-test-plan.md sync-docs.md check-fix.md
 )
 
-# Known ADOS local artifacts (files)
-readonly ADOS_LOCAL_FILES=(
+# Known ADOS local files — project-specific (customized per project)
+readonly ADOS_LOCAL_PROJECT_FILES=(
   ".ai/agent/pm-instructions.md"
+)
+
+# Known ADOS local files — updatable (track upstream, auto-updated by install)
+readonly ADOS_LOCAL_UPDATABLE_FILES=(
   "doc/documentation-handbook.md"
   "doc/00-index.md"
+  # Guides
+  "doc/guides/change-lifecycle.md"
+  "doc/guides/unified-change-convention-tracker-agnostic-specification.md"
+  "doc/guides/decision-records-management.md"
+  "doc/guides/opencode-agents-and-commands-guide.md"
+  "doc/guides/opencode-model-configuration.md"
+  "doc/guides/tools-convention.md"
+  "doc/guides/copywriting.md"
+  "doc/guides/system-dependencies.md"
+  "doc/guides/onboarding-existing-project.md"
+  # Decision records stubs
+  "doc/decisions/README.md"
+  "doc/decisions/00-index.md"
+  # AI rules index
+  ".ai/rules/README.md"
 )
 
 # Known ADOS local template files
@@ -283,9 +302,14 @@ require_project_root() {
 }
 
 remove_local_files() {
-  # Remove known ADOS files
+  # Remove project-specific files
   local file
-  for file in "${ADOS_LOCAL_FILES[@]}"; do
+  for file in "${ADOS_LOCAL_PROJECT_FILES[@]}"; do
+    remove_file "${file}" "${file}"
+  done
+
+  # Remove updatable files
+  for file in "${ADOS_LOCAL_UPDATABLE_FILES[@]}"; do
     remove_file "${file}" "${file}"
   done
 
@@ -294,11 +318,10 @@ remove_local_files() {
     remove_file "${file}" "${file}"
   done
 
-  # Remove empty directories (only if we created them and they're empty)
+  # Remove empty directories (only if empty)
   local dir
-  for dir in "doc/templates" "doc/overview" "doc/spec/features" "doc/spec" "doc/decisions" "doc/changes" "doc/guides" ".ai/agent" ".ai/local" ".ai"; do
+  for dir in "doc/templates" "doc/overview" "doc/spec/features" "doc/spec" "doc/decisions" "doc/changes" "doc/guides" ".ai/agent" ".ai/rules" ".ai/local" ".ai"; do
     if [[ -d "${dir}" ]]; then
-      # Only remove if empty
       if [[ -z "$(ls -A "${dir}" 2>/dev/null)" ]]; then
         run_cmd rmdir "${dir}"
         log_info "remove ${dir}/ (empty)"

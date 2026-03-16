@@ -27,7 +27,7 @@ This clones ADOS to `~/.ados/repo/` and installs all agent and command definitio
 ~/.ados/repo/scripts/install.sh --local
 ```
 
-This copies mandatory ADOS artifacts (templates, handbook, directory structure) into your current project.
+This copies all ADOS framework artifacts into your project: documentation handbook, guides, templates, decision record stubs, AI rules index, and creates required directory structure. Re-running updates everything to the latest ADOS version.
 
 **Alternative — manual clone:**
 
@@ -36,7 +36,30 @@ git clone --depth=1 https://github.com/juliusz-cwiakalski/agentic-delivery-os.gi
 ```
 
 > **Tip:** Use `--dry-run` with either install mode to preview changes before applying them.
+> Use `--interactive` to review diffs for each changed file before accepting updates.
+> Use `--no-fetch` to skip automatic ADOS repo update before local install.
 > To remove ADOS later, run `~/.ados/repo/scripts/uninstall.sh --global` or `~/.ados/repo/scripts/uninstall.sh --local`.
+
+### Keeping ADOS Updated
+
+Re-run `install.sh --local` to update all framework artifacts to the latest ADOS version:
+
+```bash
+~/.ados/repo/scripts/install.sh --local
+```
+
+This automatically:
+- Fetches the latest ADOS from GitHub (skip with `--no-fetch`)
+- Updates guides, templates, handbook, and other framework files
+- Preserves your project-specific files (PM instructions, custom rules)
+
+To review changes before accepting them:
+
+```bash
+~/.ados/repo/scripts/install.sh --local --interactive
+```
+
+Interactive mode shows a diff for each changed file and lets you accept or skip individually.
 
 ---
 
@@ -66,13 +89,14 @@ ADOS is both a framework you adopt **and** a system that uses itself. Some artif
 |----------|------|--------|-------|
 | **Mandatory** | | | |
 | AGENTS.md | `AGENTS.md` | Copy & customize | Customize project description, repo structure, key references |
-| PM instructions | `.ai/agent/pm-instructions.md` | Create & customize | Configure your tracker (GitHub/Jira), workflow mapping, labels |
-| Documentation handbook | `doc/documentation-handbook.md` | Copy as-is | Shared standard — keep identical across repos |
+| PM instructions | `.ai/agent/pm-instructions.md` | Auto-installed, customize | `install.sh --local` creates stub; customize for your tracker |
+| Documentation handbook | `doc/documentation-handbook.md` | Auto-installed | `install.sh --local` installs and keeps updated |
 | **Recommended** | | | |
-| Documentation index | `doc/00-index.md` | Copy & customize | Update links to match your docs |
-| Document templates | `doc/templates/` | Copy as-is | 7 templates — agents read at runtime |
-| Decision records dir | `doc/decisions/` | Copy as-is | README.md + 00-index.md stubs |
-| AI rules index | `.ai/rules/README.md` | Copy & customize | Add project-specific rules to routing table |
+| Documentation index | `doc/00-index.md` | Auto-installed, customize | Update links to match your docs |
+| Document templates | `doc/templates/` | Auto-installed | 7 templates — agents read at runtime |
+| Decision records dir | `doc/decisions/` | Auto-installed | README.md + 00-index.md stubs |
+| AI rules index | `.ai/rules/README.md` | Auto-installed, customize | Add project-specific rules to routing table |
+| ADOS guides | `doc/guides/` | Auto-installed | 9 framework guides — change lifecycle, conventions, etc. |
 | **Optional (create as needed)** | | | |
 | Project overview | `doc/overview/` | Create & customize | North star, architecture, glossary |
 | Feature specs | `doc/spec/features/` | Create & customize | Current-truth feature descriptions |
@@ -356,7 +380,7 @@ boundaries), archive them:
 
 ### 1.3 `doc/documentation-handbook.md`
 
-The canonical documentation standard. Copy it **as-is** from the ADOS repository.
+The canonical documentation standard. **Auto-installed** by `install.sh --local`. If setting up manually, copy it as-is from the ADOS repository.
 
 **Setup:**
 
@@ -367,6 +391,8 @@ The canonical documentation standard. Copy it **as-is** from the ADOS repository
 ---
 
 ## Step 2: Recommended Artifacts (Optional)
+
+> **Note:** If you used `install.sh --local`, most recommended artifacts below are already installed. This section is for manual setup or understanding what each artifact does.
 
 These artifacts improve the ADOS experience but are not strictly required. Set them up incrementally as your project grows.
 
@@ -391,6 +417,8 @@ Current-truth descriptions of your system's features. Use `doc/templates/feature
 
 ### 2.4 `doc/templates/` — Document Templates
 
+**Auto-installed** by `install.sh --local`.
+
 Copy the templates directory from ADOS:
 
 - `change-spec-template.md`
@@ -404,6 +432,8 @@ Copy the templates directory from ADOS:
 Agents read these at runtime to guide document structure.
 
 ### 2.5 `doc/decisions/` — Decision Records
+
+**Auto-installed** by `install.sh --local`.
 
 Set up the decision records directory:
 

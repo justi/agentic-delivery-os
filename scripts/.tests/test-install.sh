@@ -139,8 +139,9 @@ source "${SCRIPT_DIR}/install.sh"
 create_mock_ados_source() {
   local -r base="$1"
   mkdir -p "${base}/.opencode/agent" "${base}/.opencode/command"
-  mkdir -p "${base}/.ai/agent"
-  mkdir -p "${base}/doc/templates"
+  mkdir -p "${base}/.ai/agent" "${base}/.ai/rules"
+  mkdir -p "${base}/doc/templates" "${base}/doc/guides"
+  mkdir -p "${base}/doc/decisions"
 
   # Agent files
   printf '# pm agent\n' > "${base}/.opencode/agent/pm.md"
@@ -151,10 +152,32 @@ create_mock_ados_source() {
   printf '# run-plan command\n' > "${base}/.opencode/command/run-plan.md"
   printf '# commit command\n' > "${base}/.opencode/command/commit.md"
 
-  # Local install artifacts
+  # Local install artifacts — project-specific
   printf '# PM Instructions\n' > "${base}/.ai/agent/pm-instructions.md"
+
+  # Local install artifacts — updatable files
   printf '# Documentation Handbook\n' > "${base}/doc/documentation-handbook.md"
   printf '# Doc Index\n' > "${base}/doc/00-index.md"
+
+  # Guide files (9 guides)
+  printf '# Change Lifecycle\n' > "${base}/doc/guides/change-lifecycle.md"
+  printf '# Unified Change Convention\n' > "${base}/doc/guides/unified-change-convention-tracker-agnostic-specification.md"
+  printf '# Decision Records Management\n' > "${base}/doc/guides/decision-records-management.md"
+  printf '# Opencode Agents and Commands Guide\n' > "${base}/doc/guides/opencode-agents-and-commands-guide.md"
+  printf '# Opencode Model Configuration\n' > "${base}/doc/guides/opencode-model-configuration.md"
+  printf '# Tools Convention\n' > "${base}/doc/guides/tools-convention.md"
+  printf '# Copywriting\n' > "${base}/doc/guides/copywriting.md"
+  printf '# System Dependencies\n' > "${base}/doc/guides/system-dependencies.md"
+  printf '# Onboarding Existing Project\n' > "${base}/doc/guides/onboarding-existing-project.md"
+
+  # Decision stubs
+  printf '# Decisions README\n' > "${base}/doc/decisions/README.md"
+  printf '# Decisions Index\n' > "${base}/doc/decisions/00-index.md"
+
+  # AI rules index
+  printf '# AI Rules Index\n' > "${base}/.ai/rules/README.md"
+
+  # Template files
   printf '# Change Spec Template\n' > "${base}/doc/templates/change-spec-template.md"
   printf '# Feature Spec Template\n' > "${base}/doc/templates/feature-spec-template.md"
 
@@ -430,11 +453,17 @@ test_local_install_creates_structure() {
     install_local_files "${source_dir}"
   )
 
-  # Check files were created
+  # Check core files were created
   assert_file_exists "${project_dir}/.ai/agent/pm-instructions.md" "pm-instructions.md"
   assert_file_exists "${project_dir}/doc/documentation-handbook.md" "documentation-handbook.md"
   assert_file_exists "${project_dir}/doc/00-index.md" "00-index.md"
   assert_file_exists "${project_dir}/doc/templates/change-spec-template.md" "template file"
+
+  # Check new updatable files were created
+  assert_file_exists "${project_dir}/doc/guides/change-lifecycle.md" "change-lifecycle guide"
+  assert_file_exists "${project_dir}/doc/decisions/README.md" "decisions README"
+  assert_file_exists "${project_dir}/doc/decisions/00-index.md" "decisions index"
+  assert_file_exists "${project_dir}/.ai/rules/README.md" "rules index"
 
   # Check directories were created
   assert_dir_exists "${project_dir}/doc/overview" "doc/overview"
@@ -443,6 +472,7 @@ test_local_install_creates_structure() {
   assert_dir_exists "${project_dir}/doc/changes" "doc/changes"
   assert_dir_exists "${project_dir}/doc/guides" "doc/guides"
   assert_dir_exists "${project_dir}/.ai/local" ".ai/local"
+  assert_dir_exists "${project_dir}/.ai/rules" ".ai/rules"
 }
 
 test_local_install_preserves_project_specific_files() {
@@ -624,7 +654,7 @@ test_version_flag() {
   stdout="$("${SCRIPT_DIR}/install.sh" --version 2>&1)" || exit_code=$?
   assert_exit_code 0 "${exit_code}" "Version should succeed"
   assert_contains "${stdout}" "ados-install" "Should show app name"
-  assert_contains "${stdout}" "1.0.0" "Should show version"
+  assert_contains "${stdout}" "2.0.0" "Should show version"
 }
 
 test_unknown_option() {
@@ -672,6 +702,215 @@ test_local_requires_git_dir() {
 }
 
 # ============================================================================
+# INTEGRATION TESTS — New file installation (guides, decisions, rules)
+# ============================================================================
+
+test_local_install_creates_guides() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false
+    reset_counters
+    install_local_files "${source_dir}"
+  )
+
+  # Check all 9 guide files were created
+  assert_file_exists "${project_dir}/doc/guides/change-lifecycle.md"
+  assert_file_exists "${project_dir}/doc/guides/unified-change-convention-tracker-agnostic-specification.md"
+  assert_file_exists "${project_dir}/doc/guides/decision-records-management.md"
+  assert_file_exists "${project_dir}/doc/guides/opencode-agents-and-commands-guide.md"
+  assert_file_exists "${project_dir}/doc/guides/opencode-model-configuration.md"
+  assert_file_exists "${project_dir}/doc/guides/tools-convention.md"
+  assert_file_exists "${project_dir}/doc/guides/copywriting.md"
+  assert_file_exists "${project_dir}/doc/guides/system-dependencies.md"
+  assert_file_exists "${project_dir}/doc/guides/onboarding-existing-project.md"
+}
+
+test_local_install_creates_decision_stubs() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false
+    reset_counters
+    install_local_files "${source_dir}"
+  )
+
+  assert_file_exists "${project_dir}/doc/decisions/README.md"
+  assert_file_exists "${project_dir}/doc/decisions/00-index.md"
+}
+
+test_local_install_creates_rules_index() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false
+    reset_counters
+    install_local_files "${source_dir}"
+  )
+
+  assert_dir_exists "${project_dir}/.ai/rules"
+  assert_file_exists "${project_dir}/.ai/rules/README.md"
+}
+
+test_local_install_updates_guides() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  # Create project with old guide content
+  mkdir -p "${project_dir}/doc/guides"
+  printf '# Old Lifecycle\n' > "${project_dir}/doc/guides/change-lifecycle.md"
+  printf '# Old Copywriting\n' > "${project_dir}/doc/guides/copywriting.md"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false
+    reset_counters
+    install_local_files "${source_dir}"
+  )
+
+  # Guides are updatable — should be updated to upstream content
+  local content
+  content="$(cat "${project_dir}/doc/guides/change-lifecycle.md")"
+  assert_eq "# Change Lifecycle" "${content}" "Guide should be updated to upstream"
+
+  content="$(cat "${project_dir}/doc/guides/copywriting.md")"
+  assert_eq "# Copywriting" "${content}" "Guide should be updated to upstream"
+}
+
+# ============================================================================
+# INTEGRATION TESTS — Interactive mode
+# ============================================================================
+
+test_interactive_flag_parsed() {
+  local stdout exit_code=0
+  stdout="$("${SCRIPT_DIR}/install.sh" --help 2>&1)" || exit_code=$?
+  assert_exit_code 0 "${exit_code}"
+  assert_contains "${stdout}" "--interactive" "Should document interactive flag"
+}
+
+test_no_fetch_flag_parsed() {
+  local stdout exit_code=0
+  stdout="$("${SCRIPT_DIR}/install.sh" --help 2>&1)" || exit_code=$?
+  assert_exit_code 0 "${exit_code}"
+  assert_contains "${stdout}" "--no-fetch" "Should document no-fetch flag"
+}
+
+test_prompt_diff_overwrite_accept() {
+  local src="${_test_tmpdir}/src.md"
+  local dest="${_test_tmpdir}/dest.md"
+  printf '# New content\n' > "${src}"
+  printf '# Old content\n' > "${dest}"
+
+  # Simulate "y" answer
+  local result=0
+  printf 'y\n' | prompt_diff_overwrite "${src}" "${dest}" "test.md" || result=$?
+  assert_eq "0" "${result}" "Should return 0 on 'y'"
+}
+
+test_prompt_diff_overwrite_reject() {
+  local src="${_test_tmpdir}/src.md"
+  local dest="${_test_tmpdir}/dest.md"
+  printf '# New content\n' > "${src}"
+  printf '# Old content\n' > "${dest}"
+
+  local result=0
+  printf 'n\n' | prompt_diff_overwrite "${src}" "${dest}" "test.md" || result=$?
+  assert_eq "1" "${result}" "Should return 1 on 'n'"
+}
+
+test_interactive_mode_with_accept() {
+  local src="${_test_tmpdir}/src.md"
+  local dest="${_test_tmpdir}/dest.md"
+  printf '# New content\n' > "${src}"
+  printf '# Old content\n' > "${dest}"
+
+  INSTALL_MODE="local"
+  FORCE=false
+  INTERACTIVE=true
+  reset_counters
+
+  # Pipe "y" to simulate user acceptance
+  printf 'y\n' | copy_file_with_diff "${src}" "${dest}" "test.md"
+
+  assert_eq "1" "${_updated}" "Should count as updated"
+  local content
+  content="$(cat "${dest}")"
+  assert_eq "# New content" "${content}" "Content should be updated"
+  INTERACTIVE=false
+}
+
+test_interactive_mode_with_reject() {
+  local src="${_test_tmpdir}/src.md"
+  local dest="${_test_tmpdir}/dest.md"
+  printf '# New content\n' > "${src}"
+  printf '# Old content\n' > "${dest}"
+
+  INSTALL_MODE="local"
+  FORCE=false
+  INTERACTIVE=true
+  reset_counters
+
+  printf 'n\n' | copy_file_with_diff "${src}" "${dest}" "test.md"
+
+  assert_eq "1" "${_unchanged}" "Should count as unchanged"
+  local content
+  content="$(cat "${dest}")"
+  assert_eq "# Old content" "${content}" "Content should NOT be updated"
+  INTERACTIVE=false
+}
+
+# ============================================================================
+# INTEGRATION TESTS — Auto-fetch
+# ============================================================================
+
+test_auto_fetch_skips_with_no_fetch() {
+  local source_dir="${_test_tmpdir}/source"
+  mkdir -p "${source_dir}/.git"
+
+  NO_FETCH=true
+  VERBOSE=true
+  local output
+  output="$(auto_fetch_source "${source_dir}" 2>&1)"
+  NO_FETCH=false
+  VERBOSE=false
+
+  assert_contains "${output}" "no-fetch" "Should mention --no-fetch in skip message"
+}
+
+test_auto_fetch_skips_explicit_source() {
+  local source_dir="${_test_tmpdir}/source"
+  mkdir -p "${source_dir}"
+
+  local saved="${ADOS_SOURCE_DIR:-}"
+  ADOS_SOURCE_DIR="${source_dir}"
+  VERBOSE=true
+  local output
+  output="$(auto_fetch_source "${source_dir}" 2>&1)"
+  VERBOSE=false
+  if [[ -n "${saved}" ]]; then
+    ADOS_SOURCE_DIR="${saved}"
+  else
+    unset ADOS_SOURCE_DIR
+  fi
+
+  assert_contains "${output}" "ADOS_SOURCE_DIR" "Should mention ADOS_SOURCE_DIR in skip message"
+}
+
+# ============================================================================
 # RUN TESTS
 # ============================================================================
 main() {
@@ -710,6 +949,12 @@ main() {
   run_test "local install with --force overwrites" test_local_install_force_overwrites
   run_test "local install adds .gitignore entries" test_local_install_gitignore_entries
 
+  # New file installation tests
+  run_test "local install creates guide files" test_local_install_creates_guides
+  run_test "local install creates decision stubs" test_local_install_creates_decision_stubs
+  run_test "local install creates rules index" test_local_install_creates_rules_index
+  run_test "local install updates guides (updatable)" test_local_install_updates_guides
+
   # Global install integration
   run_test "global install copies agent files" test_global_install_copies_agents
   run_test "global install updates changed files" test_global_install_updates_changed
@@ -720,6 +965,18 @@ main() {
   run_test "unknown option exits with code 2" test_unknown_option
   run_test "local --dry-run doesn't create files" test_local_dry_run
   run_test "local install requires .git directory" test_local_requires_git_dir
+
+  # Interactive mode tests
+  run_test "help mentions --interactive flag" test_interactive_flag_parsed
+  run_test "help mentions --no-fetch flag" test_no_fetch_flag_parsed
+  run_test "prompt_diff_overwrite accepts on 'y'" test_prompt_diff_overwrite_accept
+  run_test "prompt_diff_overwrite rejects on 'n'" test_prompt_diff_overwrite_reject
+  run_test "interactive mode with accept updates file" test_interactive_mode_with_accept
+  run_test "interactive mode with reject preserves file" test_interactive_mode_with_reject
+
+  # Auto-fetch tests
+  run_test "auto-fetch skips with --no-fetch" test_auto_fetch_skips_with_no_fetch
+  run_test "auto-fetch skips with explicit ADOS_SOURCE_DIR" test_auto_fetch_skips_explicit_source
 
   print_summary
 }
