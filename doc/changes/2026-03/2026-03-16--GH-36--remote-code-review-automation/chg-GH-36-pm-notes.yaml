@@ -1,0 +1,33 @@
+change_id: GH-36
+title: "Remote code review and review-feedback automation for ADOS"
+phases:
+  clarify_scope: { started: "2026-03-16T17:10:00Z", completed: "2026-03-16T17:18:00Z" }
+  specification: { started: null, completed: null }
+  test_planning: { started: null, completed: null }
+  delivery_planning: { started: null, completed: null }
+  delivery: { started: null, completed: null }
+  system_spec_update: { started: null, completed: null }
+  review_fix: { started: null, completed: null }
+  quality_gates: { started: null, completed: null }
+  dod_check: { started: null, completed: null }
+  pr_creation: { started: null, completed: null, url: null }
+decisions:
+  - text: "Single ticket delivery — do not split into multiple tickets despite large scope (2 agents + 2 commands + config + docs)"
+    date: "2026-03-16"
+  - text: "Platform-neutral from the start — GitHub and GitLab both supported in v1 (ADOS=GitHub, Menuvivo=GitLab). Drop 'GitLab-first' framing from the ticket."
+    date: "2026-03-16"
+  - text: "Reuse @pr-manager patterns for platform detection, tmp/ workspace conventions, and CLI reference. Review for efficiency during design."
+    date: "2026-03-16"
+  - text: "Ticket's 'PM must use @toolsmith' → corrected to standard ADOS flow: @coder executes plan and delegates to @toolsmith as needed."
+    date: "2026-03-16"
+  - text: "Ticket's embedded 4-phase implementation plan → treated as input context for spec-writer, not the actual plan."
+    date: "2026-03-16"
+open_questions: []
+blockers: []
+notes:
+  - text: "Ticket authored from ChatGPT conversation without ADOS context. PM instructed to correct discrepancies rather than changing ADOS conventions."
+    type: info
+    date: "2026-03-16"
+  - text: "Confirmed file paths: .opencode/agent/*.md, .opencode/command/*.md, tmp/code-review/<branch>/, tmp/review-feedback/<branch>/, .ai/checklists/code-review.md, .ai/agent/code-review-instructions.md"
+    type: info
+    date: "2026-03-16"
