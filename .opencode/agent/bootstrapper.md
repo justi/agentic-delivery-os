@@ -144,6 +144,11 @@ Core question areas:
 - **Delivery workflow** — Current PR process? Review requirements?
 - **Architecture** — Key components? Service boundaries?
 - **Conventions** — Naming, branching, commit message standards?
+- **Quality gates** — Any build/test/lint scripts that must pass? Where are they?
+- **Multi-repo** — Does this project span multiple repos? Which ones?
+- **Estimation** — Does the team use story points or sizing?
+- **Review process** — Who merges PRs? Any mandatory review steps?
+- **Ticket quality** — Do tickets often start without enough context? Any pre-conditions?
 </phase_3_interview>
 
 <phase_4_draft>
@@ -165,6 +170,46 @@ Generate draft artifacts based on accumulated context:
 Use templates from `doc/templates/` as structural guides when generating artifacts.
 Reference `doc/guides/onboarding-existing-project.md` for the manual adoption path.
 </phase_4_draft>
+
+<pm_instructions_guidance>
+When generating `.ai/agent/pm-instructions.md`, follow these principles:
+
+**Core principle:** Include ONLY project-specific configuration. Do not repeat the standard ADOS change lifecycle — reference `doc/guides/change-lifecycle.md` instead.
+
+**Mandatory sections (always generate):**
+1. **Tracker Configuration** — type (github/jira/local), connection details, project keys
+2. **Workflow States Mapping** — map ADOS phases to tracker statuses or labels
+3. **Label Taxonomy** — at minimum `change`; add issue type labels from interview
+4. **Backlog Source of Truth** — explicit statement of where backlog lives
+5. **Conventions** — workItemRef format, branch naming
+
+**Recommended sections (generate when interview reveals the need):**
+- **Issue Validation Checklist** — if team reports issues with incomplete tickets
+- **Priority & Selection Rules** — if team wants deterministic auto-selection logic
+- **Quality Gate References** — if repo has specific quality scripts
+- **Blocking Question Workflow** — if human approval gates exist
+- **Multi-Repo Coordination** — if project spans multiple repos (use `todo-<repo>`/`done-<repo>` label pattern)
+- **Definition of Ready** — if team has maturity for pre-conditions
+- **Estimation Methodology** — if team uses story points
+- **PR/MR Workflow Customizations** — if merge process has repo-specific steps
+
+**Interview questions to determine extensions:**
+- "Does your team use story points or estimation?" → add Estimation section
+- "Do tickets often start without enough context?" → add Issue Validation / DoR
+- "Does this change span multiple repos?" → add Multi-Repo Coordination
+- "Are there specific quality gate scripts to run?" → add Quality Gate References
+- "Who merges PRs/MRs? Any special review requirements?" → add PR/MR Customizations
+
+**What NOT to include:**
+- Standard ADOS change lifecycle (lives in `doc/guides/change-lifecycle.md`)
+- Build/test commands (belong in quality gate scripts or README)
+- Tool bug workarounds (document in tool docs)
+- Delivery schedules or backlogs (use separate planning docs)
+
+**Target size:** 30-100 lines for simple projects, up to 300 lines for complex multi-repo setups.
+
+Reference `doc/guides/onboarding-existing-project.md` Section 1.2 for examples.
+</pm_instructions_guidance>
 
 <phase_5_review>
 Present each draft artifact to the human:
