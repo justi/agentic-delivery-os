@@ -20,6 +20,10 @@
 #   --interactive (-i)  When a file differs from upstream, show a colored unified
 #                       diff and prompt whether to overwrite or keep the local version.
 #
+# Branch selection:
+#   --branch (-b) <name>  Install from a specific branch (default: main).
+#                         Useful for testing pre-merge changes.
+#
 # Auto-fetch:
 #   By default, --local pulls the latest ADOS source before copying files.
 #   --no-fetch disables auto-fetch (useful for offline or pinned-version installs).
@@ -124,6 +128,7 @@ VERBOSE="${VERBOSE:-false}"
 FORCE="${FORCE:-false}"
 INTERACTIVE="${INTERACTIVE:-false}"
 NO_FETCH="${NO_FETCH:-false}"
+ADOS_BRANCH="${ADOS_BRANCH:-main}"
 
 # Install mode: "global" or "local"
 INSTALL_MODE=""
@@ -357,23 +362,35 @@ clone_or_update_repo() {
   if [[ -d "${ADOS_REPO_DIR}/.git" ]]; then
     before_sha="$(_git -C "${ADOS_REPO_DIR}" rev-parse --short HEAD 2>/dev/null || true)"
     log_info "Updating existing ADOS repo at ${ADOS_REPO_DIR} (current: ${before_sha:-unknown})"
+
+    # Switch branch if needed
+    local current_branch
+    current_branch="$(_git -C "${ADOS_REPO_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [[ "${current_branch}" != "${ADOS_BRANCH}" ]]; then
+      log_info "Switching branch: ${current_branch} → ${ADOS_BRANCH}"
+      run_cmd _git -C "${ADOS_REPO_DIR}" fetch origin
+      run_cmd _git -C "${ADOS_REPO_DIR}" checkout "${ADOS_BRANCH}" 2>/dev/null \
+        || run_cmd _git -C "${ADOS_REPO_DIR}" checkout -b "${ADOS_BRANCH}" "origin/${ADOS_BRANCH}"
+    fi
+
     run_cmd _git -C "${ADOS_REPO_DIR}" pull --ff-only
   else
-    log_info "Cloning ADOS repo to ${ADOS_REPO_DIR}"
+    log_info "Cloning ADOS repo to ${ADOS_REPO_DIR} (branch: ${ADOS_BRANCH})"
     run_cmd _mkdir -p "${ADOS_HOME}"
-    run_cmd _git clone "${ADOS_REPO_URL}" "${ADOS_REPO_DIR}"
+    run_cmd _git clone --branch "${ADOS_BRANCH}" "${ADOS_REPO_URL}" "${ADOS_REPO_DIR}"
   fi
 
   # Report installed version
   if [[ -d "${ADOS_REPO_DIR}/.git" && "${DRY_RUN}" != "true" ]]; then
-    local after_sha
+    local after_sha after_branch
     after_sha="$(_git -C "${ADOS_REPO_DIR}" rev-parse --short HEAD 2>/dev/null || true)"
+    after_branch="$(_git -C "${ADOS_REPO_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
     if [[ -n "${before_sha}" && "${before_sha}" != "${after_sha}" ]]; then
-      log_info "Updated: ${before_sha} → ${after_sha}"
+      log_info "Updated: ${before_sha} → ${after_sha} (${after_branch})"
     elif [[ -z "${before_sha}" ]]; then
-      log_info "Installed at: ${after_sha:-unknown}"
+      log_info "Installed at: ${after_sha:-unknown} (${after_branch})"
     else
-      log_info "Already at latest: ${after_sha}"
+      log_info "Already at latest: ${after_sha} (${after_branch})"
     fi
   fi
 }
@@ -422,6 +439,7 @@ do_global_install() {
   log_info "ADOS_HOME:          ${ADOS_HOME}"
   log_info "ADOS_REPO_DIR:      ${ADOS_REPO_DIR}"
   log_info "OPENCODE_GLOBAL_DIR: ${OPENCODE_GLOBAL_DIR}"
+  [[ "${ADOS_BRANCH}" != "main" ]] && log_info "Branch:             ${ADOS_BRANCH}"
 
   clone_or_update_repo
   reset_counters
@@ -497,6 +515,18 @@ auto_fetch_source() {
   fi
 
   log_info "Fetching latest ADOS source..."
+
+  # Switch branch if needed
+  local current_branch
+  current_branch="$(_git -C "${source_dir}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  if [[ -n "${current_branch}" && "${current_branch}" != "${ADOS_BRANCH}" ]]; then
+    log_info "Switching source branch: ${current_branch} → ${ADOS_BRANCH}"
+    run_cmd _git -C "${source_dir}" fetch origin 2>/dev/null || true
+    run_cmd _git -C "${source_dir}" checkout "${ADOS_BRANCH}" 2>/dev/null \
+      || run_cmd _git -C "${source_dir}" checkout -b "${ADOS_BRANCH}" "origin/${ADOS_BRANCH}" 2>/dev/null \
+      || log_warn "Could not switch to branch ${ADOS_BRANCH}"
+  fi
+
   if run_cmd _git -C "${source_dir}" pull --ff-only 2>/dev/null; then
     log_debug "Auto-fetch completed"
   else
@@ -572,6 +602,7 @@ do_local_install() {
   log_info "=== ADOS Local Install ==="
   log_info "Source:  ${source_dir}"
   log_info "Target:  $(pwd)"
+  [[ "${ADOS_BRANCH}" != "main" ]] && log_info "Branch:  ${ADOS_BRANCH}"
   [[ "${FORCE}" == "true" ]] && log_info "Mode:    force (overwrite existing files)"
   [[ "${INTERACTIVE}" == "true" ]] && log_info "Mode:    interactive (prompt on diff)"
 
@@ -608,13 +639,14 @@ Modes:
                      ADOS while preserving project-specific files (pm-instructions.md).
 
 Options:
-  -h, --help         Show this help message
-  -V, --version      Show version
-  -n, --dry-run      Show what would be done without doing it
-  -v, --verbose      Enable debug output
-  -f, --force        Overwrite ALL existing files (including project-specific)
-  -i, --interactive  Show diff and prompt before overwriting changed files
-      --no-fetch     Skip auto-fetching latest ADOS source before local install
+  -h, --help             Show this help message
+  -V, --version          Show version
+  -b, --branch <name>    Install from a specific branch (default: main)
+  -n, --dry-run          Show what would be done without doing it
+  -v, --verbose          Enable debug output
+  -f, --force            Overwrite ALL existing files (including project-specific)
+  -i, --interactive      Show diff and prompt before overwriting changed files
+      --no-fetch         Skip auto-fetching latest ADOS source before local install
 
 File handling (--local mode):
   Updatable files (guides, templates, handbook) are auto-updated to match upstream.
@@ -624,11 +656,15 @@ File handling (--local mode):
 One-liner global install:
   curl -fsSL ${ADOS_RAW_URL}/scripts/install.sh | bash -s -- --global
 
+Install from a specific branch (for testing pre-merge changes):
+  curl -fsSL ${ADOS_RAW_URL}/scripts/install.sh | bash -s -- --global -b feat/my-branch
+
 Local project install (after global install):
   ${ADOS_REPO_DIR}/scripts/install.sh --local
 
 Environment:
   ADOS_REPO_URL          Override git clone URL
+  ADOS_BRANCH            Override branch (default: main; same as --branch)
   ADOS_HOME              Override ~/.ados directory
   ADOS_REPO_DIR          Override ~/.ados/repo directory
   OPENCODE_GLOBAL_DIR    Override ~/.config/opencode directory
@@ -645,6 +681,7 @@ parse_args() {
       -V|--version) printf '%s %s\n' "${APP_NAME}" "${APP_VERSION}"; exit 0 ;;
       -g|--global) INSTALL_MODE="global" ;;
       -l|--local) INSTALL_MODE="local" ;;
+      -b|--branch) shift; ADOS_BRANCH="${1:?--branch requires a branch name}" ;;
       -n|--dry-run) DRY_RUN=true ;;
       -v|--verbose) VERBOSE=true ;;
       -f|--force) FORCE=true ;;
@@ -670,6 +707,7 @@ main() {
   fi
 
   log_debug "INSTALL_MODE=${INSTALL_MODE}"
+  log_debug "ADOS_BRANCH=${ADOS_BRANCH}"
   log_debug "DRY_RUN=${DRY_RUN}"
   log_debug "VERBOSE=${VERBOSE}"
   log_debug "FORCE=${FORCE}"
