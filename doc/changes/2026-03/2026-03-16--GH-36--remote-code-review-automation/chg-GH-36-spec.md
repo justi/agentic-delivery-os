@@ -304,8 +304,8 @@ N/A — agent prompts and command definitions only; no runtime telemetry applica
 |----|----------|---------|--------|
 | OQ-1 | Should the `code-reviewer` agent support reviewing PRs/MRs that the current user authored, or only others' PRs? | Self-review can be valuable for checklist verification, but might generate noise. | Resolved: support both — the user decides when to invoke |
 | OQ-2 | Should `AI-APPLY` markers be case-sensitive? | Case-insensitive is more forgiving but risks false positives with unusual text. | Resolved: case-insensitive, standalone token (not substring) |
-| OQ-3 | Should the review draft include a confidence score per finding? | Could help users prioritize, but adds complexity. | Decision needed: consult `@architect` |
-| OQ-4 | What is the maximum number of inline comments the agent should publish per review? | Too many comments create noise; too few miss issues. | Decision needed: consult `@architect` |
+| OQ-3 | Should the review draft include a confidence score per finding? | Could help users prioritize, but adds complexity. | Resolved: include high/medium/low confidence per finding — minimal complexity, helps prioritize |
+| OQ-4 | What is the maximum number of inline comments the agent should publish per review? | Too many comments create noise; too few miss issues. | Resolved: default cap of 30 inline comments; remaining findings bundled into summary comment |
 
 ## 15. DECISION LOG
 
@@ -318,6 +318,8 @@ N/A — agent prompts and command definitions only; no runtime telemetry applica
 | DEC-5 | Dirty tree blocks both commands (no auto-commit) | Unlike `@pr-manager` which auto-commits, review workflows need a predictable starting state. Auto-committing before review could change the diff being reviewed. | 2026-03-16 |
 | DEC-6 | `AI-APPLY` marker as explicit acceptance mechanism | Provides a deterministic, unambiguous signal that is platform-neutral and greppable. Case-insensitive, standalone token. | 2026-03-16 |
 | DEC-7 | Ambiguous feedback is never auto-applied | Conservative safety default. False negatives (missing an accepted comment) are preferable to false positives (applying unwanted changes). | 2026-03-16 |
+| DEC-8 | Include high/medium/low confidence per finding | Helps users prioritize review findings without adding schema complexity. Three-level scale is sufficient. | 2026-03-16 |
+| DEC-9 | Default cap of 30 inline comments per review | Prevents comment noise on large PRs. Remaining findings are bundled into the summary comment so nothing is lost. | 2026-03-16 |
 
 ## 16. AFFECTED COMPONENTS (HIGH-LEVEL)
 

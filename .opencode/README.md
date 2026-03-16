@@ -35,6 +35,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 
 - `architect`: architecture decisions and decision record authoring (ADR/PDR/TDR/BDR/ODR)
 - `bootstrapper`: automate ADOS adoption for existing projects
+- `code-reviewer`: review open PR/MR diff against repo-local rules and publish findings
 - `coder`: implement plan phases by writing code for a change
 - `committer`: create one Conventional Commit
 - `designer`: visual design and UI implementation
@@ -47,6 +48,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 - `plan-writer`: author change implementation plans
 - `pm`: orchestrate changes; manage tickets via MCP (reads `.ai/agent/pm-instructions.md`)
 - `pr-manager`: create/update PR/MR for branch; enriches description with ticket context via MCP
+- `review-feedback-applier`: classify and apply accepted review feedback from PR/MR
 - `reviewer`: review change vs spec/plan
 - `runner`: run commands and capture logs
 - `spec-writer`: author change specifications
@@ -55,6 +57,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 
 ## Commands
 
+- `/apply-review-feedback`: classify and apply accepted PR/MR review feedback locally (via `@review-feedback-applier`)
 - `/bootstrap`: scaffold ADOS artifacts for an existing project
 - `/check`: run quality gates (no fixes)
 - `/check-fix`: run quality gates and fix failures
@@ -65,6 +68,7 @@ Note: OpenCode upstream docs use `.opencode/agents/` and `.opencode/commands/`. 
 - `/pr`: create/update PR/MR and sync title/description (`tmp/pr/<branch>/description.md`, via `@pr-manager`); fetches ticket context from Jira/GitHub when `workItemRef` is detected
 - `/review`: review a change vs spec/plan
 - `/review-deep`: deeper review vs spec/plan
+- `/review-remote`: review open PR/MR diff and optionally publish findings (via `@code-reviewer`)
 - `/run-plan`: execute an implementation plan
 - `/sync-docs`: reconcile system specs from a change
 - `/write-decision`: write a decision record (ADR/PDR/TDR/BDR/ODR) from planning context

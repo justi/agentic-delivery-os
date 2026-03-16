@@ -54,6 +54,8 @@ Detail: [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 - `editor` — content rewrites and translations
 
 ### Verification
+- `code-reviewer` — review open PR/MR diff against repo-local rules and publish findings
+- `review-feedback-applier` — classify and apply accepted review feedback from PR/MR
 - `reviewer` — review change vs spec/plan; append remediation if FAIL
 - `fixer` — reproduce failures and apply targeted fixes
 - `runner` — execute commands, capture logs (subagent)
@@ -75,6 +77,7 @@ Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.ope
 
 | Command | Purpose |
 |---------|---------|
+| `/apply-review-feedback` | Classify and apply accepted PR/MR review feedback locally |
 | `/bootstrap` | Scaffold ADOS artifacts for an existing project |
 | `/plan-change` | Interactive planning session (prep context for /write-spec) |
 | `/write-spec <ref>` | Generate change specification |
@@ -83,6 +86,7 @@ Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.ope
 | `/run-plan <ref>` | Execute plan phases |
 | `/review <ref>` | Review change vs spec/plan |
 | `/review-deep <ref>` | Deep review with stronger reasoning model |
+| `/review-remote` | Review open PR/MR diff and optionally publish findings |
 | `/sync-docs <ref>` | Reconcile system docs from a change |
 | `/check` | Run quality gates (no fixes) |
 | `/check-fix` | Run quality gates and fix failures |
