@@ -497,6 +497,90 @@ Check your `AGENTS.md` for the correct folder pattern: `doc/changes/YYYY-MM/YYYY
 
 Run a fresh ADOS onboarding — some referenced directories (like `doc/overview/`, `doc/spec/`) need to be created. Create them with README.md stubs and populate incrementally.
 
+### "PM agent can't read or update tickets" / MCP tracker setup
+
+The `@pm` and `@pr-manager` agents need MCP (Model Context Protocol) access to your issue tracker to read tickets, update statuses, and enrich PR descriptions. Other agents do **not** need tracker access.
+
+**Best practice: disable tracker MCP globally, enable per agent.**
+
+This follows the principle of least privilege — only agents that need tracker access get it. This prevents other agents from accidentally modifying tickets.
+
+**GitHub Issues setup** (in `.opencode/opencode.jsonc`):
+
+```jsonc
+{
+  "mcp": {
+    "github-mcp": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "environment": {
+        // Settings → Developer Settings → Personal access tokens (classic)
+        // Permissions: repo, read:org, user
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_API_TOKEN}"
+      },
+      "enabled": true
+    }
+  },
+  "tools": {
+    "github*": false          // disabled globally for all agents
+  },
+  "agent": {
+    "pm": {
+      "tools": {
+        "github*": true       // PM can read/update issues
+      }
+    },
+    "pr-manager": {
+      "tools": {
+        "github*": true       // PR manager reads tickets for context
+      }
+    }
+  }
+}
+```
+
+**Jira setup** (in `~/.config/opencode/opencode.jsonc` — global, or per-project):
+
+```jsonc
+{
+  "mcp": {
+    "jira-mcp": {
+      "type": "local",
+      "command": ["uvx", "mcp-atlassian"],
+      "environment": {
+        "JIRA_URL": "https://<your-domain>.atlassian.net/",
+        "JIRA_USERNAME": "{env:JIRA_USERNAME}",
+        "JIRA_API_TOKEN": "{env:JIRA_API_TOKEN}"
+      },
+      "timeout": 60000
+    }
+  },
+  "tools": {
+    "jira*": false            // disabled globally
+  },
+  "agent": {
+    "pm": {
+      "tools": {
+        "jira*": true         // PM can read/update Jira issues
+      }
+    },
+    "pr-manager": {
+      "tools": {
+        "jira*": true         // PR manager reads tickets for context
+      }
+    }
+  }
+}
+```
+
+**Key points:**
+
+- **Global vs project config:** MCP servers can be declared in the global config (`~/.config/opencode/opencode.jsonc`) and shared across projects, or per-project in `.opencode/opencode.jsonc`. Tool permissions (`"tools"` and `"agent"` blocks) are always per-project.
+- **Multiple Jira instances:** If you work across multiple Jira instances, declare each with a unique MCP name (e.g., `jira-projecta-mcp`, `jira-projectb-mcp`) in the global config. Each can have different credentials and URLs.
+- **Why `@pr-manager` needs access:** It reads ticket descriptions and comments to enrich PR descriptions with the "why" behind changes. Without MCP access, PRs will still be created but without ticket context.
+- **Environment variables:** Store API tokens in environment variables (e.g., `GITHUB_API_TOKEN`, `JIRA_API_TOKEN`), not directly in config files. OpenCode resolves `{env:VAR_NAME}` at runtime.
+- **Verification:** Run `@pm deliver change <ref>` — if the PM agent can read the ticket, MCP is working. If you see "MCP tools unavailable" warnings, check your config and token setup.
+
 ---
 
 ## Related Guides
