@@ -381,4 +381,4 @@ Both workflows reuse `@pr-manager` patterns (platform detection, branchPath sani
 | 1 | DONE | 2026-03-16 | 2026-03-16 | f140d1f | Created code-reviewer agent, /review-remote command, code-review checklist, code-review-instructions. OQ-3/OQ-4 resolved as DEC-8/DEC-9. |
 | 2 | DONE | 2026-03-16 | 2026-03-16 | f140d1f | Created review-feedback-applier agent, /apply-review-feedback command. reviewer.md verified unchanged (hash 744163ac). |
 | 3 | DONE | 2026-03-16 | 2026-03-16 | f140d1f | Updated .opencode/README.md and AGENTS.md inventories, applied license headers to all 6 new files, all AC validated. |
-| 4 | DONE | 2026-03-16 | 2026-03-16 | pending | GH-39 scope: created pr-instructions.md, template, guide; refactored 3 agents; updated bootstrapper, AGENTS.md, README, handbook, spec. |
+| 4 | DONE | 2026-03-16 | 2026-03-16 | 11da621 | GH-39 scope: created pr-instructions.md, template, guide; refactored 3 agents; updated bootstrapper, AGENTS.md, README, handbook, spec. |

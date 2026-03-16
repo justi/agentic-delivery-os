@@ -6,12 +6,12 @@ source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/
 id: SPEC-REMOTE-CODE-REVIEW
 status: Current
 created: 2026-03-16
-last_updated: 2026-03-16
+last_updated: 2026-03-16T12:00:00Z
 owners: [Juliusz Ćwiąkalski]
 service: delivery-os
 links:
-  related_changes: ["GH-36"]
-summary: "Two agent/command pairs for remote code review and review-feedback application on GitHub and GitLab, with repository-local checklists, draft generation, deduplication, and three-tier feedback classification."
+  related_changes: ["GH-36", "GH-39"]
+summary: "Two agent/command pairs for remote code review and review-feedback application on GitHub and GitLab, with repository-local checklists, draft generation, deduplication, three-tier feedback classification, and externalized platform access via pr-instructions.md."
 ---
 
 # Feature: Remote Code Review and Review-Feedback Application
@@ -24,7 +24,7 @@ ADOS provides two complementary workflows for interacting with remote PR/MR revi
 
 2. **Review feedback application** — the `review-feedback-applier` agent (`.opencode/agent/review-feedback-applier.md`) and `/apply-review-feedback` command (`.opencode/command/apply-review-feedback.md`) read review comments from an open PR/MR, classify each as accepted/rejected/ambiguous using a three-tier system, and apply accepted changes to local source files without committing or pushing.
 
-Both workflows support GitHub (`gh`) and GitLab (`glab`) from v1, using platform-neutral core logic with platform-specific CLI adapters that mirror `@pr-manager` patterns. They are entirely separate from the existing `@reviewer` agent, which validates implementation against change specs and plans locally.
+Both workflows support GitHub (`gh`) and GitLab (`glab`) from v1. Platform access is externalized into `.ai/agent/pr-instructions.md` — a repository-local configuration file that maps abstract operations (fetch diff, publish comment, etc.) to concrete CLI commands. Each agent reads this file at startup and falls back to auto-detection from `git remote get-url origin` when it is absent. This mirrors the `pm-instructions.md` pattern for issue tracker access and keeps agent prompts platform-neutral. Both workflows are entirely separate from the existing `@reviewer` agent, which validates implementation against change specs and plans locally.
 
 ## Business Context
 
@@ -49,7 +49,7 @@ Both workflows support GitHub (`gh`) and GitLab (`glab`) from v1, using platform
 
 - **Remote code review (F-1):** The `code-reviewer` agent fetches a PR/MR diff and metadata, analyzes it against review criteria, and produces structured findings with severity (critical/major/minor/nit) and confidence (high/medium/low).
 - **Review feedback application (F-2):** The `review-feedback-applier` agent fetches review threads, classifies each comment, and applies accepted changes to local files.
-- **Platform detection (F-3):** Both agents auto-detect the platform from `git remote get-url origin` (GitHub vs GitLab), with fallback to CLI auth status checks and manual override via `--github`/`--gitlab` flags.
+- **Platform access via pr-instructions (F-3):** All three PR/MR-facing agents (`code-reviewer`, `review-feedback-applier`, `pr-manager`) read `.ai/agent/pr-instructions.md` for platform type, access method, and an Operations Reference table mapping every PR/MR operation to a concrete CLI command. When `pr-instructions.md` is absent, agents fall back to auto-detecting the platform from `git remote get-url origin` (GitHub vs GitLab), then to CLI auth status checks, and finally to manual override via `--github`/`--gitlab` flags.
 - **Repository-local review configuration (F-4):** Two optional files customize review behavior:
   - `.ai/checklists/code-review.md` — structured checklist of review criteria (checkbox-based).
   - `.ai/agent/code-review-instructions.md` — free-form review instructions and priorities.
@@ -68,9 +68,9 @@ Both workflows support GitHub (`gh`) and GitLab (`glab`) from v1, using platform
 ```
 Flow 1: Remote code review
   User runs /review-remote [--publish] [--pr N]
-  → Platform detection (GitHub/GitLab)
+  → Load .ai/agent/pr-instructions.md (if present; else auto-detect platform)
   → Pre-flight checks (clean tree, auth, active PR/MR)
-  → Fetch diff + metadata + existing comments
+  → Fetch diff + metadata + existing comments (via Operations Reference)
   → Load .ai/checklists/code-review.md (if present)
   → Load .ai/agent/code-review-instructions.md (if present)
   → Analyze diff → produce findings
@@ -81,9 +81,9 @@ Flow 1: Remote code review
 
 Flow 2: Apply review feedback
   User runs /apply-review-feedback [--pr N]
-  → Platform detection (GitHub/GitLab)
+  → Load .ai/agent/pr-instructions.md (if present; else auto-detect platform)
   → Pre-flight checks (clean tree, auth, active PR/MR)
-  → Fetch all review threads
+  → Fetch all review threads (via Operations Reference)
   → Classify each: explicit-accept / implicit-accept / rejected / ambiguous
   → Generate classification-report.md
   → Apply accepted changes to local files
@@ -110,6 +110,7 @@ Flow 2: Apply review feedback
 | `.opencode/agent/review-feedback-applier.md` | Review feedback applier agent | Fetch threads, classify feedback, apply accepted changes locally |
 | `.opencode/command/review-remote.md` | Review remote command | Thin entry point delegating to `code-reviewer` agent |
 | `.opencode/command/apply-review-feedback.md` | Apply review feedback command | Thin entry point delegating to `review-feedback-applier` agent |
+| `.ai/agent/pr-instructions.md` | PR/MR platform instructions | Repository-local platform config with Operations Reference table; read by `code-reviewer`, `review-feedback-applier`, and `pr-manager` |
 | `.ai/checklists/code-review.md` | Review checklist | Optional repository-local checklist of review criteria |
 | `.ai/agent/code-review-instructions.md` | Review instructions | Optional repository-local free-form review instructions |
 
@@ -149,7 +150,19 @@ The `AI-APPLY` marker is an explicit acceptance signal for review feedback:
 - **Examples:** "AI-APPLY", "Good catch, AI-APPLY this", "ai-apply"
 - **Invalid:** "AI-APPLYED", "NOAI-APPLY" (not standalone)
 
-### Platform CLI Reference
+### Platform Access Layer
+
+Platform access is externalized into `.ai/agent/pr-instructions.md`, which defines:
+
+- **Platform type** (GitHub, GitLab, etc.)
+- **Access method** (CLI tool, MCP server, etc.)
+- **Operations Reference table** — maps abstract operation names to concrete CLI commands
+
+Agents reference this table for every PR/MR operation (fetch diff, list PRs, publish comment, etc.) rather than embedding platform-specific commands in their prompts. This separates WHAT the agent does from HOW it accesses the platform.
+
+A template (`doc/templates/pr-instructions-template.md`) covers four integration types: GitHub CLI, GitLab CLI, GitHub MCP, and Azure DevOps MCP. A guide (`doc/guides/pr-platform-integration.md`) documents setup for each.
+
+**Fallback behavior:** When `pr-instructions.md` is absent, agents fall back to auto-detection:
 
 | Platform | CLI | PR/MR listing | Diff fetch | Comments fetch | Publish |
 |----------|-----|---------------|------------|----------------|---------|
@@ -167,6 +180,7 @@ The `AI-APPLY` marker is an explicit acceptance signal for review feedback:
 | NFR-5 | Ambiguity safety | Ambiguous feedback items are never auto-applied | Listed in `skipped-items.md` only |
 | NFR-6 | Graceful degradation | Both agents function when `.ai/checklists/code-review.md` and `.ai/agent/code-review-instructions.md` are absent | Built-in heuristics used |
 | NFR-7 | State isolation | Review artifacts for different branches are isolated under separate `<branchPath>/` directories | No cross-contamination |
+| NFR-8 | Platform config fallback | All three PR/MR-facing agents function when `.ai/agent/pr-instructions.md` is absent | Auto-detection from `git remote get-url origin` |
 
 ## Quality Assurance Strategy
 
@@ -185,6 +199,7 @@ The `AI-APPLY` marker is an explicit acceptance signal for review feedback:
 
 ### Configuration
 
+- **PR/MR platform instructions:** `.ai/agent/pr-instructions.md` — repository-local platform config with Operations Reference table. Generated by `@bootstrapper` or copied from `doc/templates/pr-instructions-template.md`. When absent, agents auto-detect platform from `git remote get-url origin`.
 - **Review checklist:** `.ai/checklists/code-review.md` — optional, human-authored, evolves with repository review standards.
 - **Review instructions:** `.ai/agent/code-review-instructions.md` — optional, human-authored, repository-specific priorities and patterns.
 - **State directories:** `tmp/code-review/` and `tmp/review-feedback/` — git-ignored, ephemeral, no automated cleanup required.
@@ -192,7 +207,8 @@ The `AI-APPLY` marker is an explicit acceptance signal for review feedback:
 
 ## Dependencies & Risks
 
-- **Depends on (pattern):** `@pr-manager` agent for platform detection, `branchPath` sanitization, and `tmp/` conventions (pattern reuse, not code dependency).
+- **Depends on (config):** `.ai/agent/pr-instructions.md` for platform access commands (optional — agents fall back to auto-detection when absent).
+- **Depends on (pattern):** `@pr-manager` agent for `branchPath` sanitization and `tmp/` conventions (pattern reuse, not code dependency).
 - **Depends on (tool):** `gh` CLI for GitHub operations; `glab` CLI for GitLab operations.
 - **Does not affect:** `@reviewer` agent (existing local review agent is unchanged).
 - **Risk:** Large PRs may produce many findings — mitigated by 30-inline-comment cap and severity prioritization.
@@ -204,6 +220,9 @@ The `AI-APPLY` marker is an explicit acceptance signal for review feedback:
 - **Review feedback applier agent:** `.opencode/agent/review-feedback-applier.md`
 - **Review remote command:** `.opencode/command/review-remote.md`
 - **Apply review feedback command:** `.opencode/command/apply-review-feedback.md`
+- **PR/MR platform instructions:** `.ai/agent/pr-instructions.md`
+- **PR/MR platform instructions template:** `doc/templates/pr-instructions-template.md`
+- **PR/MR platform integration guide:** [doc/guides/pr-platform-integration.md](../../guides/pr-platform-integration.md)
 - **Review checklist:** `.ai/checklists/code-review.md`
 - **Review instructions:** `.ai/agent/code-review-instructions.md`
 - **Agent inventory:** [.opencode/README.md](../../../.opencode/README.md)

@@ -6,11 +6,11 @@ source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/
 id: SPEC-BOOTSTRAPPER
 status: Current
 created: 2026-03-10
-last_updated: 2026-03-10
+last_updated: 2026-03-16
 owners: [Juliusz Ćwiąkalski]
 service: delivery-os
 links:
-  related_changes: ["GH-32"]
+  related_changes: ["GH-32", "GH-36"]
   guides:
     - "doc/guides/onboarding-existing-project.md"
 summary: "Multi-session bootstrapper agent and /bootstrap command that automate ADOS adoption for existing projects via repo scan, confidence assessment, human interview, and artifact generation."
@@ -35,7 +35,7 @@ The bootstrapper complements the manual onboarding guide (`doc/guides/onboarding
 ### Goals & Success Metrics
 
 - **Primary Goal:** Enable a team to go from zero ADOS artifacts to a working setup in a single interactive session.
-- **KPIs:** Bootstrapper generates valid `AGENTS.md` + `pm-instructions.md` + at least one feature spec per invocation.
+- **KPIs:** Bootstrapper generates valid `AGENTS.md` + `pm-instructions.md` + `pr-instructions.md` + at least one feature spec per invocation.
 
 ## User Experience & Functionality
 
@@ -45,7 +45,7 @@ The bootstrapper complements the manual onboarding guide (`doc/guides/onboarding
 - **Repo scan (F-2):** Automatically detects project structure, tech stack, existing docs, CI/CD configuration, and package managers.
 - **Confidence assessment (F-3):** Scores each artifact to generate on a 0.0–1.0 scale, focusing interview questions on low-confidence areas only.
 - **Human interview (F-4):** Asks 3–7 targeted questions per turn, grouped by theme, with progressive refinement. Accepts "skip" and "I don't know" responses.
-- **Draft generation (F-5):** Produces mandatory artifacts (`AGENTS.md`, `.ai/agent/pm-instructions.md`, `doc/documentation-handbook.md`) and recommended artifacts (feature specs, overview docs) based on accumulated context.
+- **Draft generation (F-5):** Produces mandatory artifacts (`AGENTS.md`, `.ai/agent/pm-instructions.md`, `.ai/agent/pr-instructions.md`, `doc/documentation-handbook.md`) and recommended artifacts (feature specs, overview docs) based on accumulated context.
 - **Human review (F-6):** Presents each draft for approval, highlights low-confidence areas with TODOs, and iterates on corrections.
 - **Write phase (F-7):** Writes approved artifacts to the filesystem, creates necessary directories, and provides next-step suggestions.
 
@@ -134,6 +134,7 @@ last_updated: <ISO-timestamp>
 |----------|-----------|-------------|
 | `AGENTS.md` | Yes | Project-specific version with correct repo structure, tech stack, and references |
 | `.ai/agent/pm-instructions.md` | Yes | Tracker configuration based on interview answers |
+| `.ai/agent/pr-instructions.md` | Yes | PR/MR platform configuration based on interview answers (Git platform, CLI tool) |
 | `doc/documentation-handbook.md` | Yes | Copied as-is from ADOS source |
 | Feature specs in `doc/spec/features/` | Recommended | Based on project scan and interview (at least one) |
 | `doc/overview/` docs | Optional | North star and/or architecture overview |
