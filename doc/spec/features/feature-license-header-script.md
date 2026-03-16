@@ -6,7 +6,7 @@ source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/
 id: SPEC-LICENSE-HEADER-SCRIPT
 status: Current
 created: 2026-03-07
-last_updated: 2026-03-07
+last_updated: 2026-03-16
 owners: [Juliusz Ćwiąkalski]
 service: scripts
 links:
@@ -27,14 +27,17 @@ summary: "Script that adds or updates MIT license headers to both Markdown and B
 
 ### Markdown Files
 
-Files with `.md` extension receive the license header as YAML frontmatter:
+Files with `.md` extension receive the license header as YAML frontmatter with a `source:` attribute:
 
 ```yaml
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (...)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/<path>
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/<path>
+---
 ```
+
+The `source:` line is a real YAML attribute (not a comment) to ensure Markdown renderers treat the block as valid frontmatter.
 
 ### Bash Scripts
 
@@ -57,7 +60,8 @@ For shebang-detected files, the header is inserted after the shebang line:
 - **Idempotent**: Running the script multiple times on the same file produces the same result — no duplicate headers.
 - **Directory processing**: When given a directory, discovers both `.md` files and bash scripts recursively.
 - **Dry-run mode**: Supports previewing changes without modifying files.
-- **Canonical URL**: The `Latest version` URL always points to the `main` branch on GitHub.
+- **Canonical URL**: The `source` URL always points to the `main` branch on GitHub.
+- **Format-aware**: Markdown files use `source:` YAML attribute; Bash files use `# Latest version:` comment. The script detects and migrates the old `# Latest version:` comment format in Markdown files to the new `source:` attribute format.
 
 ## Usage
 
@@ -74,4 +78,4 @@ scripts/add-header-location.sh --dry-run path/to/file.sh
 
 ## Related Documentation
 
-- **Tests**: `scripts/.tests/test-add-header-location.sh` — 18 automated tests
+- **Tests**: `scripts/.tests/test-add-header-location.sh` — 19 automated tests
