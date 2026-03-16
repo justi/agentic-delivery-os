@@ -225,8 +225,15 @@ Body guidance (use only sections that apply; keep it tight):
 - `## Risk & Rollback`
   </output_contract>
 
-<platform_detection>
-Determine platform primarily from `git remote get-url origin` host:
+<platform_access>
+Load PR/MR platform configuration from `.ai/agent/pr-instructions.md` if it exists.
+This file defines the platform type, access method, and an Operations Reference table
+mapping each abstract operation (list PRs, create PR, update PR, fetch metadata, etc.)
+to the concrete CLI or MCP command. Use it as the single source of truth for all
+platform interactions in steps 4, 5, and 9.
+
+**Graceful fallback** — if `.ai/agent/pr-instructions.md` does not exist:
+Detect platform from `git remote get-url origin` host:
 
 - `github.com` (or host contains `github`) → GitHub (use `gh`)
 - `gitlab.com` (or host contains `gitlab`) → GitLab (use `glab`)
@@ -237,7 +244,7 @@ If still unclear:
 - Else if `glab auth status` succeeds → GitLab
 
 If still unknown and no override flag is provided: output `NEEDS_INPUT` with an exact rerun suggestion using `--github` or `--gitlab`.
-</platform_detection>
+</platform_access>
 
 <process>
   <step id="1">
@@ -266,9 +273,10 @@ If still unknown and no override flag is provided: output `NEEDS_INPUT` with an 
     Hard rule: Do NOT attempt to create or update a PR/MR until the branch exists on the remote with all commits pushed.
   </step>
   <step id="4">
-    Detect platform and verify tooling/auth:
-    - GitHub: require `gh`.
-    - GitLab: require `glab`.
+    Load platform configuration and verify tooling/auth:
+    - Read `.ai/agent/pr-instructions.md` if it exists — use the Operations Reference table for all subsequent platform commands.
+    - If the file is absent: fall back to auto-detection (see platform_access).
+    - Verify the platform CLI is installed and authenticated using the "Check auth" operation from the instructions (or fallback: `gh auth status` / `glab auth status`).
     - JSON parsing: require `jq`.
     If missing/auth fails: stop with a short actionable message.
   </step>
@@ -280,6 +288,7 @@ If still unknown and no override flag is provided: output `NEEDS_INPUT` with an 
   </step>
   <step id="5">
     Mandatory existence check (GATING STEP): locate an existing OPEN PR/MR for the current branch.
+    Use the "List open PRs for branch" operation from `pr-instructions.md` (or fallback auto-detection commands).
 
     This step MUST run successfully before any create attempt.
 
@@ -401,7 +410,9 @@ If still unknown and no override flag is provided: output `NEEDS_INPUT` with an 
     Create `tmp/pr/<branchPath>/body.md` from line 3+ (do not echo content to stdout).
   </step>
   <step id="9">
-    Create or update PR/MR:
+    Create or update PR/MR using the Operations Reference from `pr-instructions.md`:
+    - "Create PR" / "Update PR" / "View PR (confirm)" operations.
+    If `pr-instructions.md` is absent, use fallback auto-detection commands for the detected platform.
 
     Hard rule:
     - NEVER attempt "create" when `mode=update`.
@@ -427,32 +438,11 @@ If still unknown and no override flag is provided: output `NEEDS_INPUT` with an 
 </process>
 
 <cli_reference>
-Follow the pattern; ignore the specific example content.
+For concrete CLI commands, read `.ai/agent/pr-instructions.md` — the Operations Reference table
+maps each operation (list PRs, create PR, update PR, view PR, check auth) to the exact CLI command.
+If `pr-instructions.md` is absent, fall back to auto-detected platform commands.
 
-GitHub (`gh`):
-
-```bash
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-BRANCH_PATH="$(printf '%s' "$BRANCH" | tr -c 'A-Za-z0-9._/-' '_' | sed 's#\.\.#__#g; s#^/*##')"
-mkdir -p "tmp/pr/$BRANCH_PATH"
-
-TITLE="$(head -n 1 "tmp/pr/$BRANCH_PATH/description.md")"
-tail -n +3 "tmp/pr/$BRANCH_PATH/description.md" > "tmp/pr/$BRANCH_PATH/body.md"
-
-# GATING STEP: find most recently updated OPEN PR for branch.
-PR_JSON="$(gh pr list --head "$BRANCH" --state open --json number,baseRefName,url,updatedAt --jq 'sort_by(.updatedAt) | reverse | .[0]' 2>tmp/gh-pr-list.err)" || { cat tmp/gh-pr-list.err >&2; exit 1; }
-NUMBER="$(printf '%s' "$PR_JSON" | jq -r '.number // empty')"
-
-if [ -z "$NUMBER" ]; then
-  gh pr create --base "$BASE" --title "$TITLE" --body-file "tmp/pr/$BRANCH_PATH/body.md" || exit 1
-  NUMBER="$(gh pr list --head "$BRANCH" --state open --json number,updatedAt --jq 'sort_by(.updatedAt) | reverse | .[0].number' 2>/dev/null)"
-fi
-
-gh pr edit "$NUMBER" --base "$BASE" --title "$TITLE" --body-file "tmp/pr/$BRANCH_PATH/body.md"
-gh pr view "$NUMBER" --json number,baseRefName,url --jq '{number,baseRefName,url}'
-```
-
-GitLab (`glab`):
+Helper patterns (platform-independent):
 
 ```bash
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
@@ -461,24 +451,12 @@ mkdir -p "tmp/pr/$BRANCH_PATH"
 
 TITLE="$(head -n 1 "tmp/pr/$BRANCH_PATH/description.md")"
 tail -n +3 "tmp/pr/$BRANCH_PATH/description.md" > "tmp/pr/$BRANCH_PATH/body.md"
-
-# GATING STEP: list MRs for source branch; pick most recently updated.
-MR_LIST_JSON="$(glab mr list --source-branch "$BRANCH" --output json 2>tmp/glab-mr-list.err)" || { cat tmp/glab-mr-list.err >&2; exit 1; }
-MR_JSON="$(printf '%s' "$MR_LIST_JSON" | jq 'sort_by(.updated_at // .updatedAt // "") | reverse | .[0]')"
-IID="$(printf '%s' "$MR_JSON" | jq -r '.iid // empty')"
-
-if [ -z "$IID" ]; then
-  glab mr create --source-branch "$BRANCH" --target-branch "$BASE" --title "$TITLE" --description "$(cat "tmp/pr/$BRANCH_PATH/body.md")" --yes || exit 1
-  MR_LIST_JSON="$(glab mr list --source-branch "$BRANCH" --output json 2>/dev/null)" || exit 1
-  IID="$(printf '%s' "$MR_LIST_JSON" | jq -r 'sort_by(.updated_at // "") | reverse | .[0].iid // empty')"
-fi
-
-glab mr update "$IID" --target-branch "$BASE" --title "$TITLE" --description "$(cat "tmp/pr/$BRANCH_PATH/body.md")" --yes
-MR_VIEW_JSON="$(glab mr view "$IID" --output json)" || exit 1
-WEB_URL="$(printf '%s' "$MR_VIEW_JSON" | jq -r '.web_url')"
-TARGET_BRANCH="$(printf '%s' "$MR_VIEW_JSON" | jq -r '.target_branch')"
 ```
 
+Robustness rules:
+- Do NOT treat CLI invocation errors as "no PR/MR".
+- Only conclude "not found" when the CLI succeeds and returns an empty result.
+- If the command fails (non-zero exit, auth error, etc.), STOP and report the error.
 </cli_reference>
 
 <constraints>

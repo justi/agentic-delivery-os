@@ -73,8 +73,15 @@ Parse invocation text into:
 If unknown flags are provided: output `NEEDS_INPUT` with an exact rerun suggestion.
 </argument_parsing>
 
-<platform_detection>
-Determine platform primarily from `git remote get-url origin` host:
+<platform_access>
+Load PR/MR platform configuration from `.ai/agent/pr-instructions.md` if it exists.
+This file defines the platform type, access method, and an Operations Reference table
+mapping each abstract operation (list PRs, fetch diff, publish comment, etc.) to the
+concrete CLI or MCP command. Use it as the single source of truth for all platform
+interactions in steps 2–4 and 10.
+
+**Graceful fallback** — if `.ai/agent/pr-instructions.md` does not exist:
+Detect platform from `git remote get-url origin` host:
 
 - `github.com` (or host contains `github`) → GitHub (use `gh`)
 - `gitlab.com` (or host contains `gitlab`) → GitLab (use `glab`)
@@ -85,7 +92,7 @@ If still unclear:
 - Else if `glab auth status` succeeds → GitLab
 
 If still unknown and no override flag is provided: output `NEEDS_INPUT` with an exact rerun suggestion using `--github` or `--gitlab`.
-</platform_detection>
+</platform_access>
 
 <pre_flight>
 Before any review work, verify ALL of the following. STOP with a clear message if any check fails.
@@ -107,49 +114,27 @@ Before any review work, verify ALL of the following. STOP with a clear message i
   </step>
 
   <step id="2">
-    Detect platform and verify tooling/auth:
-    - GitHub: require `gh`.
-    - GitLab: require `glab`.
+    Load platform configuration and verify tooling/auth:
+    - Read `.ai/agent/pr-instructions.md` if it exists — use the Operations Reference table for all subsequent commands.
+    - If the file is absent: fall back to auto-detection (see platform_access).
+    - Verify the platform CLI is installed and authenticated using the "Check auth" operation from the instructions (or fallback: `gh auth status` / `glab auth status`).
     If missing/auth fails: stop with a short actionable message.
   </step>
 
   <step id="3">
     Resolve PR/MR:
     - If explicit number provided: verify it exists and is open.
-    - Else: find the open PR/MR for the current branch.
-
-    GitHub:
-    ```bash
-    PR_JSON="$(gh pr list --head "$BRANCH" --state open --json number,baseRefName,url,title,body,headRefName --jq 'sort_by(.updatedAt) | reverse | .[0]')"
-    ```
-
-    GitLab:
-    ```bash
-    MR_LIST_JSON="$(glab mr list --source-branch "$BRANCH" --output json)"
-    MR_JSON="$(printf '%s' "$MR_LIST_JSON" | jq 'sort_by(.updated_at // "") | reverse | .[0]')"
-    ```
-
+    - Else: find the open PR/MR for the current branch using the "List open PRs for branch" operation from `pr-instructions.md` (or fallback auto-detection commands).
     If no open PR/MR found: STOP with message.
   </step>
 
   <step id="4">
     Fetch diff and metadata. Save to `tmp/code-review/<branchPath>/`.
-
-    GitHub:
-    ```bash
-    gh pr diff "$NUMBER" > "tmp/code-review/$BRANCH_PATH/diff.patch"
-    gh pr view "$NUMBER" --json number,baseRefName,headRefName,title,body,url,author,labels,reviewRequests,comments,reviews --jq '.' > "tmp/code-review/$BRANCH_PATH/context.json"
-    gh api "repos/{owner}/{repo}/pulls/$NUMBER/comments" --paginate > "tmp/code-review/$BRANCH_PATH/comments-snapshot.json"
-    ```
-
-    GitLab:
-    ```bash
-    glab mr diff "$IID" > "tmp/code-review/$BRANCH_PATH/diff.patch"
-    glab mr view "$IID" --output json > "tmp/code-review/$BRANCH_PATH/context.json"
-    glab api "projects/:id/merge_requests/$IID/notes" --paginate > "tmp/code-review/$BRANCH_PATH/comments-snapshot.json"
-    ```
-
-    Follow the pattern; adapt exact flags as needed.
+    Use the Operations Reference from `pr-instructions.md` for:
+    - "Fetch PR diff" → save to `diff.patch`
+    - "Fetch PR metadata" → save to `context.json`
+    - "Fetch inline review comments" → save to `comments-snapshot.json`
+    If `pr-instructions.md` is absent, use fallback auto-detection commands for the detected platform.
   </step>
 
   <step id="5">
@@ -236,31 +221,12 @@ Before any review work, verify ALL of the following. STOP with a clear message i
     Publish (only when --publish AND user confirms):
 
     - Cap inline comments at 30. Remaining findings go into the summary comment.
-    - Post summary comment to PR/MR.
-    - Post inline comments at diff positions where possible.
+    - Post summary comment to PR/MR using the "Publish summary comment" operation from `pr-instructions.md`.
+    - Post inline comments at diff positions using the "Publish inline review" operation from `pr-instructions.md`.
     - If inline positioning fails for a finding: include it in the summary comment with file:line reference.
-
-    GitHub:
-    ```bash
-    # Summary comment
-    gh pr comment "$NUMBER" --body-file "tmp/code-review/$BRANCH_PATH/summary-comment.md"
-
-    # Inline comments via review API
-    gh api "repos/{owner}/{repo}/pulls/$NUMBER/reviews" -X POST --input "tmp/code-review/$BRANCH_PATH/review-payload.json"
-    ```
-
-    GitLab:
-    ```bash
-    # Summary note
-    glab mr note "$IID" --message "$(cat "tmp/code-review/$BRANCH_PATH/summary-comment.md")"
-
-    # Inline discussions via API
-    glab api "projects/:id/merge_requests/$IID/discussions" -X POST ...
-    ```
+    - If `pr-instructions.md` is absent, use fallback auto-detection commands for the detected platform.
 
     Save publish results to `tmp/code-review/<branchPath>/publish-report.json`.
-
-    Follow the pattern; adapt exact flags and API paths as needed.
   </step>
 
   <step id="11">

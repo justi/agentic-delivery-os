@@ -271,6 +271,63 @@ Both workflows reuse `@pr-manager` patterns (platform detection, branchPath sani
 
 **Completion signal**: `docs(GH-36): update inventories and apply license headers`
 
+### Phase 4: PR/MR platform instructions extraction (from GH-39)
+
+**Goal**: Extract hardcoded platform detection logic and CLI commands from `@pr-manager`, `@code-reviewer`, and `@review-feedback-applier` into a repo-local `.ai/agent/pr-instructions.md` file — mirroring the pattern of `.ai/agent/pm-instructions.md` for issue tracker access. Create supporting docs and update the bootstrapper.
+
+**Tasks**:
+
+- [x] **4.1** Create `.ai/agent/pr-instructions.md` for ADOS — the repo-local PR/MR platform configuration for this repo (GitHub, CLI via `gh`). (Created with platform type, access method, host, auth, and 14-row Operations Reference table covering all PR/MR operations)
+
+- [x] **4.2** Create `doc/templates/pr-instructions-template.md` — a template that other repos can copy. (Created with 4 commented-out platform sections: GitHub CLI, GitLab CLI, GitHub MCP, Azure DevOps MCP; each with full Operations Reference table)
+
+- [x] **4.3** Refactor `.opencode/agent/code-reviewer.md` — replaced `<platform_detection>` with `<platform_access>` referencing `pr-instructions.md`, refactored steps 2/3/4/10 to use Operations Reference table, added graceful fallback to auto-detection when `pr-instructions.md` absent.
+
+- [x] **4.4** Refactor `.opencode/agent/review-feedback-applier.md` — replaced `<platform_detection>` with `<platform_access>` referencing `pr-instructions.md`, refactored steps 2/3/4 to use Operations Reference table, added graceful fallback.
+
+- [x] **4.5** Refactor `.opencode/agent/pr-manager.md` — replaced `<platform_detection>` with `<platform_access>`, refactored steps 4/5/9 and `<cli_reference>` to use Operations Reference from `pr-instructions.md`, preserved helper patterns and robustness rules, added graceful fallback.
+
+- [x] **4.6** Create `doc/guides/pr-platform-integration.md` — guide with 4 integration types (GitHub CLI, GitLab CLI, GitHub MCP, Azure DevOps MCP), decision flowchart, setup instructions, and relationship to other config files.
+
+- [x] **4.7** Update `.opencode/agent/bootstrapper.md` — added PR/MR platform to interview questions, `pr_instructions` to state schema and confidence scores, `pr-instructions.md` as mandatory artifact #3 in Phase 4, `pr_platform_discovery` section, and path to write allowlist.
+
+- [x] **4.8** Update `AGENTS.md` (repo structure, key references), `.opencode/README.md` (PR/MR platform config convention), `doc/documentation-handbook.md` (.ai/agent/ description, template index), `doc/templates/README.md` (template table).
+
+- [x] **4.9** Run `scripts/add-header-location.sh` on all 3 new files (pr-instructions.md, pr-instructions-template.md, pr-platform-integration.md) — all updated with 3-line YAML frontmatter.
+
+- [x] **4.10** Update the spec (`chg-GH-36-spec.md`) — added F-13 through F-17, AC-F13-1 through AC-F17-1, DEC-10 through DEC-12, updated affected components and document history.
+
+**Acceptance Criteria**:
+
+- Must: `.ai/agent/pr-instructions.md` exists with Operations Reference table covering all PR/MR operations
+- Must: `doc/templates/pr-instructions-template.md` exists with multi-platform examples
+- Must: `code-reviewer`, `review-feedback-applier`, and `pr-manager` agents reference `pr-instructions.md` with graceful fallback
+- Must: All three agents preserve their existing workflow logic (WHAT) while delegating platform access (HOW) to `pr-instructions.md`
+- Must: Graceful fallback — when `pr-instructions.md` is missing, agents fall back to auto-detection from `git remote get-url origin`
+- Must: `doc/guides/pr-platform-integration.md` exists documenting supported integration types
+- Must: `bootstrapper.md` includes PR/MR platform in interview and artifact generation
+- Must: `AGENTS.md`, `.opencode/README.md`, `doc/documentation-handbook.md` updated where needed
+- Must: All new files have license headers
+- Must: Spec updated with GH-39 scope
+
+**Files and modules**:
+
+- `.ai/agent/pr-instructions.md` (new)
+- `doc/templates/pr-instructions-template.md` (new)
+- `doc/guides/pr-platform-integration.md` (new)
+- `.opencode/agent/code-reviewer.md` (refactored)
+- `.opencode/agent/review-feedback-applier.md` (refactored)
+- `.opencode/agent/pr-manager.md` (refactored)
+- `.opencode/agent/bootstrapper.md` (updated)
+- `AGENTS.md` (updated)
+- `.opencode/README.md` (updated)
+- `doc/documentation-handbook.md` (updated if needed)
+- `chg-GH-36-spec.md` (updated)
+
+**Completion signal**: `feat(GH-36): extract platform instructions into pr-instructions.md (GH-39)`
+
+---
+
 ## Test Scenarios
 
 | ID | Scenario | Phases | AC |
@@ -315,6 +372,7 @@ Both workflows reuse `@pr-manager` patterns (platform detection, branchPath sani
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-03-16 | plan-writer | Initial plan — 3 phases: review agent+command, feedback agent+command, docs+validation |
+| 1.1 | 2026-03-16 | coder | Added Phase 4: PR/MR platform instructions extraction (GH-39 scope merged into GH-36) |
 
 ## Execution Log
 
@@ -323,3 +381,4 @@ Both workflows reuse `@pr-manager` patterns (platform detection, branchPath sani
 | 1 | DONE | 2026-03-16 | 2026-03-16 | f140d1f | Created code-reviewer agent, /review-remote command, code-review checklist, code-review-instructions. OQ-3/OQ-4 resolved as DEC-8/DEC-9. |
 | 2 | DONE | 2026-03-16 | 2026-03-16 | f140d1f | Created review-feedback-applier agent, /apply-review-feedback command. reviewer.md verified unchanged (hash 744163ac). |
 | 3 | DONE | 2026-03-16 | 2026-03-16 | f140d1f | Updated .opencode/README.md and AGENTS.md inventories, applied license headers to all 6 new files, all AC validated. |
+| 4 | DONE | 2026-03-16 | 2026-03-16 | pending | GH-39 scope: created pr-instructions.md, template, guide; refactored 3 agents; updated bootstrapper, AGENTS.md, README, handbook, spec. |

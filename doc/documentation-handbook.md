@@ -128,7 +128,7 @@ summary: "Repository documentation structure, conventions, and workflow."
 
 ### 4.1 `/.ai/` (for Agents)
 
-- **`/agent/`**: Repo-specific instructions that agents must follow (committed).
+- **`/agent/`**: Repo-specific instructions that agents must follow (committed). Includes `pm-instructions.md` (issue tracker config) and `pr-instructions.md` (PR/MR platform config).
 - **`/local/`**: Local-only agent context (git-ignored). Never commit content from here.
 - **`/rules/`**: Optional rules such as the spec workflow, naming conventions, review criteria.
 
@@ -571,6 +571,7 @@ A: The **producer** (the service that exposes the API or publishes the event). C
 - `doc/templates/test-plan-template.md`
 - `doc/templates/implementation-plan-template.md`
 - `doc/templates/north-star-template.md`
+- `doc/templates/pr-instructions-template.md`
 
 (Keep these **shared** and versioned; link to canonical sources.)
 

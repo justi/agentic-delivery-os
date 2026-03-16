@@ -64,6 +64,7 @@ interview:
 confidence:
   agents_md: <0.0-1.0>
   pm_instructions: <0.0-1.0>
+  pr_instructions: <0.0-1.0>
   documentation_handbook: <0.0-1.0>
   feature_specs: <0.0-1.0>
   overview_docs: <0.0-1.0>
@@ -72,6 +73,7 @@ confidence:
 artifacts:
   agents_md: { status: <pending|draft|approved|written>, path: <path-or-null> }
   pm_instructions: { status: <pending|draft|approved|written>, path: <path-or-null> }
+  pr_instructions: { status: <pending|draft|approved|written>, path: <path-or-null> }
   documentation_handbook: { status: <pending|draft|approved|written>, path: <path-or-null> }
   feature_specs:
     - { name: <feature-name>, status: <pending|draft|approved|written>, path: <path-or-null> }
@@ -141,6 +143,7 @@ Core question areas:
 - **Project purpose** — What does this project do? Who uses it?
 - **Team structure** — Who works on this? What roles?
 - **Tracker setup** — GitHub Issues or Jira? Project key? (After getting the answer, probe the tracker via MCP to discover workflows — see `<tracker_workflow_discovery>`)
+- **PR/MR platform** — Which Git hosting platform? (GitHub / GitLab / Azure DevOps) Access method? (CLI / MCP) Self-hosted URL? (See `<pr_platform_discovery>`)
 - **Delivery workflow** — Current PR process? Review requirements?
 - **Architecture** — Key components? Service boundaries?
 - **Conventions** — Naming, branching, commit message standards?
@@ -157,15 +160,16 @@ Generate draft artifacts based on accumulated context:
 **Mandatory artifacts (always generated):**
 1. `AGENTS.md` — Project-specific version with correct repo structure, tech stack, and references
 2. `.ai/agent/pm-instructions.md` — Tracker configuration based on interview answers and workflow discovery (see `<tracker_workflow_discovery>`). This file is NOT pre-installed by `install.sh --local` — it must always be generated here or created manually.
-3. `doc/documentation-handbook.md` — Copy as-is from ADOS source (already installed by `install.sh --local`; verify it exists)
+3. `.ai/agent/pr-instructions.md` — PR/MR platform configuration based on repo scan and interview (see `<pr_platform_discovery>`). Tells agents HOW to interact with the PR/MR platform. Use `doc/templates/pr-instructions-template.md` as the structural template.
+4. `doc/documentation-handbook.md` — Copy as-is from ADOS source (already installed by `install.sh --local`; verify it exists)
 
 **Recommended artifacts (generated when confidence is sufficient):**
-4. At least one feature spec in `doc/spec/features/` — based on project scan and interview
-5. `doc/overview/` docs — north star and/or architecture overview
+5. At least one feature spec in `doc/spec/features/` — based on project scan and interview
+6. `doc/overview/` docs — north star and/or architecture overview
 
 **Optional artifacts (generated on request):**
-6. `doc/templates/` — Copy from ADOS source
-7. `doc/decisions/` — Directory setup with README and index
+7. `doc/templates/` — Copy from ADOS source
+8. `doc/decisions/` — Directory setup with README and index
 
 Use templates from `doc/templates/` as structural guides when generating artifacts.
 Reference `doc/guides/onboarding-existing-project.md` for the manual adoption path.
@@ -249,6 +253,35 @@ When generating the Workflow States Mapping, **never fabricate statuses or trans
 - Use standard values: `todo`, `in-progress`, `review`, `done`, `blocked`
 </tracker_workflow_discovery>
 
+<pr_platform_discovery>
+When generating `.ai/agent/pr-instructions.md`, determine the PR/MR platform:
+
+1. **Auto-detect from repo scan** — check `git remote get-url origin`:
+   - Host contains `github` → GitHub
+   - Host contains `gitlab` → GitLab
+   - Host contains `dev.azure.com` or `visualstudio.com` → Azure DevOps
+
+2. **Confirm with user during interview:**
+   - "Your repo appears to be on GitHub. Do you use the `gh` CLI for PR operations, or do you have a GitHub MCP server configured?"
+   - For self-hosted instances: "Is this a self-hosted instance? What is the hostname?"
+
+3. **Access method selection:**
+   - If `gh` or `glab` is detected on PATH → recommend CLI
+   - If MCP tools are available → offer MCP as alternative
+   - Default to CLI if both available (simpler, more reliable)
+
+4. **Generate `pr-instructions.md`:**
+   - Use `doc/templates/pr-instructions-template.md` as the structural template
+   - Fill in platform type, access method, host, and Operations Reference table
+   - Reference `doc/guides/pr-platform-integration.md` for details
+
+Interview questions:
+- "Which Git platform hosts your repository?" (GitHub / GitLab / Azure DevOps / Other)
+- "Do you have the platform CLI installed?" (`gh` for GitHub, `glab` for GitLab)
+- "Is this a self-hosted instance? If so, what is the hostname?"
+- "Do you have any MCP servers configured for your Git platform?"
+</pr_platform_discovery>
+
 <phase_5_review>
 Present each draft artifact to the human:
 
@@ -329,6 +362,7 @@ The bootstrapper may ONLY write files to these paths:
 
 - `AGENTS.md` (project root)
 - `.ai/agent/pm-instructions.md`
+- `.ai/agent/pr-instructions.md`
 - `.ai/local/bootstrapper-context.yaml` (state file — git-ignored)
 - `doc/documentation-handbook.md`
 - `doc/00-index.md`

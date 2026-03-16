@@ -69,8 +69,15 @@ Parse invocation text into:
 If unknown flags are provided: output `NEEDS_INPUT` with an exact rerun suggestion.
 </argument_parsing>
 
-<platform_detection>
-Determine platform primarily from `git remote get-url origin` host:
+<platform_access>
+Load PR/MR platform configuration from `.ai/agent/pr-instructions.md` if it exists.
+This file defines the platform type, access method, and an Operations Reference table
+mapping each abstract operation (list PRs, fetch diff, fetch comments, etc.) to the
+concrete CLI or MCP command. Use it as the single source of truth for all platform
+interactions in steps 2–4.
+
+**Graceful fallback** — if `.ai/agent/pr-instructions.md` does not exist:
+Detect platform from `git remote get-url origin` host:
 
 - `github.com` (or host contains `github`) → GitHub (use `gh`)
 - `gitlab.com` (or host contains `gitlab`) → GitLab (use `glab`)
@@ -81,7 +88,7 @@ If still unclear:
 - Else if `glab auth status` succeeds → GitLab
 
 If still unknown and no override flag is provided: output `NEEDS_INPUT` with an exact rerun suggestion using `--github` or `--gitlab`.
-</platform_detection>
+</platform_access>
 
 <pre_flight>
 Before any work, verify ALL of the following. STOP with a clear message if any check fails.
@@ -145,56 +152,29 @@ Three-tier feedback classification:
   </step>
 
   <step id="2">
-    Detect platform and verify tooling/auth:
-    - GitHub: require `gh`.
-    - GitLab: require `glab`.
+    Load platform configuration and verify tooling/auth:
+    - Read `.ai/agent/pr-instructions.md` if it exists — use the Operations Reference table for all subsequent commands.
+    - If the file is absent: fall back to auto-detection (see platform_access).
+    - Verify the platform CLI is installed and authenticated using the "Check auth" operation from the instructions (or fallback: `gh auth status` / `glab auth status`).
     If missing/auth fails: stop with a short actionable message.
   </step>
 
   <step id="3">
     Resolve PR/MR:
     - If explicit number provided: verify it exists and is open.
-    - Else: find the open PR/MR for the current branch.
-
-    GitHub:
-    ```bash
-    PR_JSON="$(gh pr list --head "$BRANCH" --state open --json number,baseRefName,url,title,headRefName --jq 'sort_by(.updatedAt) | reverse | .[0]')"
-    ```
-
-    GitLab:
-    ```bash
-    MR_LIST_JSON="$(glab mr list --source-branch "$BRANCH" --output json)"
-    MR_JSON="$(printf '%s' "$MR_LIST_JSON" | jq 'sort_by(.updated_at // "") | reverse | .[0]')"
-    ```
-
+    - Else: find the open PR/MR for the current branch using the "List open PRs for branch" operation from `pr-instructions.md` (or fallback auto-detection commands).
     If no open PR/MR found: STOP with message.
   </step>
 
   <step id="4">
     Fetch all review threads and comments. Save to `tmp/review-feedback/<branchPath>/`.
-
-    GitHub:
-    ```bash
-    # Get review comments (inline)
-    gh api "repos/{owner}/{repo}/pulls/$NUMBER/comments" --paginate > "tmp/review-feedback/$BRANCH_PATH/inline-comments.json"
-    # Get issue comments (top-level)
-    gh api "repos/{owner}/{repo}/issues/$NUMBER/comments" --paginate > "tmp/review-feedback/$BRANCH_PATH/issue-comments.json"
-    # Get reviews
-    gh api "repos/{owner}/{repo}/pulls/$NUMBER/reviews" --paginate > "tmp/review-feedback/$BRANCH_PATH/reviews-snapshot.json"
-    ```
-
+    Use the Operations Reference from `pr-instructions.md` for:
+    - "Fetch inline review comments" → save to `inline-comments.json`
+    - "Fetch issue comments" → save to `issue-comments.json`
+    - "Fetch reviews" → save to `reviews-snapshot.json`
     After fetching, merge the inline and issue comment arrays into a single `threads-snapshot.json`.
     Do NOT use shell append (`>>`) to combine JSON files — read both arrays and merge them programmatically.
-
-    GitLab:
-    ```bash
-    # Get all discussions (threads + notes)
-    glab api "projects/:id/merge_requests/$IID/discussions" --paginate > "tmp/review-feedback/$BRANCH_PATH/threads-snapshot.json"
-    # Get MR notes
-    glab api "projects/:id/merge_requests/$IID/notes" --paginate > "tmp/review-feedback/$BRANCH_PATH/notes-snapshot.json"
-    ```
-
-    Follow the pattern; adapt exact flags and API paths as needed.
+    If `pr-instructions.md` is absent, use fallback auto-detection commands for the detected platform.
   </step>
 
   <step id="5">

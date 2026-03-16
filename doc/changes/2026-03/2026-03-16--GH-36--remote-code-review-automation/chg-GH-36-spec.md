@@ -92,6 +92,11 @@ Because ADOS lacks a workflow for reviewing open PRs/MRs against repository-spec
 | F-10 | Pre-flight safety checks (dirty tree, auth, branch state) | Ensures workflows start from a clean, valid state |
 | F-11 | Temporary state persistence under `tmp/code-review/<branchPath>/` and `tmp/review-feedback/<branchPath>/` | Follows ADOS `tmp/` conventions for per-branch artifacts |
 | F-12 | Documentation updates to `.opencode/README.md` and `AGENTS.md` | Maintains tooling inventory per repo conventions |
+| F-13 | Repository-local PR/MR platform instructions via `.ai/agent/pr-instructions.md` (from GH-39) | Extracts hardcoded platform detection and CLI commands from agent prompts into a single config file, mirroring `pm-instructions.md` pattern |
+| F-14 | Refactor `@code-reviewer`, `@review-feedback-applier`, and `@pr-manager` to read `pr-instructions.md` (from GH-39) | Agents define WHAT operations to perform; `pr-instructions.md` defines HOW; graceful fallback when absent |
+| F-15 | PR/MR platform instructions template at `doc/templates/pr-instructions-template.md` (from GH-39) | Enables other repos to configure PR/MR platform access by copying and customizing the template |
+| F-16 | PR/MR platform integration guide at `doc/guides/pr-platform-integration.md` (from GH-39) | Documents supported integration types (GitHub CLI, GitLab CLI, GitHub MCP, Azure DevOps MCP) with setup instructions |
+| F-17 | Bootstrapper PR/MR platform interview and artifact generation (from GH-39) | Extends `@bootstrapper` to ask about Git platform and generate `pr-instructions.md` during adoption |
 
 ### 5.1 Capability Details
 
@@ -320,6 +325,9 @@ N/A — agent prompts and command definitions only; no runtime telemetry applica
 | DEC-7 | Ambiguous feedback is never auto-applied | Conservative safety default. False negatives (missing an accepted comment) are preferable to false positives (applying unwanted changes). | 2026-03-16 |
 | DEC-8 | Include high/medium/low confidence per finding | Helps users prioritize review findings without adding schema complexity. Three-level scale is sufficient. | 2026-03-16 |
 | DEC-9 | Default cap of 30 inline comments per review | Prevents comment noise on large PRs. Remaining findings are bundled into the summary comment so nothing is lost. | 2026-03-16 |
+| DEC-10 | Extract platform access into `.ai/agent/pr-instructions.md` (from GH-39) | Mirrors `pm-instructions.md` pattern. Agent prompts define WHAT to do; `pr-instructions.md` defines HOW. Eliminates hardcoded CLI commands from 3 agents. | 2026-03-16 |
+| DEC-11 | Graceful fallback when `pr-instructions.md` absent | Preserves backward compatibility — agents auto-detect from `git remote get-url origin` as before. Zero breaking changes for existing repos. | 2026-03-16 |
+| DEC-12 | Operations Reference table as the contract format | A Markdown table mapping operation names to commands is human-readable, agent-parseable, and version-controllable. Simpler than YAML/JSON config. | 2026-03-16 |
 
 ## 16. AFFECTED COMPONENTS (HIGH-LEVEL)
 
@@ -333,6 +341,12 @@ N/A — agent prompts and command definitions only; no runtime telemetry applica
 | `.ai/agent/code-review-instructions.md` | New — optional repository-local review instructions |
 | `.opencode/README.md` | Updated — add new agent and command entries |
 | `AGENTS.md` | Updated — add new agents and commands to inventory |
+| `.ai/agent/pr-instructions.md` | New — repository-local PR/MR platform instructions (from GH-39) |
+| `doc/templates/pr-instructions-template.md` | New — template for PR/MR platform instructions (from GH-39) |
+| `doc/guides/pr-platform-integration.md` | New — PR/MR platform integration guide (from GH-39) |
+| `.opencode/agent/pr-manager.md` | Refactored — reads `pr-instructions.md` (from GH-39) |
+| `.opencode/agent/bootstrapper.md` | Updated — PR/MR platform interview and artifact generation (from GH-39) |
+| `doc/documentation-handbook.md` | Updated — template index and .ai/agent/ description (from GH-39) |
 
 ## 17. ACCEPTANCE CRITERIA
 
@@ -379,6 +393,17 @@ N/A — agent prompts and command definitions only; no runtime telemetry applica
 |----|-----------|--------|
 | AC-F12-1 | **Given** `.opencode/README.md`, **then** it lists `code-reviewer` and `review-feedback-applier` in the Agents section and `/review-remote` and `/apply-review-feedback` in the Commands section. | F-12 |
 | AC-F12-2 | **Given** `AGENTS.md`, **then** it lists both new agents in the agent team and both new commands in the commands table. | F-12 |
+
+### PR/MR platform instructions (from GH-39)
+
+| ID | Criterion | Linked |
+|----|-----------|--------|
+| AC-F13-1 | **Given** `.ai/agent/pr-instructions.md` exists, **then** it contains an Operations Reference table mapping all PR/MR operations to concrete CLI commands. | F-13 |
+| AC-F14-1 | **Given** `.ai/agent/pr-instructions.md` exists, **when** `@code-reviewer`, `@review-feedback-applier`, or `@pr-manager` runs, **then** it reads `pr-instructions.md` for platform access commands. | F-14 |
+| AC-F14-2 | **Given** `.ai/agent/pr-instructions.md` does NOT exist, **when** any of the three agents runs, **then** it falls back to auto-detection from `git remote get-url origin` (current behavior preserved). | F-14 |
+| AC-F15-1 | **Given** `doc/templates/pr-instructions-template.md` exists, **then** it includes commented-out examples for GitHub CLI, GitLab CLI, GitHub MCP, and Azure DevOps MCP. | F-15 |
+| AC-F16-1 | **Given** `doc/guides/pr-platform-integration.md` exists, **then** it documents all supported integration types with setup instructions and a decision flowchart. | F-16 |
+| AC-F17-1 | **Given** `.opencode/agent/bootstrapper.md`, **then** it includes PR/MR platform in interview questions, `pr_instructions` in state schema, and `pr-instructions.md` in artifact generation. | F-17 |
 
 ## 18. ROLLOUT & CHANGE MANAGEMENT (HIGH-LEVEL)
 
@@ -467,6 +492,7 @@ Patterns that do NOT qualify as acceptance:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-03-16 | spec-writer | Initial specification from planning session and GH-36 ticket context |
+| 1.1 | 2026-03-16 | coder | Added GH-39 scope: F-13 through F-17, AC-F13-1 through AC-F17-1, DEC-10 through DEC-12, updated affected components |
 
 ---
 
