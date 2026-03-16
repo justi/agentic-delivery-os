@@ -72,8 +72,9 @@ readonly ADOS_COMMAND_FILES=(
 )
 
 # Known ADOS local files — project-specific (customized per project)
+# Note: pm-instructions.md is NOT removed — it's user-created (by /bootstrap or manually),
+# not installed by install.sh. Removing it would lose project-specific configuration.
 readonly ADOS_LOCAL_PROJECT_FILES=(
-  ".ai/agent/pm-instructions.md"
 )
 
 # Known ADOS local files — updatable (track upstream, auto-updated by install)

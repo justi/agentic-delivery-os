@@ -416,7 +416,8 @@ test_local_uninstall_removes_files() {
     remove_local_files
   )
 
-  assert_file_not_exists "${project_dir}/.ai/agent/pm-instructions.md" "pm-instructions should be removed"
+  # pm-instructions.md should NOT be removed (user-created, not ADOS-installed)
+  assert_file_exists "${project_dir}/.ai/agent/pm-instructions.md" "pm-instructions should be preserved"
   assert_file_not_exists "${project_dir}/doc/documentation-handbook.md" "handbook should be removed"
   assert_file_not_exists "${project_dir}/doc/00-index.md" "index should be removed"
   assert_file_not_exists "${project_dir}/doc/templates/change-spec-template.md" "template should be removed"

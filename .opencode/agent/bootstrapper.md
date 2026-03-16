@@ -140,7 +140,7 @@ Ask targeted questions to fill gaps. Rules:
 Core question areas:
 - **Project purpose** — What does this project do? Who uses it?
 - **Team structure** — Who works on this? What roles?
-- **Tracker setup** — GitHub Issues or Jira? Project key?
+- **Tracker setup** — GitHub Issues or Jira? Project key? (After getting the answer, probe the tracker via MCP to discover workflows — see `<tracker_workflow_discovery>`)
 - **Delivery workflow** — Current PR process? Review requirements?
 - **Architecture** — Key components? Service boundaries?
 - **Conventions** — Naming, branching, commit message standards?
@@ -156,8 +156,8 @@ Generate draft artifacts based on accumulated context:
 
 **Mandatory artifacts (always generated):**
 1. `AGENTS.md` — Project-specific version with correct repo structure, tech stack, and references
-2. `.ai/agent/pm-instructions.md` — Tracker configuration based on interview answers
-3. `doc/documentation-handbook.md` — Copy as-is from ADOS source
+2. `.ai/agent/pm-instructions.md` — Tracker configuration based on interview answers and workflow discovery (see `<tracker_workflow_discovery>`). This file is NOT pre-installed by `install.sh --local` — it must always be generated here or created manually.
+3. `doc/documentation-handbook.md` — Copy as-is from ADOS source (already installed by `install.sh --local`; verify it exists)
 
 **Recommended artifacts (generated when confidence is sufficient):**
 4. At least one feature spec in `doc/spec/features/` — based on project scan and interview
@@ -178,7 +178,7 @@ When generating `.ai/agent/pm-instructions.md`, follow these principles:
 
 **Mandatory sections (always generate):**
 1. **Tracker Configuration** — type (github/jira/local), connection details, project keys
-2. **Workflow States Mapping** — map ADOS phases to tracker statuses or labels
+2. **Workflow States Mapping** — map ADOS phases to tracker statuses or labels (see `<tracker_workflow_discovery>`)
 3. **Label Taxonomy** — at minimum `change`; add issue type labels from interview
 4. **Backlog Source of Truth** — explicit statement of where backlog lives
 5. **Conventions** — workItemRef format, branch naming
@@ -223,6 +223,31 @@ Add `doc/planning/backlog.md`, `doc/planning/epics/`, and `doc/planning/archive/
 
 Reference `doc/guides/onboarding-existing-project.md` Section 1.2 for examples.
 </pm_instructions_guidance>
+
+<tracker_workflow_discovery>
+When generating the Workflow States Mapping, **never fabricate statuses or transition IDs**. Use this discovery process:
+
+**For Jira:**
+1. **Try MCP first** — attempt to use Jira MCP tools to fetch real workflows:
+   - `jira_get_transitions` or similar to discover available statuses and transition IDs per issue type
+   - `jira_get_issue` on an existing issue to see its current status and available transitions
+   - `jira_get_project` to understand issue types and workflow schemes
+2. **If MCP is available** — use the actual status names and transition IDs from the project. Map each ADOS phase to the closest matching Jira status.
+3. **If MCP is not available** — inform the user:
+   - "I cannot access your Jira instance to discover workflows. To set up MCP, see the troubleshooting section in doc/guides/onboarding-existing-project.md"
+   - Ask the user to list their Jira workflow statuses and transition IDs manually
+   - Alternatively, generate the mapping with `TODO` placeholders for transition IDs: `| Planning started | In Progress | TODO | Verify transition ID in Jira |`
+4. **Never guess transition IDs** — they are project-specific integers that vary per Jira instance and workflow scheme. Wrong IDs cause silent failures.
+
+**For GitHub Issues:**
+- GitHub Issues uses labels for workflow states (no transition IDs needed)
+- Discover existing labels via `gh_list_issues` or ask the user what labels they use
+- Suggest standard ADOS labels (`change`, `in-progress`, `review`, `blocked`, `delivered`)
+
+**For Local (markdown backlog):**
+- No external discovery needed — statuses are defined in the backlog table
+- Use standard values: `todo`, `in-progress`, `review`, `done`, `blocked`
+</tracker_workflow_discovery>
 
 <phase_5_review>
 Present each draft artifact to the human:

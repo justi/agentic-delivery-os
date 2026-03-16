@@ -453,8 +453,7 @@ test_local_install_creates_structure() {
     install_local_files "${source_dir}"
   )
 
-  # Check core files were created
-  assert_file_exists "${project_dir}/.ai/agent/pm-instructions.md" "pm-instructions.md"
+  # Check core files were created (pm-instructions.md is NOT installed — it's user-created)
   assert_file_exists "${project_dir}/doc/documentation-handbook.md" "documentation-handbook.md"
   assert_file_exists "${project_dir}/doc/00-index.md" "00-index.md"
   assert_file_exists "${project_dir}/doc/templates/change-spec-template.md" "template file"
@@ -471,15 +470,39 @@ test_local_install_creates_structure() {
   assert_dir_exists "${project_dir}/doc/decisions" "doc/decisions"
   assert_dir_exists "${project_dir}/doc/changes" "doc/changes"
   assert_dir_exists "${project_dir}/doc/guides" "doc/guides"
+  assert_dir_exists "${project_dir}/.ai/agent" ".ai/agent"
   assert_dir_exists "${project_dir}/.ai/local" ".ai/local"
   assert_dir_exists "${project_dir}/.ai/rules" ".ai/rules"
 }
 
-test_local_install_preserves_project_specific_files() {
+test_local_install_does_not_create_pm_instructions() {
   local -r source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
   local -r project_dir="$(create_mock_project "${_test_tmpdir}/project")"
 
-  # Create existing project-specific file with custom content
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" \
+    FORCE=false \
+    DRY_RUN=false \
+    VERBOSE=false \
+    reset_counters
+    install_local_files "${source_dir}"
+  )
+
+  # pm-instructions.md should NOT be created (it's user-created by /bootstrap)
+  [[ ! -f "${project_dir}/.ai/agent/pm-instructions.md" ]] || {
+    printf '  pm-instructions.md should NOT be created by install\n' >&2
+    return 1
+  }
+  # But .ai/agent/ directory should exist (for bootstrapper to write into)
+  assert_dir_exists "${project_dir}/.ai/agent" ".ai/agent dir should exist"
+}
+
+test_local_install_preserves_existing_pm_instructions() {
+  local -r source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local -r project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  # Create existing pm-instructions with custom content (as if created by /bootstrap)
   mkdir -p "${project_dir}/.ai/agent"
   printf '# My custom PM config\n' > "${project_dir}/.ai/agent/pm-instructions.md"
 
@@ -493,10 +516,10 @@ test_local_install_preserves_project_specific_files() {
     install_local_files "${source_dir}"
   )
 
-  # Project-specific file should NOT be overwritten
+  # Existing pm-instructions.md should be untouched
   local content
   content="$(cat "${project_dir}/.ai/agent/pm-instructions.md")"
-  assert_eq "# My custom PM config" "${content}" "Project-specific file should be preserved"
+  assert_eq "# My custom PM config" "${content}" "Existing pm-instructions should be preserved"
 }
 
 test_local_install_updates_shared_files() {
@@ -531,11 +554,9 @@ test_local_install_force_overwrites() {
   local -r source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
   local -r project_dir="$(create_mock_project "${_test_tmpdir}/project")"
 
-  # Create existing files with different content
+  # Create existing shared file with different content
   mkdir -p "${project_dir}/doc"
-  mkdir -p "${project_dir}/.ai/agent"
   printf '# My custom handbook\n' > "${project_dir}/doc/documentation-handbook.md"
-  printf '# My custom PM config\n' > "${project_dir}/.ai/agent/pm-instructions.md"
 
   # Export vars so subshell inherits them
   INSTALL_MODE="local"
@@ -553,10 +574,6 @@ test_local_install_force_overwrites() {
   local content
   content="$(cat "${project_dir}/doc/documentation-handbook.md")"
   assert_eq "# Documentation Handbook" "${content}" "Handbook should be overwritten with --force"
-
-  # Project-specific file SHOULD also be overwritten with --force
-  content="$(cat "${project_dir}/.ai/agent/pm-instructions.md")"
-  assert_eq "# PM Instructions" "${content}" "PM instructions should be overwritten with --force"
 }
 
 test_local_install_gitignore_entries() {
@@ -944,7 +961,8 @@ main() {
 
   # Local install integration
   run_test "local install creates full directory structure" test_local_install_creates_structure
-  run_test "local install preserves project-specific files" test_local_install_preserves_project_specific_files
+  run_test "local install does not create pm-instructions.md" test_local_install_does_not_create_pm_instructions
+  run_test "local install preserves existing pm-instructions.md" test_local_install_preserves_existing_pm_instructions
   run_test "local install updates shared files" test_local_install_updates_shared_files
   run_test "local install with --force overwrites" test_local_install_force_overwrites
   run_test "local install adds .gitignore entries" test_local_install_gitignore_entries
