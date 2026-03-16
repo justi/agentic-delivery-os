@@ -11,6 +11,46 @@ source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/
 
 ---
 
+<!-- TOC -->
+* [Onboarding an Existing Project to ADOS](#onboarding-an-existing-project-to-ados)
+  * [Getting ADOS](#getting-ados)
+    * [Keeping ADOS Updated](#keeping-ados-updated)
+  * [Prerequisites](#prerequisites)
+  * [Artifact Checklist](#artifact-checklist)
+  * [Choose Your Setup Path](#choose-your-setup-path)
+  * [Automated Bootstrap](#automated-bootstrap)
+  * [Manual Setup (Step-by-Step)](#manual-setup-step-by-step)
+    * [Step 1: Mandatory Artifacts](#step-1-mandatory-artifacts)
+    * [1.1 `AGENTS.md` (Project Root)](#11-agentsmd-project-root)
+    * [1.2 `.ai/agent/pm-instructions.md`](#12-aiagentpm-instructionsmd)
+      * [Mandatory Sections](#mandatory-sections)
+      * [Recommended Extensions](#recommended-extensions)
+      * [What NOT to include](#what-not-to-include)
+      * [Example: GitHub Issues (Minimal)](#example-github-issues-minimal)
+      * [Example: Jira (with common extensions)](#example-jira-with-common-extensions)
+      * [Example: Local Markdown Backlog (Git-native)](#example-local-markdown-backlog-git-native)
+    * [1.3 `doc/documentation-handbook.md`](#13-docdocumentation-handbookmd)
+  * [Step 2: Recommended Artifacts (Optional)](#step-2-recommended-artifacts-optional)
+    * [2.1 `doc/00-index.md` — Documentation Landing Page](#21-doc00-indexmd--documentation-landing-page)
+    * [2.2 `doc/overview/` — Project Overview](#22-docoverview--project-overview)
+    * [2.3 `doc/spec/features/` — Feature Specifications](#23-docspecfeatures--feature-specifications)
+    * [2.4 `doc/templates/` — Document Templates](#24-doctemplates--document-templates)
+    * [2.5 `doc/decisions/` — Decision Records](#25-docdecisions--decision-records)
+    * [2.6 `doc/guides/` — Project-Specific Guides](#26-docguides--project-specific-guides)
+  * [Step 3: Decision Records Setup](#step-3-decision-records-setup)
+  * [Step 4: First Change Walkthrough](#step-4-first-change-walkthrough)
+    * [Using Autopilot (Recommended)](#using-autopilot-recommended)
+    * [Using Manual Commands](#using-manual-commands)
+  * [Troubleshooting](#troubleshooting)
+    * ["Agent can't find my issue tracker"](#agent-cant-find-my-issue-tracker)
+    * ["Templates are not being used"](#templates-are-not-being-used)
+    * ["Decision records workflow doesn't work"](#decision-records-workflow-doesnt-work)
+    * ["Change artifacts are in the wrong location"](#change-artifacts-are-in-the-wrong-location)
+    * ["Agents reference files that don't exist"](#agents-reference-files-that-dont-exist)
+    * ["PM agent can't read or update tickets" / MCP tracker setup](#pm-agent-cant-read-or-update-tickets--mcp-tracker-setup)
+  * [Related Guides](#related-guides)
+<!-- TOC -->
+
 ## Getting ADOS
 
 **One-liner global install** (recommended — gives you ADOS agents in every project):
@@ -132,7 +172,7 @@ The `@bootstrapper` agent will:
 4. **Draft** all required ADOS artifacts for your review
 5. **Write** final artifacts upon your approval
 
-After bootstrap completes, jump to [First Change Walkthrough](#first-change-walkthrough) to validate your setup.
+After bootstrap completes, jump to [First Change Walkthrough](#step-4-first-change-walkthrough) to validate your setup.
 
 ---
 
