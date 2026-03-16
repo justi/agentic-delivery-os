@@ -57,7 +57,7 @@ IFS=$'\n\t'
 # SETTINGS
 # ============================================================================
 readonly APP_NAME="ados-install"
-readonly APP_VERSION="2.0.0"
+readonly APP_VERSION="3.0.0"
 readonly LOG_TAG="(${APP_NAME})"
 
 # Exit codes
@@ -135,6 +135,9 @@ ALLOW_NON_ROOT="${ALLOW_NON_ROOT:-false}"
 
 # Install mode: "global" or "local"
 INSTALL_MODE=""
+
+# AI tool: "opencode" or "claude-code" (auto-detected or forced via flags)
+AI_TOOL=""
 
 # ============================================================================
 # TRAPS
@@ -356,6 +359,162 @@ validate_paths() {
 }
 
 # ============================================================================
+# AI TOOL DETECTION
+# ============================================================================
+
+# Detect which AI coding tool to install for (Claude Code or OpenCode)
+# Sets the global AI_TOOL variable.
+detect_ai_tool() {
+  # If already set via --claude-code or --opencode flag, keep it
+  if [[ -n "${AI_TOOL}" ]]; then
+    log_debug "AI tool forced via flag: ${AI_TOOL}"
+    return 0
+  fi
+
+  local has_claude=false
+  local has_opencode=false
+
+  [[ -d ".claude" ]] && has_claude=true
+  [[ -d ".opencode" ]] && has_opencode=true
+
+  if [[ "${has_claude}" == "true" && "${has_opencode}" == "false" ]]; then
+    AI_TOOL="claude-code"
+    log_info "Auto-detected AI tool: Claude Code (.claude/ directory found)"
+  elif [[ "${has_opencode}" == "true" && "${has_claude}" == "false" ]]; then
+    AI_TOOL="opencode"
+    log_info "Auto-detected AI tool: OpenCode (.opencode/ directory found)"
+  elif [[ "${has_claude}" == "true" && "${has_opencode}" == "true" ]]; then
+    # Both present — ask
+    printf '\nDetected both Claude Code and OpenCode directories.\n'
+    printf 'Which AI coding tool should ADOS install for?\n'
+    printf '  1) Claude Code (.claude/)\n'
+    printf '  2) OpenCode (.opencode/)\n'
+    printf 'Choice [1/2]: '
+    local choice
+    read -r choice
+    case "${choice}" in
+      1) AI_TOOL="claude-code" ;;
+      *) AI_TOOL="opencode" ;;
+    esac
+  else
+    # Neither present — ask
+    printf '\nWhich AI coding tool do you use?\n'
+    printf '  1) Claude Code\n'
+    printf '  2) OpenCode\n'
+    printf 'Choice [1/2]: '
+    local choice
+    read -r choice
+    case "${choice}" in
+      1) AI_TOOL="claude-code" ;;
+      *) AI_TOOL="opencode" ;;
+    esac
+  fi
+
+  log_info "Installing for: ${AI_TOOL}"
+}
+
+# ============================================================================
+# DOMAIN FUNCTIONS — Claude Code Install (Local)
+# ============================================================================
+
+install_claude_code_local() {
+  local -r source_dir="$1"
+  local -r cc_agent_src="${source_dir}/.claude-code/agent"
+  local -r cc_command_src="${source_dir}/.claude-code/command"
+  local -r agent_dest=".claude/agents"
+  local -r command_dest=".claude/commands"
+
+  # --- Claude Code agents ---
+  ensure_dir "${agent_dest}" ".claude/agents"
+  if [[ -d "${cc_agent_src}" ]]; then
+    local agent_file
+    for agent_file in "${cc_agent_src}"/*.md; do
+      [[ -f "${agent_file}" ]] || continue
+      local name
+      name="$(basename "${agent_file}")"
+      copy_updatable_file "${agent_file}" "${agent_dest}/${name}" "agents/${name}"
+    done
+  else
+    log_warn "Claude Code agent source not found: ${cc_agent_src}"
+  fi
+
+  # --- Claude Code commands ---
+  ensure_dir "${command_dest}" ".claude/commands"
+  if [[ -d "${cc_command_src}" ]]; then
+    local cmd_file
+    for cmd_file in "${cc_command_src}"/*.md; do
+      [[ -f "${cmd_file}" ]] || continue
+      local name
+      name="$(basename "${cmd_file}")"
+      copy_updatable_file "${cmd_file}" "${command_dest}/${name}" "commands/${name}"
+    done
+  else
+    log_warn "Claude Code command source not found: ${cc_command_src}"
+  fi
+
+  # --- Add ADOS workflow section to CLAUDE.md ---
+  local claude_md="CLAUDE.md"
+  local ados_marker="## ADOS Workflow"
+  if [[ -f "${claude_md}" ]]; then
+    if ! file_contains_line "${claude_md}" "${ados_marker}"; then
+      if [[ "${DRY_RUN}" == "true" ]]; then
+        log_info "[DRY-RUN] Would append ADOS workflow section to ${claude_md}"
+      else
+        cat >> "${claude_md}" << 'CLAUDE_SECTION'
+
+## ADOS Workflow
+
+This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workflow is:
+
+```
+/plan-change -> /write-spec -> /write-plan -> /write-test-plan -> /run-plan -> /sync-docs -> /review -> /check -> /pr
+```
+
+Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
+
+Agents are in `.claude/agents/` and commands in `.claude/commands/`.
+See `doc/guides/change-lifecycle.md` for the full 10-phase lifecycle.
+CLAUDE_SECTION
+        log_info "add    ADOS workflow section to ${claude_md}"
+      fi
+    else
+      log_debug "skip   ${claude_md} (ADOS section already present)"
+    fi
+  else
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      log_info "[DRY-RUN] Would create ${claude_md} with ADOS workflow section"
+    else
+      cat > "${claude_md}" << 'CLAUDE_NEW'
+# Project Instructions
+
+## ADOS Workflow
+
+This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workflow is:
+
+```
+/plan-change -> /write-spec -> /write-plan -> /write-test-plan -> /run-plan -> /sync-docs -> /review -> /check -> /pr
+```
+
+Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
+
+Agents are in `.claude/agents/` and commands in `.claude/commands/`.
+See `doc/guides/change-lifecycle.md` for the full 10-phase lifecycle.
+CLAUDE_NEW
+      log_info "create ${claude_md}"
+    fi
+  fi
+}
+
+# Install Claude Code agents/commands to global location
+# Note: Claude Code does not have a global agent location like OpenCode does.
+# Agents are per-project. We document this and install to the ADOS repo for reference.
+install_claude_code_global() {
+  log_info "Claude Code agents are per-project (no global agent location)."
+  log_info "Use --local in a project directory to install Claude Code agents."
+  log_info "The ADOS repo at ${ADOS_REPO_DIR} contains the source agents in .claude-code/"
+}
+
+# ============================================================================
 # DOMAIN FUNCTIONS — Global Install
 # ============================================================================
 
@@ -446,11 +605,25 @@ do_global_install() {
 
   clone_or_update_repo
   reset_counters
-  install_global_files
+
+  # If no AI_TOOL set via flags, default to opencode for global install
+  if [[ -z "${AI_TOOL}" ]]; then
+    AI_TOOL="opencode"
+  fi
+
+  if [[ "${AI_TOOL}" == "claude-code" ]]; then
+    install_claude_code_global
+  else
+    install_global_files
+  fi
 
   printf '\n'
   log_info "Done — ${_added} added, ${_updated} updated, ${_unchanged} unchanged"
-  log_info "ADOS agents and commands are now available globally"
+  if [[ "${AI_TOOL}" == "opencode" ]]; then
+    log_info "ADOS agents and commands are now available globally (OpenCode)"
+  else
+    log_info "ADOS repo updated. Claude Code agents are per-project; use --local to install."
+  fi
   printf '\n'
   log_info "To update: re-run this same command (idempotent — only changed files are updated)"
   log_info "To set up a project: run '${ADOS_REPO_DIR}/scripts/install.sh --local' in a project root"
@@ -581,7 +754,7 @@ install_local_files() {
 
   # --- Project-specific files (preserve local edits) ---
   local file
-  for file in "${ADOS_PROJECT_FILES[@]}"; do
+  for file in ${ADOS_PROJECT_FILES[@]+"${ADOS_PROJECT_FILES[@]}"}; do
     copy_file_with_diff "${source_dir}/${file}" "${file}" "${file}"
   done
 
@@ -619,6 +792,9 @@ do_local_install() {
   require_project_root
   validate_paths
 
+  # Detect which AI tool to install for
+  detect_ai_tool
+
   local source_dir
   source_dir="$(resolve_source_dir)" || exit $?
 
@@ -628,6 +804,7 @@ do_local_install() {
   log_info "=== ADOS Local Install ==="
   log_info "Source:  ${source_dir}"
   log_info "Target:  $(pwd)"
+  log_info "AI Tool: ${AI_TOOL}"
   [[ "${ADOS_BRANCH}" != "main" ]] && log_info "Branch:  ${ADOS_BRANCH}"
   [[ "${FORCE}" == "true" ]] && log_info "Mode:    force (overwrite existing files)"
   [[ "${INTERACTIVE}" == "true" ]] && log_info "Mode:    interactive (prompt on diff)"
@@ -635,15 +812,29 @@ do_local_install() {
   reset_counters
   install_local_files "${source_dir}"
 
+  # Install AI-tool-specific agents and commands
+  if [[ "${AI_TOOL}" == "claude-code" ]]; then
+    install_claude_code_local "${source_dir}"
+  fi
+
   printf '\n'
   log_info "Done — ${_added} added, ${_updated} updated, ${_unchanged} unchanged"
   printf '\n'
   if [[ "${_added}" -gt 0 ]]; then
     log_info "Next steps:"
-    log_info "  1. Open this project in OpenCode (https://opencode.ai)"
-    log_info "  2. Run /bootstrap to complete setup with AI-guided configuration"
-    log_info "     The bootstrapper will detect your tracker, generate PM instructions,"
-    log_info "     and customize AGENTS.md for your project."
+    if [[ "${AI_TOOL}" == "claude-code" ]]; then
+      log_info "  1. Open this project in Claude Code"
+      log_info "  2. Run /bootstrap to complete setup with AI-guided configuration"
+      log_info "     The bootstrapper will detect your tracker, generate PM instructions,"
+      log_info "     and customize AGENTS.md for your project."
+      log_info "  Agents installed to: .claude/agents/"
+      log_info "  Commands installed to: .claude/commands/"
+    else
+      log_info "  1. Open this project in OpenCode (https://opencode.ai)"
+      log_info "  2. Run /bootstrap to complete setup with AI-guided configuration"
+      log_info "     The bootstrapper will detect your tracker, generate PM instructions,"
+      log_info "     and customize AGENTS.md for your project."
+    fi
   else
     log_info "Project artifacts updated to latest ADOS version"
     log_info "Templates, guides, and handbook updated; project-specific files preserved"
@@ -678,6 +869,8 @@ Options:
   -i, --interactive      Show diff and prompt before overwriting changed files
       --no-fetch         Skip auto-fetching latest ADOS source before local install
       --allow-non-root   Allow local install in a subdirectory (for monorepo subprojects)
+      --claude-code      Force installation for Claude Code (agents to .claude/agents/)
+      --opencode         Force installation for OpenCode (agents to .opencode/agent/)
 
 File handling (--local mode):
   Updatable files (guides, templates, handbook) are auto-updated to match upstream.
@@ -719,6 +912,8 @@ parse_args() {
       -i|--interactive) INTERACTIVE=true ;;
       --no-fetch) NO_FETCH=true ;;
       --allow-non-root) ALLOW_NON_ROOT=true ;;
+      --claude-code) AI_TOOL="claude-code" ;;
+      --opencode) AI_TOOL="opencode" ;;
       --) shift; break ;;
       -*) die "Unknown option: $1" ;;
       *) break ;;

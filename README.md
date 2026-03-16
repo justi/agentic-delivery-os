@@ -51,7 +51,7 @@ Agentic Delivery OS codifies a predictable pipeline where quality and traceabili
 
 ## Quick start
 
-> **Requires:** [OpenCode](https://opencode.ai) — the AI coding agent that runs ADOS agents and commands.
+> **Requires:** [OpenCode](https://opencode.ai) or [Claude Code](https://claude.com/claude-code) — the AI coding agent that runs ADOS agents and commands.
 
 **Global install** (one-liner — gives you ADOS agents in every project):
 
@@ -65,6 +65,13 @@ curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery
 ~/.ados/repo/scripts/install.sh --local    # copy artifacts into current project
 ```
 
+The installer auto-detects whether you use Claude Code or OpenCode based on your project directories (`.claude/` vs `.opencode/`). You can also force a specific tool:
+
+```bash
+~/.ados/repo/scripts/install.sh --local --claude-code   # force Claude Code
+~/.ados/repo/scripts/install.sh --local --opencode       # force OpenCode
+```
+
 Then in your AI coding agent:
 
 ```text
@@ -76,6 +83,35 @@ Then in your AI coding agent:
 > **Update:** Re-run the same install commands to update to the latest version.
 
 > Full guide: [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
+
+## Claude Code Support
+
+ADOS now supports both **OpenCode** and **Claude Code** as AI coding tools. The same spec-driven workflow works identically in both environments.
+
+### How it works
+
+- **Auto-detection**: `install.sh --local` detects which tool you use by looking for `.claude/` or `.opencode/` directories.
+- **Manual override**: Use `--claude-code` or `--opencode` flags to force a specific tool.
+- **Both present**: If both directories exist, the installer prompts you to choose.
+
+### Claude Code specifics
+
+| Aspect | OpenCode | Claude Code |
+|--------|----------|-------------|
+| Agent location | `.opencode/agent/` | `.claude/agents/` |
+| Command location | `.opencode/command/` | `.claude/commands/` |
+| Agent format | YAML frontmatter + XML tags | Pure Markdown (headers + sections) |
+| Delegation | `@agent-name` references | "Use the Agent tool to delegate to the `agent-name` agent" |
+| Global install | `~/.config/opencode/` | Per-project only (no global agent location) |
+| Project config | `.opencode/README.md` | `CLAUDE.md` (ADOS section added automatically) |
+
+### Source definitions
+
+The Claude Code agent and command definitions live in `.claude-code/` in the ADOS repository:
+- `.claude-code/agent/` -- 19 agent definitions (same roles as OpenCode)
+- `.claude-code/command/` -- 16 command definitions (same workflows as OpenCode)
+
+During `--local` install with `--claude-code`, these are copied to `.claude/agents/` and `.claude/commands/` in your project.
 
 ## Benefits
 
@@ -104,7 +140,7 @@ This project exists to evolve and validate an AI-native delivery operating model
 
 ## What is implemented here
 
-OpenCode tooling (see [.opencode/README.md](.opencode/README.md) for the authoritative list):
+OpenCode tooling (see [.opencode/README.md](.opencode/README.md) for the authoritative list) and Claude Code equivalents (in `.claude-code/`):
 
 - **19 agents** for SDLC roles:
   - [@pm](.opencode/agent/pm.md), [@coder](.opencode/agent/coder.md), [@spec-writer](.opencode/agent/spec-writer.md), [@plan-writer](.opencode/agent/plan-writer.md), [@test-plan-writer](.opencode/agent/test-plan-writer.md), [@reviewer](.opencode/agent/reviewer.md), [@doc-syncer](.opencode/agent/doc-syncer.md), [@pr-manager](.opencode/agent/pr-manager.md), [@runner](.opencode/agent/runner.md), [@fixer](.opencode/agent/fixer.md), [@committer](.opencode/agent/committer.md), [@architect](.opencode/agent/architect.md), [@editor](.opencode/agent/editor.md), [@designer](.opencode/agent/designer.md), [@image-generator](.opencode/agent/image-generator.md), [@image-reviewer](.opencode/agent/image-reviewer.md), [@bootstrapper](.opencode/agent/bootstrapper.md), [@external-researcher](.opencode/agent/external-researcher.md), [@toolsmith](.opencode/agent/toolsmith.md).
@@ -166,9 +202,12 @@ Branches follow conventional-commit-aligned types:
 ```
 .
 ├── AGENTS.md             # delivery system bootstrap (start here)
-├── .opencode/            # agent and command definitions (THE product)
+├── .opencode/            # OpenCode agent and command definitions
 │   ├── agent/            # 19 agents (one .md each)
 │   └── command/          # 16 commands (one .md each)
+├── .claude-code/         # Claude Code agent and command definitions (source)
+│   ├── agent/            # 19 agents (one .md each, Markdown format)
+│   └── command/          # 16 commands (one .md each, Markdown format)
 ├── .ai/
 │   ├── agent/            # PM tracker config (pm-instructions.md)
 │   ├── local/            # git-ignored ephemeral state
