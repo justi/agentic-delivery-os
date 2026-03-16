@@ -1,0 +1,153 @@
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/spec/features/feature-document-templates.md
+
+id: SPEC-DOCUMENT-TEMPLATES
+status: Current
+created: 2026-03-10
+last_updated: 2026-03-10
+owners: [Juliusz Ćwiąkalski]
+service: delivery-os
+links:
+  related_changes: ["GH-32"]
+  guides:
+    - "doc/documentation-handbook.md"
+    - "doc/guides/onboarding-existing-project.md"
+summary: "Seven document templates in doc/templates/ that agents read at runtime for structural guidance and humans use for manual authoring, with graceful fallback to embedded defaults."
+---
+
+# Feature: Document Templates
+
+## Overview
+
+ADOS maintains a set of seven document templates in `doc/templates/` that serve as the structural source of truth for the core document types produced during the change delivery lifecycle and project-level artifacts. Agents read these templates at runtime to guide document structure; if a template is absent, agents fall back gracefully to their embedded default structures. Humans use the same templates for manual authoring.
+
+## Business Context
+
+### Problem Statement
+
+- **Problem:** Agent prompts embed document structure inline, creating drift risk between what agents produce and what the Documentation Handbook prescribes. No canonical templates exist for humans to reference.
+- **Affected Users:** AI agents (`@spec-writer`, `@plan-writer`, `@test-plan-writer`, `@doc-syncer`) and human contributors authoring ADOS documents.
+- **Business Impact:** Without templates, structural inconsistency accumulates across documents, and the Documentation Handbook's template references (section 17) point to non-existent files.
+
+### Goals & Success Metrics
+
+- **Primary Goal:** Single source of structural truth for all core ADOS document types, readable by both agents and humans.
+- **KPIs:** All 7 templates exist, render as valid GitHub-flavored Markdown, and are referenced by the corresponding agents or guides.
+
+## User Experience & Functionality
+
+### Templates
+
+| Template | Purpose | Agent Consumer |
+|----------|---------|---------------|
+| `change-spec-template.md` | Change specification structure | `@spec-writer` |
+| `implementation-plan-template.md` | Implementation plan structure | `@plan-writer` |
+| `test-plan-template.md` | Test plan structure | `@test-plan-writer` |
+| `feature-spec-template.md` | Feature specification for `doc/spec/features/` | `@doc-syncer` |
+| `decision-record-template.md` | Decision record (all types) | `@architect` |
+| `test-spec-template.md` | Test specification for `doc/quality/test-specs/` | `@doc-syncer` |
+| `north-star-template.md` | Product north star document for `doc/overview/01-north-star.md` | `@bootstrapper` |
+
+### Capabilities
+
+- **Structural guidance (F-1):** Each template includes front-matter skeleton, all required sections, and inline HTML-comment guidance explaining what to put in each section.
+- **Agent runtime reading (F-2):** Agents (`@spec-writer`, `@plan-writer`, `@test-plan-writer`, `@doc-syncer`) read the corresponding template from `doc/templates/` to guide document structure.
+- **Graceful fallback (F-3):** If a template file does not exist, agents fall back to their embedded default structures with no errors. This ensures ADOS works in projects that haven't copied the templates directory.
+- **Human authoring (F-4):** Templates include copy instructions (file path, placeholder replacement steps) for manual use.
+- **Consistency enforcement (F-5):** Templates define structure; agent prompts define quality rules and domain-specific logic. This separation prevents drift.
+
+### Template Structure
+
+Every template follows a consistent pattern:
+
+1. **License header** — Standard ADOS three-line header
+2. **Front-matter skeleton** — YAML with placeholders and inline comments explaining each field
+3. **Template instructions** — HTML comment block with copy/usage instructions
+4. **Section headings** — All required sections for the document type
+5. **Inline guidance** — HTML comments within each section explaining expected content
+
+### User Flow (Manual Authoring)
+
+```
+1. Navigate to doc/templates/
+2. Copy the appropriate template to the target location
+3. Replace all <...> placeholders with actual values
+4. Remove template instruction comments
+5. Fill in section content following inline guidance
+```
+
+### User Flow (Agent Authoring)
+
+```
+1. Agent receives task to create a document (e.g., change spec)
+2. Agent attempts to read doc/templates/change-spec-template.md
+3. If found: agent uses template as structural guide
+4. If not found: agent uses embedded default structure
+5. Agent applies quality rules from its prompt definition
+6. Agent writes the document
+```
+
+## Technical Architecture & Codebase Map
+
+### Core Components
+
+| Path | Component | Responsibility |
+|------|-----------|----------------|
+| `doc/templates/` | Templates directory | Contains all 7 templates and a README |
+| `doc/templates/README.md` | Directory overview | Purpose, template inventory, usage instructions |
+| `doc/templates/change-spec-template.md` | Change spec template | 25-section structure matching the change spec standard |
+| `doc/templates/implementation-plan-template.md` | Plan template | Phased implementation plan structure |
+| `doc/templates/test-plan-template.md` | Test plan template | Test plan structure with scope, strategy, and traceability matrix |
+| `doc/templates/feature-spec-template.md` | Feature spec template | 9-section feature specification structure |
+| `doc/templates/decision-record-template.md` | Decision record template | Front matter + 12 sections for all decision types |
+| `doc/templates/test-spec-template.md` | Test spec template | Enduring test specification structure |
+
+### Agent Integration
+
+Agents that produce documents are configured to read templates at runtime:
+
+- **`@spec-writer`** reads `change-spec-template.md` when creating change specifications
+- **`@plan-writer`** reads `implementation-plan-template.md` when creating implementation plans
+- **`@test-plan-writer`** reads `test-plan-template.md` when creating test plans
+- **`@doc-syncer`** reads `feature-spec-template.md` when creating/updating feature specifications
+
+The fallback-to-defaults pattern ensures agents work correctly even when templates are absent, which is expected for newly onboarded projects that haven't yet copied the templates directory.
+
+## Non-Functional Requirements
+
+| ID | Category | Requirement | Threshold |
+|----|----------|-------------|-----------|
+| NFR-1 | Completeness | All 7 templates exist in `doc/templates/` | 7/7 present |
+| NFR-2 | Validity | Each template renders as valid GitHub-flavored Markdown | All sections render |
+| NFR-3 | Guidance | Each template contains inline HTML-comment guidance for every section | 100% section coverage |
+| NFR-4 | Fallback | Agents produce valid documents when templates are absent | No errors, default structure used |
+| NFR-5 | Consistency | Template structure matches the Documentation Handbook requirements | Handbook section 17 fulfilled |
+
+## Quality Assurance Strategy
+
+### Testing Approach
+
+| Level | Scope | Notes |
+|-------|-------|-------|
+| Manual | Template rendering | Open each template on GitHub; verify valid Markdown and all sections visible |
+| Manual | Agent fallback | Remove `doc/templates/` directory; run `/write-spec`; verify document is produced with embedded defaults |
+| Manual | Agent template reading | With templates present; run `/write-spec`; verify document follows template structure |
+
+## Operational & Support
+
+### Maintenance
+
+When agent prompt structure changes, the corresponding template should be updated. The fallback-to-defaults pattern provides a safety net during transition periods — if a template is outdated, the agent's embedded defaults take precedence for quality rules.
+
+## Dependencies & Risks
+
+- **Depends on:** Documentation Handbook (defines the template inventory in section 17)
+- **Risk:** Template-prompt drift over time — mitigated by agents reading templates at runtime (single source) and prompts defining quality rules only
+
+## Related Documentation
+
+- **Documentation Handbook:** [doc/documentation-handbook.md](../../documentation-handbook.md) — section 17 defines the template inventory
+- **Templates directory:** [doc/templates/](../../templates/)
+- **Onboarding guide:** [doc/guides/onboarding-existing-project.md](../../guides/onboarding-existing-project.md) — recommends copying templates during adoption

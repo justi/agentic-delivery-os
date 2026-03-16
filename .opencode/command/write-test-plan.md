@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/write-test-plan.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/write-test-plan.md
 #
 description: Generate or update change test plan
 agent: test-plan-writer
@@ -19,7 +19,7 @@ The TEST PLAN:
 
 - Ensures full coverage of capabilities, interfaces, and acceptance criteria
 - Aligns with implementation plan phases
-- Maps scenarios to test types per `.ai/rules/testing-strategy.mdc`
+- Maps scenarios to test types per `.ai/rules/testing-strategy.md`
   </purpose>
 
 <inputs>
@@ -42,7 +42,7 @@ Given `workItemRef`:
 1. Search for folder: `doc/changes/**/*--<workItemRef>--*/`
 2. Locate spec: `chg-<workItemRef>-spec.md` (required)
 3. Locate plan: `chg-<workItemRef>-plan.md` (optional)
-4. Read: `.ai/rules/testing-strategy.mdc` (required)
+4. Read: `.ai/rules/testing-strategy.md` (required)
 
 Files:
 
@@ -55,7 +55,7 @@ Files:
 <process>
 1. Parse `workItemRef` and options from $ARGUMENTS
 2. Locate change folder, spec, plan per <discovery_rules>
-3. Read `.ai/rules/testing-strategy.mdc`; FAIL if missing
+3. Read `.ai/rules/testing-strategy.md`; FAIL if missing
 4. Extract F-#, AC-#, API-#, NFR-# from spec
 5. Checkout/create branch
 6. Delegate to `@test-plan-writer` agent (it has full template and rules)

@@ -1,3 +1,8 @@
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.ai/rules/bash.md
+---
 # Bash Scripts Coding Rules
 
 These rules define a rigorous standard for writing robust, maintainable, testable, and bug-free Bash scripts. Scripts following these rules are production-grade, easy to navigate for both humans and AI coding agents, and fully testable.

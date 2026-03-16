@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/sync-docs.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/sync-docs.md
 #
 description: Update current system specification docs from an accepted change.
 agent: doc-syncer
@@ -207,7 +207,7 @@ User-visible summary MUST include:
 **Metadata**
 
 - **Version:** 1.0
-- **Status:** [Draft | Implemented | Live | Deprecated]
+- **Status:** Current # Current | Deprecated
 - **Owner:** [Team/Person]
 - **Technical Lead:** [Name]
 - **Last Updated:** YYYY-MM-DD
@@ -826,7 +826,7 @@ This section is mainly for human governance; AI agents do not need to modify it 
 
 <feature_template_detection>
 
-- If repository contains `doc/templates/feature-specification-template.md`, treat that as canonical full feature spec style.
+- If repository contains `doc/templates/feature-spec-template.md`, treat that as canonical full feature spec style.
 - Existing feature files without YAML front matter but starting with `# Feature:` are preserved; do not replace leading metadata lines (Version, Last Updated, Status).
 - When creating a new feature spec in full template style: prepend YAML front matter (for machine readability) THEN retain template sections 1–9 below it.
 - If directive `full template` present: always generate full template style (even if YAML-only spec existed).
@@ -859,7 +859,7 @@ Mapping extracted change artifacts to template sections (non-invented):
 <directives_extension>
 Supported additional directives:
 
-- `full template`: generate full feature-specification-template structure.
+- `full template`: generate full feature-spec-template structure.
 - `concise`: force concise minimal feature template even if full template exists.
 - `omit technical implementation`: skip section 5 (technical) when generating full template style.
 - `omit code modules`: skip section 8.

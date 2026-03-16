@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/AGENTS.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/AGENTS.md
 ---
 # AGENTS.md
 
@@ -9,9 +9,11 @@ Quick-reference for AI coding agents and human contributors working in this repo
 
 ## What this repo is
 
-Agentic Delivery OS is a spec-driven software delivery system: a team of 18 AI agents and 15 commands that turn a ticket into a reviewed, tested PR through a deterministic 10-phase workflow.
+Agentic Delivery OS is a spec-driven software delivery system: a team of AI agents and commands that turn a ticket into a reviewed, tested PR through a deterministic 10-phase workflow.
 
 The agents and their prompt definitions (`.opencode/agent/*.md`, `.opencode/command/*.md`) **are the product**. A degraded prompt degrades everything downstream — treat them with the same rigor as production code. The delivery process is used to deliver improvements to itself.
+
+> **New to ADOS?** See [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md) or run `/bootstrap` to get started.
 
 ## Delivery process
 
@@ -36,7 +38,10 @@ Detail: [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 
 ### Orchestration
 - `pm` — orchestrate changes; manage tickets via MCP; never implements code
-- `architect` — architecture decisions and ADR authoring
+- `architect` — architecture decisions and decision record authoring (ADR/PDR/TDR/BDR/ODR)
+
+### Onboarding
+- `bootstrapper` — automate ADOS adoption for existing projects
 
 ### Artifact creation
 - `spec-writer` — author change specifications
@@ -61,7 +66,7 @@ Detail: [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 ### Specialized
 - `external-researcher` — research via MCP (context7, deepwiki, perplexity)
 - `image-generator` — generate AI images via text-to-image CLI
-- `image-reviewer` — analyze screenshots and visual artifacts (subagent)
+- `image-reviewer` — analyze images, screenshots, and visual artifacts
 - `toolsmith` — create and tune agents, commands, and skills
 
 Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.opencode/README.md)
@@ -70,6 +75,7 @@ Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.ope
 
 | Command | Purpose |
 |---------|---------|
+| `/bootstrap` | Scaffold ADOS artifacts for an existing project |
 | `/plan-change` | Interactive planning session (prep context for /write-spec) |
 | `/write-spec <ref>` | Generate change specification |
 | `/write-test-plan <ref>` | Generate test plan |
@@ -83,7 +89,7 @@ Full definitions: `.opencode/agent/*.md` | Inventory: [.opencode/README.md](.ope
 | `/commit` | Create one Conventional Commit |
 | `/pr` | Create/update PR/MR |
 | `/plan-decision` | Interactive architecture decision session |
-| `/write-adr` | Generate Architecture Decision Record |
+| `/write-decision` | Generate Decision Record (ADR/PDR/TDR/BDR/ODR) |
 | `/design` | Generate/update visual design assets |
 
 Full definitions: `.opencode/command/*.md`
@@ -100,7 +106,7 @@ Full definitions: `.opencode/command/*.md`
 
 ```
 /plan-change → /write-spec <ref> → /write-test-plan <ref> → /write-plan <ref>
-→ /run-plan <ref> → /review <ref> → /sync-docs <ref> → /check → /pr
+→ /run-plan <ref> → /sync-docs <ref> → /review <ref> → /check → /pr
 ```
 
 Guide: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md)
@@ -137,8 +143,8 @@ Detail: [doc/guides/unified-change-convention-tracker-agnostic-specification.md]
 .
 ├── AGENTS.md             # this file — delivery system bootstrap
 ├── .opencode/            # agent and command definitions (THE product)
-│   ├── agent/            # 18 agents (one .md each)
-│   └── command/          # 15 commands (one .md each)
+│   ├── agent/            # agents (one .md each)
+│   └── command/          # commands (one .md each)
 ├── .ai/
 │   ├── agent/            # PM tracker config (pm-instructions.md)
 │   ├── local/            # git-ignored ephemeral state
@@ -148,9 +154,15 @@ Detail: [doc/guides/unified-change-convention-tracker-agnostic-specification.md]
 ├── tools/                # PATH-able CLI utilities (no .sh extension)
 │   └── .tests/           # test files for tools (test-*.sh)
 └── doc/
-    ├── changes/          # change artifacts (spec, plan, test-plan per workItemRef)
-    ├── guides/           # how-to guides
-    ├── spec/             # current system spec (reconciled after each change)
+    ├── 00-index.md           # documentation landing page
+    ├── changes/              # change artifacts (spec, plan, test-plan per workItemRef)
+    ├── decisions/            # decision records (ADR/PDR/TDR/BDR/ODR)
+    ├── guides/               # how-to guides
+    ├── overview/             # north star, architecture, glossary
+    ├── planning/             # internal planning notes
+    ├── spec/                 # current system spec (reconciled after each change)
+    ├── templates/            # document templates (7 templates)
+    ├── tools/                # CLI tool user guides
     └── documentation-handbook.md
 ```
 

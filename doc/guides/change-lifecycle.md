@@ -1,7 +1,7 @@
 ---
-# Copyright (c) 2025-2026 Juliusz Cwiakalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/guides/change-lifecycle.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/guides/change-lifecycle.md
 id: GUIDE-CHANGE-LIFECYCLE
 status: Draft
 created: 2026-02-03
@@ -327,11 +327,11 @@ phases:
   review_fix: { started: null, completed: null }
   quality_gates: { started: null, completed: null }
   dod_check: { started: null, completed: null }
-  pr_creation: { started: null, completed: null }
+  pr_creation: { started: null, completed: null, url: null }
 decisions: []
 open_questions: []
 blockers: []
-notes: ""
+notes: [] # { text, type, date }
 ```
 
 ---

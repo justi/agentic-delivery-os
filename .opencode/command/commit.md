@@ -1,12 +1,14 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/commit.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/commit.md
 #
 description: Delegate a single Conventional Commit.
 agent: committer
 subtask: true
-model: github-copilot/gpt-4.1
+model: anthropic/claude-sonnet-4-6
+#model: github-copilot/gpt-5-mini
+#model: github-copilot/gpt-4.1
 #model: github-copilot/grok-code-fast-1
 ---
 

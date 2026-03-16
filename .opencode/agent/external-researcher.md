@@ -1,15 +1,16 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/external-researcher.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/external-researcher.md
 description: Research external sources via MCP (context7, deepwiki, perplexity)
 mode: all
-model: anthropic/claude-sonnet-4-6
+#model: anthropic/claude-sonnet-4-6
+model: github-copilot/gpt-5-mini
 tools:
   bash: false
   read: true
-  write: true
-  edit: true
+  write: false
+  edit: false
   glob: true
   grep: true
   "context7*": true
@@ -55,5 +56,5 @@ The caller provides:
 
 - Never run bash/shell commands.
 - Flag uncertain or incomplete findings explicitly; recommend further investigation when appropriate.
-- Follow repo conventions from `AGENTS.md` and `.opencode/README.md` when editing project files.
+- Follow repo conventions from `AGENTS.md` to understand repo structure 
 - Keep context small: read only the files needed; avoid loading large swaths of the repo.

@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/plan-writer.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/plan-writer.md
 #
 description: Author change implementation plans
 mode: all
@@ -128,7 +128,6 @@ Phase formatting:
 Final release phase MUST include:
 
 - Version bump per repo conventions
-- CHANGELOG.md entry
 - Spec reconciliation
   </authoring_rules>
 
@@ -172,18 +171,28 @@ Updates: `docs(plan): refine plan for <workItemRef>`
 Only stage the plan file.
 </commit_rules>
 
+<template_reading>
+Before generating the plan, attempt to read the structural template:
+
+1. Try to read `doc/templates/implementation-plan-template.md`
+2. If the template exists: use it as the structural guide for sections, front-matter skeleton, and ordering
+3. If the template does NOT exist: fall back to the embedded `<plan_structure>` defined in this prompt
+4. Template defines structure; this prompt defines quality rules and domain logic
+</template_reading>
+
 <process>
 1. Parse `workItemRef` from input
-2. Locate change folder and spec file per <discovery_rules>
-3. Extract fields per <field_extraction>
-4. Validate required fields
-5. Checkout/create branch `<changeType>/<workItemRef>/<slug>`
-6. If plan exists → load for update per <update_behavior>
-7. Construct plan using <plan_structure> and <authoring_rules>
-8. Write: `<changeFolder>/chg-<workItemRef>-plan.md`
-9. Stage ONLY this file
-10. Commit per <commit_rules>
-11. STOP
+2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
+3. Locate change folder and spec file per <discovery_rules>
+4. Extract fields per <field_extraction>
+5. Validate required fields
+6. Checkout/create branch `<changeType>/<workItemRef>/<slug>`
+7. If plan exists → load for update per <update_behavior>
+8. Construct plan using <plan_structure> and <authoring_rules>
+9. Write: `<changeFolder>/chg-<workItemRef>-plan.md`
+10. Stage ONLY this file
+11. Commit per <commit_rules>
+12. STOP
 </process>
 
 <output_contract>

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/scripts/add-header-location.sh
 # add-header-location.sh — Add MIT license headers to markdown and bash files
 #
 # Dependencies: bash>=4, git, grep, sed
@@ -130,7 +133,21 @@ compute_relative_path() {
   printf '%s' "${rel_path}"
 }
 
-# Check if file already has source line with exact prefix
+# Check if markdown file already has source attribute (new format)
+has_md_source_attr() {
+  local -r file="$1"
+  local -r pattern="^source:[[:space:]]*${GITHUB_BASE}/"
+  _grep -q "${pattern}" "${file}" 2>/dev/null
+}
+
+# Check if file has old-style source comment (# Latest version:)
+has_old_source_comment() {
+  local -r file="$1"
+  local -r pattern="^#[[:space:]]*Latest version:[[:space:]]*${GITHUB_BASE}/"
+  _grep -q "${pattern}" "${file}" 2>/dev/null
+}
+
+# Check if file already has source line with exact prefix (for bash files)
 has_source_line() {
   local -r file="$1"
   local -r prefix="Latest version:"
@@ -162,8 +179,9 @@ bash_has_header() {
   has_source_line "${file}"
 }
 
-# Update source line with prefix, replace existing URL line if present
-# Update source line with prefix, replace existing URL line if present
+# Update source line in markdown frontmatter (handles both old comment and new attribute formats)
+# Replaces any line containing the GitHub base URL in frontmatter with the new line,
+# or inserts after MIT License comment if no URL line found.
 update_source_line() {
   local -r file="$1"
   local -r new_line="$2"
@@ -231,31 +249,35 @@ update_source_line() {
   fi
 }
 
-# Ensure basic header with copyright and MIT license lines
+# Ensure basic header with copyright and MIT license lines (for markdown files)
+# Uses source: YAML attribute instead of # Latest version: comment
 ensure_basic_header() {
   local -r file="$1"
   local -r repo_root="$2"
   local -r temp_file="$(mktemp)"
   local changed=false
   
-  # Compute relative path and source line
+  # Compute relative path and source line (YAML attribute for markdown)
   local rel_path
   rel_path="$(compute_relative_path "${repo_root}" "${file}")" || return $?
-  local source_line="# Latest version: ${GITHUB_BASE}/${rel_path}"
+  local source_line="source: ${GITHUB_BASE}/${rel_path}"
   local copyright_line="# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)"
   local mit_line="# MIT License - see LICENSE file for full terms"
   
   # Patterns for matching (not exact strings)
   local copyright_pattern="^#[[:space:]]*Copyright.*2025-2026"
   local mit_pattern="^#[[:space:]]*MIT License.*see LICENSE"
-  local source_pattern="^#[[:space:]]*Latest version:.*${GITHUB_BASE}/"
+  # Match both old comment format and new attribute format
+  local old_source_pattern="^#[[:space:]]*Latest version:.*${GITHUB_BASE}/"
+  local new_source_pattern="^source:[[:space:]]*${GITHUB_BASE}/"
   
   awk -v copyright_line="${copyright_line}" \
       -v mit_line="${mit_line}" \
       -v source_line="${source_line}" \
       -v copyright_pattern="${copyright_pattern}" \
       -v mit_pattern="${mit_pattern}" \
-      -v source_pattern="${source_pattern}" '
+      -v old_source_pattern="${old_source_pattern}" \
+      -v new_source_pattern="${new_source_pattern}" '
   BEGIN {
     frontmatter_start = 0
     frontmatter_end = 0
@@ -295,8 +317,9 @@ ensure_basic_header() {
         header_copyright = line
       } else if (line ~ mit_pattern && header_mit == "") {
         header_mit = line
-      } else if (line ~ source_pattern && header_source == "") {
-        header_source = line
+      } else if ((line ~ old_source_pattern || line ~ new_source_pattern) && header_source == "") {
+        # Match either old or new format; will be replaced with new format
+        header_source = source_line
       } else {
         other[++other_count] = line
       }
@@ -359,6 +382,7 @@ ensure_basic_header() {
 }
 
 # Process a single markdown file
+# Uses source: YAML attribute (not # Latest version: comment)
 process_file() {
   local -r file="$1"
   local -r repo_root="$2"
@@ -366,22 +390,23 @@ process_file() {
   log_debug "Processing ${file}"
   
   # First ensure basic header (frontmatter, copyright, MIT lines)
+  # This also converts old # Latest version: comments to source: attributes
   local basic_header_changed=false
   if ensure_basic_header "${file}" "${repo_root}"; then
     log_debug "Basic header updated in ${file}"
     basic_header_changed=true
   fi
   
-  # Compute relative path and source line with prefix
+  # Compute relative path and source line (YAML attribute for markdown)
   local rel_path
   rel_path="$(compute_relative_path "${repo_root}" "${file}")" || return $?
-  local source_line="# Latest version: ${GITHUB_BASE}/${rel_path}"
+  local source_line="source: ${GITHUB_BASE}/${rel_path}"
   
   log_debug "Source line: ${source_line}"
   
-  # Check if file already has source line with exact prefix
-  if has_source_line "${file}"; then
-    log_debug "Skipping ${file} (already has source line)"
+  # Check if file already has source attribute with correct URL
+  if has_md_source_attr "${file}"; then
+    log_debug "Skipping ${file} (already has source attribute)"
     # If we updated basic header, consider file updated
     [[ "${basic_header_changed}" == "true" ]] && return 0 || return 1
   fi
@@ -391,7 +416,7 @@ process_file() {
     # Changed
     return 0
   else
-    # No change needed (should not happen if has_source_line returned false)
+    # No change needed (should not happen if has_md_source_attr returned false)
     # Still consider basic header change
     [[ "${basic_header_changed}" == "true" ]] && return 0 || return 1
   fi

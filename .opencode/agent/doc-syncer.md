@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/doc-syncer.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/doc-syncer.md
 #
 description: Reconcile system specs and docs with a completed change.
 mode: all
@@ -52,10 +52,11 @@ model: anthropic/claude-opus-4-6
   </step>
 
   <step name="3. Search Templates">
-    Search `doc/templates/` using glob for:
-    - `feature-specification-template.md`
-    - `test-spec-template.md`
-    - `adr-template.md`
+    Search `doc/templates/` using glob for structural templates. If found, use them as guides for document structure:
+    - `doc/templates/feature-spec-template.md` — for creating/updating feature specs in `doc/spec/features/`
+    - `doc/templates/test-spec-template.md` — for creating/updating test specs in `doc/quality/test-specs/`
+    - `doc/templates/decision-record-template.md` — for decision record structure reference
+    If templates are absent, fall back to embedded conventions in this prompt and existing document patterns.
   </step>
 
   <step name="4. Update/Create Documentation">

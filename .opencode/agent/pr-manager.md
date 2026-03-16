@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/pr-manager.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/pr-manager.md
 #
 description: Create/update PR/MR title and description.
 mode: all
@@ -214,7 +214,7 @@ Title rules (match `@committer` heuristics):
 Ticket-in-title rule:
 
 - If `workItemRef` is detected (see work_item_ref_detection), the subject MUST start with `<workItemRef> `.
-  Example: `feat(recipes): PDEV-4 add createdAt field to recipes`
+  Example: `feat(users): PDEV-4 add createdAt field to user profiles`
 
 Body guidance (use only sections that apply; keep it tight):
 

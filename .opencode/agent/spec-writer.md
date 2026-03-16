@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/spec-writer.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/spec-writer.md
 #
 description: Author canonical change specifications
 mode: all
@@ -170,19 +170,29 @@ MUST NOT appear: Implementation tasks, file paths, code-level instructions, merg
 - If an architectural decision is needed but unresolved, capture under OPEN QUESTIONS with note: "Decision needed: consult `@architect`"
   </authoring_rules>
 
+<template_reading>
+Before generating the spec, attempt to read the structural template:
+
+1. Try to read `doc/templates/change-spec-template.md`
+2. If the template exists: use it as the structural guide for sections, front-matter skeleton, and ordering
+3. If the template does NOT exist: fall back to the embedded `<spec_structure>` defined in this prompt
+4. Template defines structure; this prompt defines quality rules and domain logic
+</template_reading>
+
 <process>
 1. Parse `workItemRef` from input
-2. Gather planning-session context
-3. Compute slug from title (lowercase kebab-case, ≤60 chars)
-4. Determine change folder path per <discovery_rules>
-5. Determine `change.type` from context
-6. Assemble front matter per <front_matter_rules>
-7. Checkout/create branch `<change.type>/<workItemRef>/<slug>`
-8. Generate spec using <spec_structure> and <authoring_rules>
-9. Write file: `<changeFolder>/chg-<workItemRef>-spec.md`
-10. Stage ONLY this file
-11. Commit with: `docs(change-spec): add spec for <workItemRef>`
-12. STOP (no implementation actions)
+2. Read structural template per `<template_reading>` (fallback to embedded defaults if absent)
+3. Gather planning-session context
+4. Compute slug from title (lowercase kebab-case, ≤60 chars)
+5. Determine change folder path per <discovery_rules>
+6. Determine `change.type` from context
+7. Assemble front matter per <front_matter_rules>
+8. Checkout/create branch `<change.type>/<workItemRef>/<slug>`
+9. Generate spec using <spec_structure> and <authoring_rules>
+10. Write file: `<changeFolder>/chg-<workItemRef>-spec.md`
+11. Stage ONLY this file
+12. Commit with: `docs(change-spec): add spec for <workItemRef>`
+13. STOP (no implementation actions)
 </process>
 
 <output_contract>

@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/guides/opencode-agents-and-commands-guide.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/guides/opencode-agents-and-commands-guide.md
 id: GUIDE-OPENCODE-AGENTS
 status: Accepted
 created: 2026-01-09
@@ -67,7 +67,8 @@ Use these when you want to trigger a specific step in the process.
 | `/pr`                    | Creates/updates a PR/MR and syncs title + description.        | When preparing for review/merge.           |
 | `/design`                | Generate/update visual identity and UX assets.                | When working on UI/brand assets.           |
 | `/plan-decision`         | Interactive session for architectural decisions.              | When a complex trade-off needs an ADR.     |
-| `/write-adr`             | Generates the formal ADR document.                            | After the decision session.                |
+| `/write-decision`        | Generates the formal decision record (ADR/PDR/TDR/BDR/ODR).  | After the decision session.                |
+| `/bootstrap`             | AI-guided project setup for ADOS adoption.                    | When onboarding a new project to ADOS.     |
 | `/check`                 | Runs quality gates and summarizes logs to files.              | When you need clean, shareable results.    |
 | `/check-fix`             | Runs quality gates and auto-fixes failures.                   | When you want automatic remediation.       |
 
@@ -94,6 +95,8 @@ Use these when you need intelligent analysis or orchestration.
 | `@image-generator` | **Image Generator**. Generates AI images via text-to-image CLI.                            | Use when agents need generated images.          |
 | `@pr-manager`     | **PR/MR Manager**. Creates/updates PR/MR for current branch.                               | Use at the end of delivery; never merges.       |
 | `@toolsmith`      | **Toolsmith**. Creates and tunes OpenCode agents/commands/skills.                          | Use to create or improve tooling.               |
+| `@bootstrapper`   | **Bootstrapper**. Automates ADOS adoption for existing projects.                           | Use when onboarding a new project to ADOS.      |
+| `@external-researcher` | **Researcher**. Researches external sources via MCP (context7, deepwiki, perplexity). | Use when you need external technical research.  |
 
 ---
 
@@ -201,6 +204,22 @@ orchestrates the "How" by coordinating other agents.
 ### Step 1: High-Level Handoff
 
 Invoke the PM agent with your requirements or reference a backlog item.
+
+**Direct ticket delivery (recommended):**
+
+```
+@pm deliver change GH-123
+```
+
+Or with a Jira ticket:
+
+```
+@pm deliver change PDEV-456
+```
+
+> **Note:** Requires MCP integration with your issue tracker (GitHub or Jira) configured in `.ai/agent/pm-instructions.md`. The PM agent will fetch ticket details, orchestrate all 10 phases, and create a PR.
+
+**Free-form request (alternative):**
 
 > **User**: "Agent, please act as @pm. I want to add a new 'Dark Mode' feature to the settings page. It
 > should persist in the user profile."

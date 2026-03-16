@@ -1,3 +1,8 @@
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.ai/agent/pm-instructions.md
+---
 # Product Manager Instructions
 
 ## Repository Configuration
@@ -85,10 +90,10 @@ When no `workItemRef` is provided:
 
 ## Decision Documentation
 
-Product decisions should be documented under:
+Product decisions should be documented as PDRs (Product Decision Records) in:
 
 ```
-doc/planning/product-decisions/YYYY-MM-DD-{short-kebab-slug}.md
+doc/decisions/PDR-<zeroPad4>-<slug>.md
 ```
 
-Include: Context, Decision, Options, Drivers, Reasoning, Consequences.
+Delegate to `@architect` for creating decision records, or create directly following `doc/guides/decision-records-management.md`. Include: Context, Decision, Options, Drivers, Reasoning, Consequences.

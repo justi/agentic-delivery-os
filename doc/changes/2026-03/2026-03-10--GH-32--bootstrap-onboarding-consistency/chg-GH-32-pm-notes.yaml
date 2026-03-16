@@ -1,0 +1,93 @@
+change_id: GH-32
+title: "Bootstrap agent + onboarding guide + cross-document consistency fixes"
+phases:
+  clarify_scope: { started: "2026-03-10T10:00:00Z", completed: "2026-03-10T19:30:00Z" }
+  specification: { started: "2026-03-10T19:32:00Z", completed: "2026-03-10T19:45:00Z" }
+  test_planning: { started: "2026-03-10T19:46:00Z", completed: "2026-03-10T20:05:00Z" }
+  delivery_planning: { started: "2026-03-10T19:46:00Z", completed: "2026-03-10T20:05:00Z" }
+  delivery: { started: "2026-03-10T20:10:00Z", completed: "2026-03-10T20:45:00Z" }
+  system_spec_update: { started: "2026-03-10T20:46:00Z", completed: "2026-03-10T20:55:00Z" }
+  review_fix: { started: "2026-03-10T20:56:00Z", completed: "2026-03-10T21:10:00Z" }
+  quality_gates: { started: "2026-03-10T21:11:00Z", completed: "2026-03-10T21:20:00Z" }
+  dod_check: { started: "2026-03-10T21:21:00Z", completed: "2026-03-10T21:25:00Z" }
+  pr_creation: { started: "2026-03-10T21:26:00Z", completed: "2026-03-10T21:30:00Z", url: "https://github.com/juliusz-cwiakalski/agentic-delivery-os/pull/34" }
+decisions:
+  - text: "5-part scope: (1) cross-doc consistency fixes, (2) decision records standard, (3) document templates, (4) onboarding guide, (5) bootstrap agent+command"
+    date: "2026-03-10"
+  - text: "@bootstrapper agent + /bootstrap command (not command-only). Multi-session stateful workflow with human interview loops, persistent context via .ai/local/bootstrapper-context.yaml."
+    date: "2026-03-10"
+  - text: "Templates in doc/templates/ (Option C) — templates define structure (customizable per project), agent prompts define quality rules. Agents read templates at runtime, fallback to embedded defaults."
+    date: "2026-03-10"
+  - text: "Decision records at doc/decisions/ (not doc/adr/) — tracker-agnostic, supports ADR/PDR/TDR/BDR/ODR types. Synthesized from Menuvivo MVDR system."
+    date: "2026-03-10"
+  - text: "Tribal knowledge extraction moved to separate ticket GH-33."
+    date: "2026-03-10"
+  - text: "OQ-1 resolved (PM-decided): Bootstrapper copies handbook as-is (per §1 'keep identical across repos'). Projects can customize after initial bootstrap."
+    date: "2026-03-10"
+  - text: "OQ-2 resolved (PM-decided): Create doc/guides/copywriting.md as minimal stub. Prevents ghost reference from @pm agent. Can be expanded later."
+    date: "2026-03-10"
+  - text: "OQ-3 resolved (PM-decided): Decision IDs use type prefix + zero-padded 4-digit (ADR-0001, PDR-0001, etc.). Consistent with existing ADR-#### convention, extended to all types."
+    date: "2026-03-10"
+open_questions: []
+blockers: []
+notes:
+  - text: "Scope clarification done in prior session. Full cross-document audit completed. GH-32 ticket rewritten with 5 parts and 26 acceptance criteria. No blocking questions — ready for artifact generation."
+    type: info
+    date: "2026-03-10"
+  - text: "Source material for decision records and templates available in local references (Menuvivo MVDR system, FlagshipX templates). Paths recorded in .ai/local/pm-context.yaml."
+    type: info
+    date: "2026-03-10"
+  - text: "Spec written by @spec-writer: 519 lines, 16 functional capabilities, 26 AC, 7 NFRs, 6 risks. 3 open questions resolved by PM (OQ-1: handbook as-is, OQ-2: copywriting stub, OQ-3: type prefix + 4-digit IDs)."
+    type: info
+    date: "2026-03-10"
+  - text: "Test plan and implementation plan written in parallel. Test plan: 27 scenarios covering 26/26 AC, 7/7 NFRs. Plan: 6 phases matching 5 parts + final cleanup."
+    type: info
+    date: "2026-03-10"
+  - text: "Implementation complete — all 6 plan phases delivered by @coder. 18 new files, 11 existing files updated. Commits: c160230, cd04653, 83b67de, 0726904, cccd52f, c1c8c32."
+    type: info
+    date: "2026-03-10"
+  - text: "Doc-syncer added 4 feature specs (bootstrapper, decision-records, document-templates, onboarding-guide). Commit: b953a36."
+    type: info
+    date: "2026-03-10"
+  - text: "Reviewer: PASS with zero findings. All 26 AC satisfied, all plan tasks complete, zero ghost references."
+    type: info
+    date: "2026-03-10"
+  - text: "Quality gates: all unit tests pass (18/18 header tests, 105/105 tool tests). Content validation confirms zero ghost references in live docs/prompts."
+    type: info
+    date: "2026-03-10"
+  - text: "DoD check: PASS. All phases complete, all 26 AC met, all 36 plan tasks checked, all deliverables verified."
+    type: info
+    date: "2026-03-10"
+  - text: "North star template added (7th template) — synthesized from 20 real-world north star docs across DaySync, FlagshipX, Menuvivo, Planora. Key innovations: North Star Metric, Decision Filter, explicit scope boundaries."
+    type: info
+    date: "2026-03-11"
+  - text: "Red team review (8 specialists, 22 findings, 4 consensus findings). All 10 prioritized action items implemented: security hardening (trust boundary, write allowlist, credential scan), template count fix, AGENTS.md tree update, onboarding guide restructure (/bootstrap as primary path), code-block label fix, broken link fix, test coverage additions, time estimates. Commit: 1074be9."
+    type: info
+    date: "2026-03-11"
+  - text: "Retro: Red team caught real issues — stale AGENTS.md tree (agents read this first!), buried /bootstrap path, and bootstrapper missing trust boundary. These should have been caught during initial review. The template count drift (CF-1) was caused by post-delivery north-star addition without updating spec/test-plan — need discipline to update all artifacts when scope changes."
+    type: retro
+    date: "2026-03-11"
+  - text: "install.sh update behavior added: copy_updatable_file() for shared files (templates, handbook, doc index) that always track upstream in local mode. Project-specific files (pm-instructions.md) preserved. Version reporting in clone_or_update_repo. Test fix: renamed test to test_local_install_preserves_project_specific_files, added test_local_install_updates_shared_files. 29/29 install tests pass. Commit: 2560e2d."
+    type: info
+    date: "2026-03-11"
+  - text: "Final quality gates: 29/29 install, 22/22 uninstall, 18/18 header tests — all pass. text-to-image tests not on this branch (delivered in GH-26, separate PR)."
+    type: info
+    date: "2026-03-11"
+  - text: "Red team v2 review (8 specialists, unanimous README BLOCK + 10 action items). All 10 implemented: (1) README.md complete rewrite for adoption — Quick Start, counts 19/16, missing agents/commands, Jira URL→GH-456, reframed Intention, onboarding link, repo tree; (2) uninstall path fixed in AGENTS.md + onboarding guide; (3) north-star-template added to onboarding template list; (4) safe_rmdir hardened — path canonicalization + depth check + 3 bypass tests; (5) schema_version:1 added to bootstrapper state; (6) AGENTS.md Quick Start split into shell + AI blocks; (7) OpenCode prerequisite clarified with link; (8) spec/test-plan status→Delivered; (9) copy_updatable_file test added; (10) validate_paths for env var safety. Commit: 0e9c998."
+    type: info
+    date: "2026-03-11"
+  - text: "Post-v2 quality gates: 30/30 install, 25/25 uninstall, 18/18 header — all 73 tests pass."
+    type: info
+    date: "2026-03-11"
+  - text: "Human feedback (01-misc.md): 3 items — (1) OpenCode dependency clarity, (2) update path documentation, (3) cross-document consistency. Items 1+2 partially addressed in v2 (onboarding guide only); v3 review covers item 3 comprehensively."
+    type: info
+    date: "2026-03-11"
+  - text: "Red team v3 review (comprehensive pre-public audit). 13 findings: 5 must-fix + 8 should-fix. All 13 addressed. Must-fix: removed menuvivo-web-page from pm.md, private paths from plan, FlagshipX from designer.md + design.md (generalized to project-agnostic), fixed X handle in runner.md, cleaned toolsmith dev notes. Should-fix: collapsed .opencode/README refactoring history into <details>, added @bootstrapper/@external-researcher//bootstrap to OpenCode guide, added OpenCode prerequisite + update path to README/AGENTS Quick Start, fixed template counts 6→7 in feature specs, fixed agent/command counts 18/15→19/16 in change spec. Commit: ed4f959."
+    type: info
+    date: "2026-03-11"
+  - text: "Post-v3 quality gates: 30/30 install, 25/25 uninstall, 18/18 header — all 73 tests pass."
+    type: info
+    date: "2026-03-11"
+  - text: "Retro: Three rounds of red team review (v1→v2→v3) caught progressively finer issues. v1 found structural gaps (security, consistency). v2 found the README blind spot. v3 found private project names leaking through agent definitions — these should have been caught in the initial cross-document audit. The design.md command was entirely FlagshipX-specific — should have been flagged during delivery review. Lesson: when shipping framework tooling, every file that gets copied to user projects needs a 'would this make sense in someone else's repo?' check."
+    type: retro
+    date: "2026-03-11"

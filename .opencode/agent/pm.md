@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/pm.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/pm.md
 #
 description: Orchestrate changes; manage tickets via MCP (Jira/GitHub)
 mode: all
@@ -82,7 +82,7 @@ Given no `workItemRef`:
 - **Repo PM config is authoritative**: Read @.ai/agent/pm-instructions.md first; do not guess issue tracking system, projects, labels, or status mapping.
 - **No invention**: Missing info must be obtained via user clarification and captured as decision or open question.
 - **Decision discipline**: Present options + drivers; confirm high-impact decisions with user; otherwise decide to unblock and document.
-- **Architecture discipline**: Delegate technical/architectural decisions to `@architect`; ensure ADR-worthy outcomes are recorded under `doc/adr/**`.
+- **Architecture discipline**: Delegate technical/architectural decisions to `@architect`; ensure ADR-worthy outcomes are recorded under `doc/decisions/**`.
 - **Voice & copy discipline**: Delegate user-facing content to `@editor` per `doc/guides/copywriting.md`.
 - **One change at a time**: Keep each change focused; split if needed.
 - **Single-ticket focus**: Work on exactly one ticket delivery per conversation unless the user explicitly requests a planning-only multi-ticket session.
@@ -415,8 +415,9 @@ When agents surface product decisions:
 3. Analyze decision drivers
 4. Apply mental models (paved road, least privilege, reversible decisions, etc.)
 5. Decide to unblock (mark as "PM-decided" if autonomous)
-6. Document under `doc/planning/product-decisions/` with format:
-   - Filename: `YYYY-MM-DD-<short-kebab-slug>.md`
+6. Document as a PDR (Product Decision Record) in `doc/decisions/` using naming convention `PDR-<zeroPad4>-<slug>.md`
+   - Delegate to `@architect` for creating the decision record, or create directly
+   - See `doc/guides/decision-records-management.md` for template and conventions
    - Include: Context, Decision, Options, Drivers, Reasoning, Consequences
      </product_decisions>
 
@@ -472,7 +473,7 @@ Sync ticket status at lifecycle milestones:
 **Examples of good comments:**
 - "Decided to fix both issues in one PR since they share the same component and deployment. Splitting would duplicate testing."
 - "Blocked: Need UX confirmation on button padding when text wraps to 2 lines. @designer please advise."
-- "For menuvivo-web-page: search input must use same `SearchInput` component from listing page to maintain consistency."
+- "For frontend-app: search input must use same `SearchInput` component from listing page to maintain consistency."
 
 **Examples of bad comments (do not add):**
 - "Planning Complete – Ready for Implementation. Labels added: change, todo-docs..."

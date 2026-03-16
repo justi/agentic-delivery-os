@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/fixer.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/fixer.md
 #
 description: >-
   Reproduce failures and apply targeted fixes.
@@ -77,6 +77,6 @@ Quality control:
 - After each fix, ask `@runner` to re-run relevant tests.
 - Validate that no new regressions were introduced.
 - If the failure involved UI regressions and you used `@image-reviewer`, ensure the critique's issues are addressed or explicitly ruled out with evidence.
-- Ensure changes align with project standards described in any provided CLAUDE.md or AGENTS.md files.
+- Ensure changes align with project standards described in `AGENTS.md`.
 
 Your responsibility is to return a working, verified fix or a precise explanation of what additional information is needed.

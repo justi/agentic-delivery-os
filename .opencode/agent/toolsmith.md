@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/toolsmith.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/toolsmith.md
 #
 description: Create OpenCode agents/commands/skills.
 mode: all
@@ -10,9 +10,7 @@ model: anthropic/claude-opus-4-6
 #model: anthropic/claude-opus-4-5
 temperature: 0.2
 
-# at this moment not sure which parameter is supported regardign reasoning effort so setting all I've found
-# in general we want toolsmith to be as capabple as possible as it's quality directly impacts all other tooling, 
-# so we set the highest level for all reasoning effort parameters, but this may be adjusted in the future based on observed performance and cost trade-offs
+# Reasoning effort set to maximum — toolsmith quality directly impacts all downstream tooling
 #reasoningEffort: high
 reasoningEffort: xhigh
 effort: high
@@ -168,7 +166,7 @@ If you include examples in a created artifact prompt, add a rule: "Follow the pa
 If the agent/command/skill you create is meant for long-running work that risks context overload, must track progress across sessions, or needs a durable state machine.
 </when_to_use>
 <where_to_store>
-.ai/context/{agent|command|skill}/<name>.yaml
+.ai/local/<name>-context.yaml (git-ignored)
 </where_to_store>
 <how_to_apply>
 Embed in the created artifact explicit instructions to read/update this YAML at defined milestones.
@@ -585,16 +583,16 @@ artifacts: []
 </process>
 
 <model_profiles>
-<model id="claude-opus-4.5">
+<model id="claude-opus-4-6">
 <primary_format>XML</primary_format>
 <secondary_format>JSON</secondary_format>
-<best_for>Code generation (80.9% SWE-bench), multi-step reasoning, complex constraint adherence, verification loops</best_for>
+<best_for>Code generation, multi-step reasoning, complex constraint adherence, verification loops</best_for>
 <performance>95/100</performance>
 <cost>$$$</cost>
 <speed>slow (50 tok/s)</speed>
 <notes>Avoid ALL CAPS emphasis; use conditional logic; combine with few-shot for precision</notes>
 </model>
-<model id="claude-sonnet-4.5">
+<model id="claude-sonnet-4-6">
 <primary_format>XML</primary_format>
 <secondary_format>JSON</secondary_format>
 <best_for>Same as Opus but cost-sensitive; good balance of accuracy and cost</best_for>

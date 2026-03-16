@@ -1,10 +1,9 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/plan-change.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/plan-change.md
 #
 description: Interactive change-planning session to prepare context for /write-spec.
-agent: build
 ---
 
 <purpose>
@@ -65,7 +64,7 @@ Primary sources:
 
 - `doc/spec/**`: system-level and feature-level specifications.
 - `doc/overview/**`: domain and product overview documents.
-- `doc/adr/**`: architecture decision records.
+- `doc/decisions/**`: architecture decision records.
 - `doc/domain/**`, `doc/diagrams/**`: architecture, flows, constraints.
 - Existing change specs under `doc/changes/**/chg-*-spec.md` for related changes.
 
