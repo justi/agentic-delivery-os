@@ -1,3 +1,4 @@
+
 # Run Plan
 
 Execute implementation plan phases for a change.
@@ -35,3 +36,19 @@ The coder agent will:
 - Locate change folder: `doc/changes/**/*--<workItemRef>--*/`
 - Plan file: `chg-<workItemRef>-plan.md`
 - Spec file: `chg-<workItemRef>-spec.md`
+
+## ADOS Flow Position
+
+**Step 5/9** in change lifecycle (phase: `delivery`)
+
+### Prerequisites (MUST exist before running)
+- chg-<ref>-spec.md
+- chg-<ref>-test-plan.md
+- chg-<ref>-plan.md
+- chg-<ref>-pm-notes.yaml
+
+### This step creates
+- Implementation code + commits
+
+### Next step
+- `/sync-docs <ref>`

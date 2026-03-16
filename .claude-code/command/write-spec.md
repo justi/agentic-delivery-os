@@ -1,3 +1,4 @@
+
 # Write Spec
 
 Generate a canonical change specification from planning session context.
@@ -28,3 +29,16 @@ After successful execution:
 - No implementation details in the spec.
 - Only the spec file may be written.
 - Await human approval before `/write-plan`.
+
+## ADOS Flow Position
+
+**Step 2/9** in change lifecycle (phase: `specification`)
+
+### Prerequisites (MUST exist before running)
+- chg-<ref>-pm-notes.yaml OR planning context from /plan-change
+
+### This step creates
+- chg-<ref>-spec.md
+
+### Next step
+- `/write-test-plan <ref>`

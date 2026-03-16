@@ -1,3 +1,4 @@
+
 # Write Test Plan
 
 Generate or update a change test plan.
@@ -32,3 +33,16 @@ After successful execution:
 - Spec must exist; fail if not found.
 - Testing strategy must exist; fail if not found.
 - Only the test plan file may be written.
+
+## ADOS Flow Position
+
+**Step 3/9** in change lifecycle (phase: `test_planning`)
+
+### Prerequisites (MUST exist before running)
+- chg-<ref>-spec.md
+
+### This step creates
+- chg-<ref>-test-plan.md
+
+### Next step
+- `/write-plan <ref>`

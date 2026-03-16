@@ -1,3 +1,4 @@
+
 # Sync Docs
 
 Update current system specification docs from an accepted change.
@@ -27,3 +28,16 @@ The doc-syncer agent will:
 - Success: A reader can understand the current system from `doc/spec/**` without needing the change folder.
 - Never modify change spec or plan files.
 - Never touch source code.
+
+## ADOS Flow Position
+
+**Step 6/9** in change lifecycle (phase: `system_spec_update`)
+
+### Prerequisites (MUST exist before running)
+- Delivery complete (code committed)
+
+### This step creates
+- Updated PLAN.md, MAINTENANCE.md, README.md as needed
+
+### Next step
+- `/review <ref>`

@@ -1,3 +1,4 @@
+
 # Write Plan
 
 Generate or update an implementation plan from the canonical change specification.
@@ -27,3 +28,17 @@ After successful execution:
 
 - Spec must exist; fail if not found.
 - Only the plan file may be written.
+
+## ADOS Flow Position
+
+**Step 4/9** in change lifecycle (phase: `delivery_planning`)
+
+### Prerequisites (MUST exist before running)
+- chg-<ref>-spec.md
+- chg-<ref>-test-plan.md
+
+### This step creates
+- chg-<ref>-plan.md
+
+### Next step
+- `/run-plan <ref>`

@@ -1,3 +1,4 @@
+
 # Review
 
 Perform focused code review of diff between base branch and the canonical change branch. Validate alignment against specification, implementation plan, and repository rules.
@@ -31,3 +32,17 @@ Use the Agent tool to delegate to the `reviewer` agent with the full arguments.
 2. Findings: one line per item.
 3. Plan Update: "Added Phase X" OR "No plan changes required."
 4. Next action: suggest `/run-plan <workItemRef>` if remediation added.
+
+## ADOS Flow Position
+
+**Step 7/9** in change lifecycle (phase: `review_fix`)
+
+### Prerequisites (MUST exist before running)
+- Delivery complete
+- Docs synced
+
+### This step creates
+- Review findings, remediation if needed
+
+### Next step
+- `/check`

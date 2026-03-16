@@ -1,3 +1,4 @@
+
 # Plan Change
 
 Guide the user through a structured, interactive planning conversation that transforms an initial idea or problem report into a complete planning context for a single tracked change.
@@ -42,3 +43,16 @@ After emitting the change planning summary:
 - Never propose exact file paths or class names; use logical component names.
 - Do not create, edit, or commit files; read-only filesystem and Git.
 - Do not construct the canonical spec; only gather planning context.
+
+## ADOS Flow Position
+
+**Step 1/9** in change lifecycle (phase: `clarify_scope`)
+
+### Prerequisites (MUST exist before running)
+- None (this is the first step)
+
+### This step creates
+- chg-<ref>-pm-notes.yaml (planning context)
+
+### Next step
+- `/write-spec <ref>`
