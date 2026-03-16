@@ -258,7 +258,35 @@ Before starting any issue:
 - Branch naming: `<type>/<PROJECT>-<number>/<slug>`
 ```
 
-#### Example: Local Markdown Backlog
+#### Example: Local Markdown Backlog (Git-native)
+
+For solo developers or small teams without an external tracker, ADOS supports a fully Git-managed backlog. The backlog table tracks order and status; the actual content lives in structured files.
+
+**Directory structure:**
+
+```
+doc/planning/
+├── backlog.md                              # Active backlog (order + status)
+├── archive/
+│   └── backlog-2026-03-01.md               # Archived completed items
+└── epics/
+    ├── EPIC-1--onboarding-flow/
+    │   ├── EPIC-1--onboarding-flow.md       # Epic overview: goals, scope, success criteria
+    │   ├── STORY-1--user-registration.md    # Story detail: AC, context, notes
+    │   ├── STORY-2--email-verification.md
+    │   └── BUG-3--signup-validation.md
+    └── EPIC-2--payment-integration/
+        ├── EPIC-2--payment-integration.md
+        ├── STORY-4--stripe-checkout.md
+        └── STORY-5--invoice-generation.md
+```
+
+**How it works:**
+
+- **`backlog.md`** is the single view of active work — a lightweight table with delivery order, status, and priority. It does NOT contain requirements or acceptance criteria.
+- **Epic folders** (`doc/planning/epics/<EPIC-ID>--<slug>/`) hold the real content: an epic document describing overall goals, and individual story/bug files with full descriptions, AC, and context.
+- **Planning a new epic** starts by creating the epic folder and document, then breaking it into stories with their own files, then adding rows to `backlog.md`.
+- **Archiving**: periodically move completed items from `backlog.md` to `doc/planning/archive/backlog-<YYYY-MM-DD>.md` to keep the active backlog focused. Archive when the done section exceeds ~20 items or at sprint/milestone boundaries.
 
 ```markdown
 # PM Instructions
@@ -267,12 +295,33 @@ Before starting any issue:
 
 tracker: local
 backlog_file: doc/planning/backlog.md
+epics_dir: doc/planning/epics
+archive_dir: doc/planning/archive
 
 ## Backlog File Format
 
-| ID | Title | Status | Priority | Labels |
-|----|-------|--------|----------|--------|
-| STORY-1 | ... | todo | high | feature |
+The backlog is an ordered table. Top item = highest priority. The PM delivers
+items top-to-bottom unless dependencies require reordering.
+
+| # | ID | Title | Status | Priority | Labels | Epic |
+|---|-----|-------|--------|----------|--------|------|
+| 1 | STORY-1 | User registration | todo | high | feature | EPIC-1 |
+| 2 | STORY-2 | Email verification | todo | high | feature | EPIC-1 |
+| 3 | BUG-3 | Signup validation error | todo | high | bug | EPIC-1 |
+| 4 | STORY-4 | Stripe checkout | todo | medium | feature | EPIC-2 |
+
+Status values: `todo`, `in-progress`, `review`, `done`, `blocked`
+
+## Work Item Documentation
+
+Each story or bug has a dedicated file in its epic folder:
+- Path: `doc/planning/epics/<EPIC-ID>--<slug>/<ID>--<slug>.md`
+- Contains: description, acceptance criteria, context, dependencies, notes
+- The backlog table links to these files by ID — the file is the source of truth
+  for requirements, the table row is the source of truth for status and order.
+
+Epic documents describe the overall goal, success criteria, and scope.
+Stories reference their parent epic for context.
 
 ## Workflow Mapping
 
@@ -281,15 +330,26 @@ backlog_file: doc/planning/backlog.md
 | Planning started | in-progress |
 | Ready for review | review |
 | Done | done |
+| Blocked | blocked |
+
+## Backlog Archiving
+
+When the backlog accumulates more than ~20 completed items (or at milestone
+boundaries), archive them:
+1. Cut all `done` rows from `backlog.md`
+2. Paste into `doc/planning/archive/backlog-<YYYY-MM-DD>.md`
+3. Keep epic folders intact (they are the permanent record)
 
 ## Labels
 
-- feature, bug, docs, infra
+- feature, bug, docs, infra, tech-debt
 
 ## Conventions
 
 - workItemRef format: `STORY-<number>` or `BUG-<number>`
+- Epic ID format: `EPIC-<number>`
 - Branch naming: `<type>/STORY-<number>/<slug>`
+- Numbering is sequential across all types (STORY-1, STORY-2, BUG-3, STORY-4...)
 ```
 
 > **Tip:** Start minimal. You can always add extensions later as your workflow matures. The leanest effective PM instructions file is ~30 lines; the richest is ~300 lines.

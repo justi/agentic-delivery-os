@@ -200,11 +200,24 @@ When generating `.ai/agent/pm-instructions.md`, follow these principles:
 - "Are there specific quality gate scripts to run?" → add Quality Gate References
 - "Who merges PRs/MRs? Any special review requirements?" → add PR/MR Customizations
 
+**Local markdown backlog (when tracker type = local):**
+
+When the team has no external tracker, generate a Git-native backlog system:
+- `doc/planning/backlog.md` — ordered table with status, priority, labels, epic reference. This is the delivery queue — NOT the place for requirements.
+- `doc/planning/epics/<EPIC-ID>--<slug>/` — one folder per epic containing:
+  - `<EPIC-ID>--<slug>.md` — epic overview (goals, scope, success criteria)
+  - `<STORY/BUG-ID>--<slug>.md` — individual work item files (description, AC, context)
+- `doc/planning/archive/` — completed items moved here periodically (at ~20 done items or milestone boundaries)
+- Numbering is sequential across all types (STORY-1, STORY-2, BUG-3...).
+- The backlog table is the source of truth for ORDER and STATUS; epic/story files are the source of truth for REQUIREMENTS.
+
+Add `doc/planning/backlog.md`, `doc/planning/epics/`, and `doc/planning/archive/` to the write allowlist when generating local backlog artifacts.
+
 **What NOT to include:**
 - Standard ADOS change lifecycle (lives in `doc/guides/change-lifecycle.md`)
 - Build/test commands (belong in quality gate scripts or README)
 - Tool bug workarounds (document in tool docs)
-- Delivery schedules or backlogs (use separate planning docs)
+- Delivery schedules or backlogs inline in pm-instructions (use `doc/planning/` structure)
 
 **Target size:** 30-100 lines for simple projects, up to 300 lines for complex multi-repo setups.
 
@@ -301,6 +314,9 @@ The bootstrapper may ONLY write files to these paths:
 - `doc/decisions/README.md`
 - `doc/decisions/00-index.md`
 - `doc/guides/**` (project-specific guides)
+- `doc/planning/backlog.md` (local backlog — when tracker type is local)
+- `doc/planning/epics/**` (epic and story documents — when tracker type is local)
+- `doc/planning/archive/**` (archived backlog items — when tracker type is local)
 
 Any write to a path NOT on this list requires **explicit human confirmation** with a warning: "This path is outside the standard ADOS write allowlist. Proceed? [y/N]"
 </write_allowlist>
