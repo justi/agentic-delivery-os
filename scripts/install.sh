@@ -129,6 +129,7 @@ FORCE="${FORCE:-false}"
 INTERACTIVE="${INTERACTIVE:-false}"
 NO_FETCH="${NO_FETCH:-false}"
 ADOS_BRANCH="${ADOS_BRANCH:-main}"
+ALLOW_NON_ROOT="${ALLOW_NON_ROOT:-false}"
 
 # Install mode: "global" or "local"
 INSTALL_MODE=""
@@ -543,11 +544,34 @@ auto_fetch_source() {
   fi
 }
 
-# Verify we're in a project root (has .git directory)
+# Verify we're in a git project (root or subdir with --allow-non-root)
 require_project_root() {
-  if [[ ! -d ".git" ]]; then
-    die "Not a project root (no .git directory). Run from your project's root directory."
+  if [[ -d ".git" ]]; then
+    return 0
   fi
+
+  # Check if we're inside a git repo at all
+  local git_root
+  git_root="$(_git rev-parse --show-toplevel 2>/dev/null || true)"
+
+  if [[ -z "${git_root}" ]]; then
+    die "Not inside a git repository. Run from a project directory."
+  fi
+
+  # We're inside a git repo but not at the root
+  if [[ "${ALLOW_NON_ROOT}" == "true" ]]; then
+    log_warn "Not at git root. Installing into subdirectory: $(pwd)"
+    log_warn "Git root is: ${git_root}"
+    return 0
+  fi
+
+  log_err "Not a project root (no .git directory in current directory)."
+  log_err "  Current directory: $(pwd)"
+  log_err "  Git root:          ${git_root}"
+  log_err ""
+  log_err "If you want to install into this subdirectory (e.g., monorepo subproject),"
+  log_err "add --allow-non-root to the command."
+  exit "${EXIT_USAGE}"
 }
 
 install_local_files() {
@@ -647,6 +671,7 @@ Options:
   -f, --force            Overwrite ALL existing files (including project-specific)
   -i, --interactive      Show diff and prompt before overwriting changed files
       --no-fetch         Skip auto-fetching latest ADOS source before local install
+      --allow-non-root   Allow local install in a subdirectory (for monorepo subprojects)
 
 File handling (--local mode):
   Updatable files (guides, templates, handbook) are auto-updated to match upstream.
@@ -687,6 +712,7 @@ parse_args() {
       -f|--force) FORCE=true ;;
       -i|--interactive) INTERACTIVE=true ;;
       --no-fetch) NO_FETCH=true ;;
+      --allow-non-root) ALLOW_NON_ROOT=true ;;
       --) shift; break ;;
       -*) die "Unknown option: $1" ;;
       *) break ;;
