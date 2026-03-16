@@ -145,10 +145,43 @@ The bootstrap file that AI agents read first. It tells agents what your project 
 
 Configures the `@pm` agent for your specific issue tracker and workflow.
 
-**Setup for GitHub Issues:**
+> **What goes here:** PM instructions contain ONLY information that is specific to your project and tracker. Do not repeat the standard ADOS change lifecycle (that lives in `doc/guides/change-lifecycle.md`). The goal is a lean file: the less you repeat, the less drifts.
+
+#### Mandatory Sections
+
+| Section | Purpose |
+|---------|---------|
+| **Tracker Configuration** | Which tracker is canonical (GitHub Issues / Jira / local markdown backlog), connection details, project keys |
+| **Workflow States Mapping** | How ADOS lifecycle phases map to your tracker's statuses or labels |
+| **Label Taxonomy** | Which labels the PM agent should use — at minimum `change` for all ADOS-managed items |
+| **Backlog Source of Truth** | Explicit statement of where the backlog lives to prevent duplicate sources |
+
+#### Recommended Extensions
+
+| Extension | When to add | Example |
+|-----------|------------|---------|
+| **Issue Validation Checklist** | When tickets often start without enough context | "Check labels are set, status is not Blocked, epic context is read" |
+| **Priority & Selection Rules** | When PM needs to auto-select the next issue | "In-progress takes precedence, then `priority:high`, then oldest" |
+| **Quality Gate References** | When repo has specific scripts to run before PR/MR | "Run `scripts/quality-gates.sh` via `@runner`" |
+| **Blocking Question Workflow** | When human approval gates exist | "Add comment with question, assign to human, set `blocked` label, STOP" |
+| **Multi-Repo Coordination** | When changes span multiple repos | "Use `todo-<repo>`/`done-<repo>` labels; see inventory table" |
+| **Definition of Ready (DoR)** | When tickets need pre-conditions before work starts | 5-9 point checklist: AC defined, dependencies identified, etc. |
+| **Estimation Methodology** | When team uses story points or T-shirt sizing | "Fibonacci scale (1-89), split at 100+, triangulate against reference stories" |
+| **PR/MR Workflow Customizations** | When merge process has repo-specific steps | "Squash-only merge, i18n completeness check before MR, human-only merge" |
+| **Decision Documentation** | When product decisions need formal records | "Delegate to `@architect`; use PDRs in `doc/decisions/`" |
+
+#### What NOT to include
+
+- Do not repeat the standard ADOS change lifecycle — reference `doc/guides/change-lifecycle.md`
+- Do not embed build/test commands — those belong in quality gate scripts or the project README
+- Do not duplicate content across repos — if 5 repos share identical tracker config, extract it into a shared file
+- Do not include volatile delivery schedules or backlogs — use separate planning docs
+- Do not embed tool bug workarounds — document those in tool docs or fix them upstream
+
+#### Example: GitHub Issues (Minimal)
 
 ```markdown
-# .ai/agent/pm-instructions.md
+# PM Instructions
 
 ## Tracker Configuration
 
@@ -168,6 +201,11 @@ repo: <your-repo-name>
 
 - `change` — all changes managed by ADOS
 - `bug`, `feature`, `docs` — issue type labels
+- `priority:high`, `priority:medium`, `priority:low` — priority levels
+
+## Backlog Source of Truth
+
+GitHub Issues is the only backlog. Do not create or rely on local backlog files.
 
 ## Conventions
 
@@ -175,12 +213,10 @@ repo: <your-repo-name>
 - Branch naming: `<type>/GH-<number>/<slug>`
 ```
 
-*Note: This file uses Markdown format despite containing YAML-like configuration tables.*
-
-**Setup for Jira:**
+#### Example: Jira (with common extensions)
 
 ```markdown
-# .ai/agent/pm-instructions.md
+# PM Instructions
 
 ## Tracker Configuration
 
@@ -193,12 +229,28 @@ base_url: https://<your-domain>.atlassian.net
 | Phase | Jira Status | Transition ID | Notes |
 |-------|-------------|---------------|-------|
 | Planning started | In Progress | 21 | |
+| Spec/Plan/Tests created | In Progress | — | No transition needed |
+| Delivery started | In Progress | — | |
 | Ready for review | In Review | 31 | |
 | Done | Done | 41 | |
+| Blocked | Blocked | 51 | Set when waiting on human input |
 
 ## Labels
 
 - `change` — all changes managed by ADOS
+- `todo-<repo-name>`, `done-<repo-name>` — per-repo tracking (for multi-repo setups)
+
+## Backlog Source of Truth
+
+Jira is the canonical backlog. Query: project = <KEY> AND labels = "change" AND status != Done ORDER BY priority DESC, created ASC
+
+## Issue Validation Checklist
+
+Before starting any issue:
+1. Verify `change` label is applied
+2. Check status is not `Blocked`
+3. Read parent epic (if any) for wider context
+4. Confirm acceptance criteria exist in description
 
 ## Conventions
 
@@ -206,7 +258,41 @@ base_url: https://<your-domain>.atlassian.net
 - Branch naming: `<type>/<PROJECT>-<number>/<slug>`
 ```
 
-*Note: This file uses Markdown format despite containing YAML-like configuration tables.*
+#### Example: Local Markdown Backlog
+
+```markdown
+# PM Instructions
+
+## Tracker Configuration
+
+tracker: local
+backlog_file: doc/planning/backlog.md
+
+## Backlog File Format
+
+| ID | Title | Status | Priority | Labels |
+|----|-------|--------|----------|--------|
+| STORY-1 | ... | todo | high | feature |
+
+## Workflow Mapping
+
+| Phase | Backlog Status |
+|-------|---------------|
+| Planning started | in-progress |
+| Ready for review | review |
+| Done | done |
+
+## Labels
+
+- feature, bug, docs, infra
+
+## Conventions
+
+- workItemRef format: `STORY-<number>` or `BUG-<number>`
+- Branch naming: `<type>/STORY-<number>/<slug>`
+```
+
+> **Tip:** Start minimal. You can always add extensions later as your workflow matures. The leanest effective PM instructions file is ~30 lines; the richest is ~300 lines.
 
 ### 1.3 `doc/documentation-handbook.md`
 
