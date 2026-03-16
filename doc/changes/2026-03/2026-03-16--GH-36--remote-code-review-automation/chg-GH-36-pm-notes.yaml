@@ -7,9 +7,9 @@ phases:
   delivery_planning: { started: "2026-03-16T18:00:00Z", completed: "2026-03-16T18:20:00Z" }
   delivery: { started: "2026-03-16T18:30:00Z", completed: "2026-03-16T19:00:00Z" }
   system_spec_update: { started: "2026-03-16T18:50:00Z", completed: "2026-03-16T18:55:00Z" }
-  review_fix: { started: "2026-03-16T18:55:00Z", completed: null }
-  quality_gates: { started: null, completed: null }
-  dod_check: { started: null, completed: null }
+  review_fix: { started: "2026-03-16T18:55:00Z", completed: "2026-03-16T19:10:00Z" }
+  quality_gates: { started: "2026-03-16T19:10:00Z", completed: "2026-03-16T19:15:00Z" }
+  dod_check: { started: "2026-03-16T19:20:00Z", completed: "2026-03-16T19:25:00Z" }
   pr_creation: { started: null, completed: null, url: null }
 decisions:
   - text: "Single ticket delivery — do not split into multiple tickets despite large scope (2 agents + 2 commands + config + docs)"
