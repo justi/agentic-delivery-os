@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/templates/test-spec-template.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/templates/test-spec-template.md
 id: TEST-SPEC-<feature-slug>             # e.g., TEST-SPEC-TENANTS
 status: Current                          # Current | Deprecated
 created: <YYYY-MM-DD>

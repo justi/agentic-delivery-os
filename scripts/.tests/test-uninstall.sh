@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/scripts/.tests/test-uninstall.sh
 # test-uninstall.sh — Tests for uninstall.sh
 set -Eeuo pipefail
 set -o errtrace

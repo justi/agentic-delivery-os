@@ -200,20 +200,21 @@ test_file_without_frontmatter() {
   local content
   content="$(get_file_content "${test_file}")"
   
-  # Check that frontmatter was added
+  # Check that frontmatter was added with source: attribute (not # Latest version:)
   assert_contains "${content}" "---" "Should have frontmatter"
   assert_contains "${content}" "# Copyright" "Should have copyright line"
   assert_contains "${content}" "# MIT License" "Should have MIT license line"
-  assert_contains "${content}" "# Latest version:" "Should have latest version line"
+  assert_contains "${content}" "source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main" "Should have source attribute"
+  assert_not_contains "${content}" "# Latest version:" "Should NOT have old comment format"
   
-  # Check structure: copyright first, then MIT, then latest version
-  local copyright_line mit_line version_line
+  # Check structure: copyright first, then MIT, then source
+  local copyright_line mit_line source_line
   copyright_line="$(grep -n "# Copyright" "${test_file}" | head -1 | cut -d: -f1)"
   mit_line="$(grep -n "# MIT License" "${test_file}" | head -1 | cut -d: -f1)"
-  version_line="$(grep -n "# Latest version:" "${test_file}" | head -1 | cut -d: -f1)"
+  source_line="$(grep -n "^source:" "${test_file}" | head -1 | cut -d: -f1)"
   
   [[ "${copyright_line}" -lt "${mit_line}" ]] || return 1
-  [[ "${mit_line}" -lt "${version_line}" ]] || return 1
+  [[ "${mit_line}" -lt "${source_line}" ]] || return 1
   
   # Original content should remain
   assert_contains "${content}" "This file has no frontmatter"
@@ -240,7 +241,8 @@ Some content here."
   # Check that header lines were added at the beginning of frontmatter
   assert_contains "${content}" "# Copyright" "Should have copyright line"
   assert_contains "${content}" "# MIT License" "Should have MIT license line"
-  assert_contains "${content}" "# Latest version:" "Should have latest version line"
+  assert_contains "${content}" "source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main" "Should have source attribute"
+  assert_not_contains "${content}" "# Latest version:" "Should NOT have old comment format"
   
   # Check that original frontmatter fields remain
   assert_contains "${content}" "description: Test file"
@@ -256,8 +258,8 @@ Some content here."
   assert_contains "${lines[1]}" "# Copyright" "Second line should be copyright"
   # Third line should be MIT license
   assert_contains "${lines[2]}" "# MIT License" "Third line should be MIT license"
-  # Fourth line should be latest version
-  assert_contains "${lines[3]}" "# Latest version:" "Fourth line should be latest version"
+  # Fourth line should be source attribute
+  assert_contains "${lines[3]}" "source:" "Fourth line should be source attribute"
 }
 
 test_file_with_complete_header() {
@@ -265,9 +267,8 @@ test_file_with_complete_header() {
   local -r rel_path="test/complete-header.md"
   create_test_file "${test_file}" "---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
-#
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/${rel_path}
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/${rel_path}
 description: Already has complete header
 ---
 # Content
@@ -296,7 +297,7 @@ Should not change."
   
   assert_contains "${content}" "# Copyright"
   assert_contains "${content}" "# MIT License"
-  assert_contains "${content}" "# Latest version:"
+  assert_contains "${content}" "source:" "Should have source attribute"
   assert_contains "${content}" "description: Already has complete header"
 }
 
@@ -320,15 +321,43 @@ description: Has old URL format without prefix
   local content
   content="$(get_file_content "${test_file}")"
   
-  # Should have updated to "Latest version:" prefix
-  assert_contains "${content}" "# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main"
+  # Should have updated to source: attribute (new format)
+  assert_contains "${content}" "source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main"
   
-  # Should not have old URL line without prefix
-  local old_url_count
-  old_url_count="$(grep -c "^#[[:space:]]*https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main" "${test_file}" || true)"
+  # Should NOT have old comment format
+  assert_not_contains "${content}" "# Latest version:" "Should not have old comment format"
   
-  # There should be exactly 1 URL line (the new one with prefix)
-  assert_eq "1" "${old_url_count}" "Should have exactly one URL line with prefix"
+  # Should have exactly 1 source line
+  local source_count
+  source_count="$(grep -c "^source:" "${test_file}" || true)"
+  assert_eq "1" "${source_count}" "Should have exactly one source attribute"
+}
+
+test_file_with_old_latest_version_comment() {
+  local -r test_file="${_test_tmpdir}/old-comment-format.md"
+  create_test_file "${test_file}" "---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/test/old.md
+description: Has old Latest version comment
+---
+# Content"
+  
+  # Run script — should convert old comment to source: attribute
+  local stdout stderr exit_code=0
+  stdout="$(DRY_RUN=false "${SCRIPT_DIR}/add-header-location.sh" "${test_file}" 2>&1)" || exit_code=$?
+  
+  assert_exit_code 0 "${exit_code}" "Script should succeed"
+  
+  local content
+  content="$(get_file_content "${test_file}")"
+  
+  # Should have source: attribute now
+  assert_contains "${content}" "source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main" "Should have source attribute"
+  # Should NOT have old # Latest version: comment
+  assert_not_contains "${content}" "# Latest version:" "Old comment format should be replaced"
+  # Original frontmatter fields should remain
+  assert_contains "${content}" "description: Has old Latest version comment"
 }
 
 test_dry_run_mode() {
@@ -367,7 +396,7 @@ description: Test
   create_test_file "${test_dir}/file3.md" "---
 # Copyright line
 # MIT License
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/path
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/path
 ---"
   
   # Run script on directory
@@ -382,19 +411,20 @@ description: Test
   file2_content="$(get_file_content "${test_dir}/file2.md")"
   file3_content="$(get_file_content "${test_dir}/file3.md")"
   
-  # File 1 should have full header added
+  # File 1 should have full header added with source: attribute
   assert_contains "${file1_content}" "# Copyright"
   assert_contains "${file1_content}" "# MIT License"
-  assert_contains "${file1_content}" "# Latest version:"
+  assert_contains "${file1_content}" "source:" "Should have source attribute"
+  assert_not_contains "${file1_content}" "# Latest version:" "Should NOT have old comment format"
   
   # File 2 should have header added to existing frontmatter
   assert_contains "${file2_content}" "# Copyright"
   assert_contains "${file2_content}" "description: Test"
   
-  # File 3 should be unchanged (already has complete header)
+  # File 3 should be unchanged (already has complete header with source: attribute)
   assert_contains "${file3_content}" "# Copyright line"
   assert_contains "${file3_content}" "# MIT License"
-  # Note: This test file has non-standard lines, but script should detect it has "Latest version:" prefix
+  assert_contains "${file3_content}" "source:" "Should have source attribute"
 }
 
 test_non_markdown_file() {
@@ -468,11 +498,11 @@ test_multiple_files_argument() {
 test_unicode_copyright_idempotent() {
   local -r test_file="${_test_tmpdir}/unicode-copyright.md"
   local -r rel_path="test/unicode-copyright.md"
-  # Exact copyright line with Unicode characters
+  # Exact copyright line with Unicode characters, using new source: attribute format
   create_test_file "${test_file}" "---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/${rel_path}
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/${rel_path}
 description: Unicode test
 ---
 # Content"
@@ -499,7 +529,7 @@ description: Unicode test
   content="$(get_file_content "${test_file}")"
   assert_contains "${content}" "# Copyright.*Ćwiąkalski"
   assert_contains "${content}" "# MIT License"
-  assert_contains "${content}" "# Latest version:"
+  assert_contains "${content}" "source:" "Should have source attribute"
 }
 
 test_missing_mit_line() {
@@ -519,18 +549,19 @@ description: Missing MIT line
   local content
   content="$(get_file_content "${test_file}")"
   
-  # Should have added MIT line and source line
+  # Should have added MIT line and source attribute
   assert_contains "${content}" "# MIT License"
-  assert_contains "${content}" "# Latest version:"
+  assert_contains "${content}" "source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main" "Should have source attribute"
+  assert_not_contains "${content}" "# Latest version:" "Should NOT have old comment format"
   
   # Check order: copyright, MIT, source
-  local copyright_line mit_line version_line
+  local copyright_line mit_line source_line
   copyright_line="$(grep -n "# Copyright" "${test_file}" | head -1 | cut -d: -f1)"
   mit_line="$(grep -n "# MIT License" "${test_file}" | head -1 | cut -d: -f1)"
-  version_line="$(grep -n "# Latest version:" "${test_file}" | head -1 | cut -d: -f1)"
+  source_line="$(grep -n "^source:" "${test_file}" | head -1 | cut -d: -f1)"
   
   [[ "${copyright_line}" -lt "${mit_line}" ]] || return 1
-  [[ "${mit_line}" -lt "${version_line}" ]] || return 1
+  [[ "${mit_line}" -lt "${source_line}" ]] || return 1
   
   # Original content should remain
   assert_contains "${content}" "description: Missing MIT line"
@@ -728,7 +759,8 @@ main() {
   run_test "File without frontmatter gets full header" test_file_without_frontmatter
   run_test "File with frontmatter but no copyright gets header added" test_file_with_frontmatter_no_copyright
   run_test "File with complete header remains unchanged" test_file_with_complete_header
-  run_test "File with old URL format gets updated with prefix" test_file_with_old_url_format
+  run_test "File with old URL format gets updated to source attribute" test_file_with_old_url_format
+  run_test "File with old # Latest version: comment gets converted to source attribute" test_file_with_old_latest_version_comment
   run_test "Dry-run mode doesn't modify files" test_dry_run_mode
   run_test "Directory processing works recursively" test_directory_processing
   run_test "Non-markdown file causes error" test_non_markdown_file

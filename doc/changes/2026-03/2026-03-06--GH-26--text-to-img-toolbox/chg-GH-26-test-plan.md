@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/changes/2026-03/2026-03-06--GH-26--text-to-img-toolbox/chg-GH-26-test-plan.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/changes/2026-03/2026-03-06--GH-26--text-to-img-toolbox/chg-GH-26-test-plan.md
 
 id: chg-GH-26-test-plan
 status: Proposed

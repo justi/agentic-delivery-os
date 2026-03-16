@@ -1,4 +1,7 @@
 ---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/changes/2026-03/2026-03-06--GH-27--agents-md/chg-GH-27-plan.md
 id: chg-GH-27-agents-md
 status: Completed
 created: 2026-03-07T00:00:00Z

@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/external-researcher.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/agent/external-researcher.md
 description: Research external sources via MCP (context7, deepwiki, perplexity)
 mode: all
 #model: anthropic/claude-sonnet-4-6

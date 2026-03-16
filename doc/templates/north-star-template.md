@@ -1,7 +1,7 @@
 ---
 # Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
 # MIT License - see LICENSE file for full terms
-# Latest version: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/templates/north-star-template.md
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/doc/templates/north-star-template.md
 id: NORTH-STAR
 status: Draft                            # Draft | Active | Superseded
 created: YYYY-MM-DD
