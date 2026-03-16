@@ -176,12 +176,15 @@ Three-tier feedback classification:
     GitHub:
     ```bash
     # Get review comments (inline)
-    gh api "repos/{owner}/{repo}/pulls/$NUMBER/comments" --paginate > "tmp/review-feedback/$BRANCH_PATH/threads-snapshot.json"
+    gh api "repos/{owner}/{repo}/pulls/$NUMBER/comments" --paginate > "tmp/review-feedback/$BRANCH_PATH/inline-comments.json"
     # Get issue comments (top-level)
-    gh api "repos/{owner}/{repo}/issues/$NUMBER/comments" --paginate >> "tmp/review-feedback/$BRANCH_PATH/threads-snapshot.json"
+    gh api "repos/{owner}/{repo}/issues/$NUMBER/comments" --paginate > "tmp/review-feedback/$BRANCH_PATH/issue-comments.json"
     # Get reviews
     gh api "repos/{owner}/{repo}/pulls/$NUMBER/reviews" --paginate > "tmp/review-feedback/$BRANCH_PATH/reviews-snapshot.json"
     ```
+
+    After fetching, merge the inline and issue comment arrays into a single `threads-snapshot.json`.
+    Do NOT use shell append (`>>`) to combine JSON files — read both arrays and merge them programmatically.
 
     GitLab:
     ```bash

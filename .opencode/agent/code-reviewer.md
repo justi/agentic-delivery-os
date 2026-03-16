@@ -169,7 +169,7 @@ Before any review work, verify ALL of the following. STOP with a clear message i
     - Evaluate against: repo-local checklist items (if loaded), repo-local instructions (if loaded), and built-in heuristics.
     - For each issue found, create a structured finding (see finding_format).
     - Assign confidence: high, medium, or low.
-    - Cap at 50 total findings; prioritize by severity (critical > major > minor > nit).
+    - Cap at 50 total findings; prioritize by severity (critical > major > minor > nit). The publishing cap of 30 inline comments (see step 10) is applied separately.
   </step>
 
   <step id="7">
