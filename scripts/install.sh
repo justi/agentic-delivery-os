@@ -453,12 +453,15 @@ resolve_source_dir() {
   fi
 
   # 2. Running from the ADOS repo itself (script's own repo)
-  local script_dir
-  script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-  local candidate="${script_dir}/.."
-  if [[ -f "${candidate}/AGENTS.md" && -d "${candidate}/.opencode/agent" ]]; then
-    printf '%s' "$(cd "${candidate}" && pwd -P)"
-    return 0
+  # Note: BASH_SOURCE is unset when piped via curl|bash; skip this check in that case
+  if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    local script_dir
+    script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    local candidate="${script_dir}/.."
+    if [[ -f "${candidate}/AGENTS.md" && -d "${candidate}/.opencode/agent" ]]; then
+      printf '%s' "$(cd "${candidate}" && pwd -P)"
+      return 0
+    fi
   fi
 
   # 3. Global install location
@@ -680,7 +683,7 @@ main() {
   esac
 }
 
-# Testable main guard
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+# Testable main guard (${BASH_SOURCE[0]:-} handles curl|bash where BASH_SOURCE is unset)
+if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "${0}" ]]; then
   main "$@"
 fi
