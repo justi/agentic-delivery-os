@@ -422,7 +422,7 @@ install_claude_code_local() {
   local -r cc_agent_src="${source_dir}/.claude-code/agent"
   local -r cc_command_src="${source_dir}/.claude-code/command"
   local -r agent_dest=".claude/agents"
-  local -r command_dest=".claude/commands"
+  local -r skills_base=".claude/skills"
 
   # --- Claude Code agents ---
   ensure_dir "${agent_dest}" ".claude/agents"
@@ -438,15 +438,34 @@ install_claude_code_local() {
     log_warn "Claude Code agent source not found: ${cc_agent_src}"
   fi
 
-  # --- Claude Code commands ---
-  ensure_dir "${command_dest}" ".claude/commands"
+  # --- Claude Code skills (slash commands) ---
+  # Claude Code uses .claude/skills/<name>/SKILL.md format
   if [[ -d "${cc_command_src}" ]]; then
     local cmd_file
     for cmd_file in "${cc_command_src}"/*.md; do
       [[ -f "${cmd_file}" ]] || continue
-      local name
-      name="$(basename "${cmd_file}")"
-      copy_updatable_file "${cmd_file}" "${command_dest}/${name}" "commands/${name}"
+      local cmd_name
+      cmd_name="$(basename "${cmd_file}" .md)"
+      local skill_dir="${skills_base}/${cmd_name}"
+      ensure_dir "${skill_dir}" "skills/${cmd_name}"
+
+      # Extract first meaningful line as description
+      local desc
+      desc="$(grep -m1 -E '^[A-Z].*\.' "${cmd_file}" 2>/dev/null | head -c 100 || echo "ADOS skill")"
+
+      # Create SKILL.md with frontmatter
+      local skill_file="${skill_dir}/SKILL.md"
+      if [[ ! -f "${skill_file}" ]] || [[ "${FORCE}" == "true" ]]; then
+        {
+          printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
+          cat "${cmd_file}"
+        } > "${skill_file}"
+        log_info "add    skills/${cmd_name}/SKILL.md"
+        ((_added++)) || true
+      else
+        log_debug "skip   skills/${cmd_name}/SKILL.md (exists)"
+        ((_unchanged++)) || true
+      fi
     done
   else
     log_warn "Claude Code command source not found: ${cc_command_src}"
@@ -472,7 +491,7 @@ This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workf
 
 Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
 
-Agents are in `.claude/agents/` and commands in `.claude/commands/`.
+Agents are in `.claude/agents/` and commands in `.claude/skills/`.
 See `doc/guides/change-lifecycle.md` for the full 10-phase lifecycle.
 CLAUDE_SECTION
         log_info "add    ADOS workflow section to ${claude_md}"
@@ -497,7 +516,7 @@ This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workf
 
 Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
 
-Agents are in `.claude/agents/` and commands in `.claude/commands/`.
+Agents are in `.claude/agents/` and commands in `.claude/skills/`.
 See `doc/guides/change-lifecycle.md` for the full 10-phase lifecycle.
 CLAUDE_NEW
       log_info "create ${claude_md}"
@@ -828,7 +847,7 @@ do_local_install() {
       log_info "     The bootstrapper will detect your tracker, generate PM instructions,"
       log_info "     and customize AGENTS.md for your project."
       log_info "  Agents installed to: .claude/agents/"
-      log_info "  Commands installed to: .claude/commands/"
+      log_info "  Commands installed to: .claude/skills/"
     else
       log_info "  1. Open this project in OpenCode (https://opencode.ai)"
       log_info "  2. Run /bootstrap to complete setup with AI-guided configuration"
