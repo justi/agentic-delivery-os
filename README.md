@@ -100,7 +100,7 @@ ADOS now supports both **OpenCode** and **Claude Code** as AI coding tools. The 
 |--------|----------|-------------|
 | Agent location | `.opencode/agent/` | `.claude/agents/` |
 | Command location | `.opencode/command/` | `.claude/skills/` |
-| Agent format | YAML frontmatter + XML tags | Pure Markdown (headers + sections) |
+| Agent format | YAML frontmatter + XML tags | YAML frontmatter (`name`, `description`) + Markdown |
 | Delegation | `@agent-name` references | "Use the Agent tool to delegate to the `agent-name` agent" |
 | Global install | `~/.config/opencode/` | Per-project only (no global agent location) |
 | Project config | `.opencode/README.md` | `CLAUDE.md` (ADOS section added automatically) |
@@ -111,7 +111,7 @@ The Claude Code agent and skill definitions live in `.claude-code/` in the ADOS 
 - `.claude-code/agent/` -- 19 agent definitions (same roles as OpenCode)
 - `.claude-code/command/` -- 16 skill definitions (source dir is named `command/` for parity with OpenCode; the installer converts them to `.claude/skills/<name>/SKILL.md`)
 
-During `--local` install with `--claude-code`, these are copied to `.claude/agents/` and `.claude/skills/` in your project.
+During `--local` install with `--claude-code`, agents are copied to `.claude/agents/` and skill source files are wrapped into `.claude/skills/<name>/SKILL.md` format.
 
 ## Benefits
 
