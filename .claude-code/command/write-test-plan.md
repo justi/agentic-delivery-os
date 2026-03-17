@@ -26,7 +26,7 @@ After successful execution:
 - Created/updated file path
 - Branch name
 - Coverage summary
-- Recommendation: "Run `/run-plan <workItemRef>` to begin execution"
+- Recommendation: "Run `/write-plan <workItemRef>` to generate the implementation plan"
 
 ## Constraints
 
@@ -36,7 +36,7 @@ After successful execution:
 
 ## ADOS Flow Position
 
-**Step 3/9** in change lifecycle (phase: `test_planning`)
+**Step 3/10** in change lifecycle (phase: `test_planning`)
 
 ### Prerequisites (MUST exist before running)
 - chg-<ref>-spec.md

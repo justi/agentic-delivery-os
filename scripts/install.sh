@@ -467,7 +467,6 @@ install_claude_code_local() {
       # update behaviour
       if [[ "${DRY_RUN}" == "true" ]]; then
         log_info "[DRY-RUN] Would write skills/${cmd_name}/SKILL.md"
-        ((_added++)) || true
       else
         local tmp_skill
         tmp_skill="$(mktemp)"
@@ -505,6 +504,7 @@ This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workf
 Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
 
 Agents are in `.claude/agents/` and commands in `.claude/skills/`.
+Phase 9 (`dod_check`) is handled by the PM agent before `/pr`.
 See `doc/guides/change-lifecycle.md` for the full 10-phase lifecycle.
 CLAUDE_SECTION
         log_info "add    ADOS workflow section to ${claude_md}"
@@ -530,6 +530,7 @@ This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workf
 Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
 
 Agents are in `.claude/agents/` and commands in `.claude/skills/`.
+Phase 9 (`dod_check`) is handled by the PM agent before `/pr`.
 See `doc/guides/change-lifecycle.md` for the full 10-phase lifecycle.
 CLAUDE_NEW
       log_info "create ${claude_md}"

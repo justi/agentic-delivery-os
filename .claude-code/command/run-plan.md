@@ -39,7 +39,7 @@ The coder agent will:
 
 ## ADOS Flow Position
 
-**Step 5/9** in change lifecycle (phase: `delivery`)
+**Step 5/10** in change lifecycle (phase: `delivery`)
 
 ### Prerequisites (MUST exist before running)
 - chg-<ref>-spec.md

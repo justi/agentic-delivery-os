@@ -35,7 +35,7 @@ Use the Agent tool to delegate to the `reviewer` agent with the full arguments.
 
 ## ADOS Flow Position
 
-**Step 7/9** in change lifecycle (phase: `review_fix`)
+**Step 7/10** in change lifecycle (phase: `review_fix`)
 
 ### Prerequisites (MUST exist before running)
 - Delivery complete
@@ -45,4 +45,4 @@ Use the Agent tool to delegate to the `reviewer` agent with the full arguments.
 - Review findings, remediation if needed
 
 ### Next step
-- `/check`
+- `/check` (phase 8: quality_gates)

@@ -31,7 +31,7 @@ After successful execution:
 
 ## ADOS Flow Position
 
-**Step 4/9** in change lifecycle (phase: `delivery_planning`)
+**Step 4/10** in change lifecycle (phase: `delivery_planning`)
 
 ### Prerequisites (MUST exist before running)
 - chg-<ref>-spec.md

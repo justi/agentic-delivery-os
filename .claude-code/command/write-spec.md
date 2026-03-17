@@ -22,7 +22,7 @@ Arguments: $ARGUMENTS
 After successful execution:
 - Created file path
 - Branch name
-- Recommendation: "Run `/write-plan <workItemRef>` to generate the implementation plan"
+- Recommendation: "Run `/write-test-plan <workItemRef>` to generate the test plan"
 
 ## Constraints
 
@@ -32,7 +32,7 @@ After successful execution:
 
 ## ADOS Flow Position
 
-**Step 2/9** in change lifecycle (phase: `specification`)
+**Step 2/10** in change lifecycle (phase: `specification`)
 
 ### Prerequisites (MUST exist before running)
 - chg-<ref>-pm-notes.yaml OR planning context from /plan-change

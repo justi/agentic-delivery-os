@@ -46,7 +46,7 @@ After emitting the change planning summary:
 
 ## ADOS Flow Position
 
-**Step 1/9** in change lifecycle (phase: `clarify_scope`)
+**Step 1/10** in change lifecycle (phase: `clarify_scope`)
 
 ### Prerequisites (MUST exist before running)
 - None (this is the first step)

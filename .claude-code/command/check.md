@@ -30,7 +30,7 @@ Run this repository's configured quality gates and summarize results.
 
 ## ADOS Flow Position
 
-**Step 8/9** in change lifecycle (phase: `quality_gates`)
+**Step 8/10** in change lifecycle (phase: `quality_gates`)
 
 ### Prerequisites (MUST exist before running)
 - Code committed
@@ -40,4 +40,4 @@ Run this repository's configured quality gates and summarize results.
 - Quality gate results (audit + test output)
 
 ### Next step
-- `/pr` (if all green)
+- Phase 9 (`dod_check`) is handled by the PM agent, then `/pr` (phase 10)

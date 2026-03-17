@@ -31,7 +31,7 @@ The doc-syncer agent will:
 
 ## ADOS Flow Position
 
-**Step 6/9** in change lifecycle (phase: `system_spec_update`)
+**Step 6/10** in change lifecycle (phase: `system_spec_update`)
 
 ### Prerequisites (MUST exist before running)
 - Delivery complete (code committed)

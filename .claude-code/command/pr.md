@@ -18,7 +18,7 @@ Arguments: $ARGUMENTS
 
 ## ADOS Flow Position
 
-**Step 9/9** in change lifecycle (phase: `pr_creation`)
+**Step 10/10** in change lifecycle (phase: `pr_creation`)
 
 ### Prerequisites (MUST exist before running)
 - Quality gates passed
