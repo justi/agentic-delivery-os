@@ -53,7 +53,7 @@ Agentic Delivery OS codifies a predictable pipeline where quality and traceabili
 
 > **Requires:** [OpenCode](https://opencode.ai) or [Claude Code](https://claude.com/claude-code) — the AI coding agent that runs ADOS agents and commands.
 
-**Global install** (one-liner — gives you ADOS agents in every project):
+**Global install** (one-liner — gives you ADOS agents in every OpenCode project; Claude Code users should use `--local` per project):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/juliusz-cwiakalski/agentic-delivery-os/main/scripts/install.sh | bash -s -- --global

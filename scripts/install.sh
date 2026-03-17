@@ -384,7 +384,10 @@ detect_ai_tool() {
     AI_TOOL="opencode"
     log_info "Auto-detected AI tool: OpenCode (.opencode/ directory found)"
   elif [[ "${has_claude}" == "true" && "${has_opencode}" == "true" ]]; then
-    # Both present — ask
+    # Both present — prompt if interactive, else error
+    if [[ ! -t 0 ]]; then
+      die "Both .claude/ and .opencode/ found. Use --claude-code or --opencode to choose."
+    fi
     printf '\nDetected both Claude Code and OpenCode directories.\n'
     printf 'Which AI coding tool should ADOS install for?\n'
     printf '  1) Claude Code (.claude/)\n'
@@ -397,17 +400,22 @@ detect_ai_tool() {
       *) AI_TOOL="opencode" ;;
     esac
   else
-    # Neither present — ask
-    printf '\nWhich AI coding tool do you use?\n'
-    printf '  1) Claude Code\n'
-    printf '  2) OpenCode\n'
-    printf 'Choice [1/2]: '
-    local choice
-    read -r choice
-    case "${choice}" in
-      1) AI_TOOL="claude-code" ;;
-      *) AI_TOOL="opencode" ;;
-    esac
+    # Neither present — prompt if interactive, else default to opencode
+    if [[ ! -t 0 ]]; then
+      AI_TOOL="opencode"
+      log_info "Non-interactive mode: defaulting to OpenCode (use --claude-code to override)"
+    else
+      printf '\nWhich AI coding tool do you use?\n'
+      printf '  1) Claude Code\n'
+      printf '  2) OpenCode\n'
+      printf 'Choice [1/2]: '
+      local choice
+      read -r choice
+      case "${choice}" in
+        1) AI_TOOL="claude-code" ;;
+        *) AI_TOOL="opencode" ;;
+      esac
+    fi
   fi
 
   log_info "Installing for: ${AI_TOOL}"
@@ -454,17 +462,23 @@ install_claude_code_local() {
       desc="$(grep -m1 -E '^[A-Z].*\.' "${cmd_file}" 2>/dev/null | head -c 100 || echo "ADOS skill")"
       desc="${desc//\"/\\\"}"
 
-      # Generate SKILL.md to a temp file, then use copy_updatable_file for
-      # consistent DRY_RUN, diff, and idempotent update behaviour
-      local tmp_skill
-      tmp_skill="$(mktemp)"
-      {
-        printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
-        cat "${cmd_file}"
-      } > "${tmp_skill}"
+      # Generate SKILL.md to a project-local temp file, then use
+      # copy_updatable_file for consistent DRY_RUN, diff, and idempotent
+      # update behaviour
+      if [[ "${DRY_RUN}" == "true" ]]; then
+        log_info "[DRY-RUN] Would write skills/${cmd_name}/SKILL.md"
+        ((_added++)) || true
+      else
+        local tmp_skill
+        tmp_skill="$(mktemp)"
+        {
+          printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
+          cat "${cmd_file}"
+        } > "${tmp_skill}"
 
-      copy_updatable_file "${tmp_skill}" "${skill_dir}/SKILL.md" "skills/${cmd_name}/SKILL.md"
-      rm -f "${tmp_skill}"
+        copy_updatable_file "${tmp_skill}" "${skill_dir}/SKILL.md" "skills/${cmd_name}/SKILL.md"
+        rm -f "${tmp_skill}"
+      fi
     done
   else
     log_warn "Claude Code command source not found: ${cc_command_src}"
@@ -773,7 +787,7 @@ install_local_files() {
 
   # --- Project-specific files (preserve local edits) ---
   local file
-  for file in ${ADOS_PROJECT_FILES[@]+"${ADOS_PROJECT_FILES[@]}"}; do
+  for file in "${ADOS_PROJECT_FILES[@]}"; do
     copy_file_with_diff "${source_dir}/${file}" "${file}" "${file}"
   done
 
@@ -889,7 +903,7 @@ Options:
   -i, --interactive      Show diff and prompt before overwriting changed files
       --no-fetch         Skip auto-fetching latest ADOS source before local install
       --allow-non-root   Allow local install in a subdirectory (for monorepo subprojects)
-      --claude-code      Force installation for Claude Code (agents to .claude/agents/)
+      --claude-code      Force installation for Claude Code (--local only; agents to .claude/agents/)
       --opencode         Force installation for OpenCode (agents to .opencode/agent/)
 
 File handling (--local mode):
