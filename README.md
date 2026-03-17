@@ -149,12 +149,18 @@ OpenCode tooling (see [.opencode/README.md](.opencode/README.md) for the authori
 
 ## Autopilot (PM-driven)
 
-Autopilot mode is a high-level handoff: you provide a ticket reference (or URL) and the [@pm](.opencode/agent/pm.md) agent orchestrates the full delivery loop (including [/review](.opencode/command/review.md), [/sync-docs](.opencode/command/sync-docs.md), and [/check](.opencode/command/check.md)), then creates/updates a PR/MR via [/pr](.opencode/command/pr.md) only when it's ready for human review.
+Autopilot mode is a high-level handoff: you provide a ticket reference (or URL) and the PM agent orchestrates the full delivery loop (including /review, /sync-docs, and /check), then creates/updates a PR/MR via /pr only when it's ready for human review.
 
-Example prompt:
+Example prompt (OpenCode):
 
 ```text
 @pm deliver change GH-456
+```
+
+Example prompt (Claude Code):
+
+```text
+Use the pm agent to deliver change GH-456
 ```
 
 (You can also use a GitHub issue URL or a `workItemRef` like `GH-456`.)
