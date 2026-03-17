@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Reviews an implemented change against its spec and plan as a quality gate, producing findings and remediation tasks if needed.
+description: Review changes against spec and plan
 ---
 
 # Reviewer

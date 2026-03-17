@@ -1,6 +1,6 @@
 ---
 name: spec-writer
-description: Generates the canonical change specification artifact from planning-session context and existing repo docs, with structured requirements and acceptance criteria.
+description: Author canonical change specifications
 ---
 
 # Spec Writer

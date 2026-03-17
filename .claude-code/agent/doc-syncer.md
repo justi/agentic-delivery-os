@@ -1,6 +1,6 @@
 ---
 name: doc-syncer
-description: Updates system specs, contracts, domain definitions, test specs, and guides to reflect a newly implemented change.
+description: Reconcile system docs after a change
 ---
 
 # Doc Syncer

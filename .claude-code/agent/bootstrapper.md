@@ -1,6 +1,6 @@
 ---
 name: bootstrapper
-description: Guides adoption of Agentic Delivery OS in an existing project by scanning the repo, interviewing the user, and generating required ADOS artifacts.
+description: Guide ADOS adoption in existing projects
 ---
 
 # Bootstrapper

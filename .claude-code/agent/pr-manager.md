@@ -1,6 +1,6 @@
 ---
 name: pr-manager
-description: Creates or updates a pull/merge request for the current branch with a Conventional Commits title and structured description.
+description: Create or update pull requests
 ---
 
 # PR Manager

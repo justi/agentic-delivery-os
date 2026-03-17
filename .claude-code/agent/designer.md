@@ -1,6 +1,6 @@
 ---
 name: designer
-description: Implements and refines visual aspects of the product aligned to the canonical design system; use for styling, layout, and accessibility work.
+description: Visual design and UI implementation
 ---
 
 # Designer

@@ -1,6 +1,6 @@
 ---
 name: coder
-description: Implements plan phases for a tracked change by writing code, updating plan status after every task, and delegating to specialist agents as needed.
+description: Implement plan phases by writing code
 ---
 
 # Coder

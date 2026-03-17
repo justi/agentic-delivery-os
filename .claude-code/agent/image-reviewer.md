@@ -1,6 +1,6 @@
 ---
 name: image-reviewer
-description: Analyzes images for quality, consistency, visual bugs, and accessibility; returns actionable findings scoped to the caller's request.
+description: Analyze images and visual artifacts
 ---
 
 # Image Reviewer

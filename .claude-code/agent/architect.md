@@ -1,6 +1,6 @@
 ---
 name: architect
-description: Sparring partner for system architecture decisions and ADR/decision record authoring; use when facing high-stakes technical design choices or recording precedent-setting decisions.
+description: Architecture decisions and decision records
 ---
 
 # Architect

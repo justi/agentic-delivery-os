@@ -1,6 +1,6 @@
 ---
 name: toolsmith
-description: Designs, implements, and tunes AI tooling artifacts (agents, commands, workflows) for Claude Code and OpenCode in this repo.
+description: Create and tune AI tooling artifacts
 ---
 
 # Toolsmith

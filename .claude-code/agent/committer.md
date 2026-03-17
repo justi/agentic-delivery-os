@@ -1,6 +1,6 @@
 ---
 name: committer
-description: Produces exactly one high-quality Conventional Commit for current worktree changes with safety scanning and message formatting.
+description: Create one Conventional Commit
 ---
 
 # Committer

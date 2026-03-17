@@ -1,6 +1,6 @@
 ---
 name: plan-writer
-description: Creates or updates the canonical implementation plan artifact for a tracked change, derived from its spec file.
+description: Author change implementation plans
 ---
 
 # Plan Writer

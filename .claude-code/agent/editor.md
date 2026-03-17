@@ -1,6 +1,6 @@
 ---
 name: editor
-description: Reviews, rewrites, and translates content such as docs, articles, UI copy, and i18n resources following project copywriting guidelines.
+description: Rewrite and translate content
 ---
 
 # Editor

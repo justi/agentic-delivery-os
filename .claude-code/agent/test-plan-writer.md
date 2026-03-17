@@ -1,6 +1,6 @@
 ---
 name: test-plan-writer
-description: Creates or updates the per-change test plan artifact derived from the change spec, implementation plan, and repository testing strategy.
+description: Author change test plans
 ---
 
 # Test Plan Writer

@@ -1,6 +1,6 @@
 ---
 name: fixer
-description: Debugs, investigates, and resolves build/test failures through iterative hypothesis-driven diagnosis and minimal safe fixes.
+description: Debug and resolve build/test failures
 ---
 
 # Fixer

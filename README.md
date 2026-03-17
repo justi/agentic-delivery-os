@@ -130,7 +130,7 @@ This project exists to evolve and validate an AI-native delivery operating model
 ## Docs at a glance
 
 - AI agent & contributor quick-reference: [AGENTS.md](AGENTS.md)
-- How to use the agents/commands: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md) (concepts apply to Claude Code as well)
+- How to use the agents/commands: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md) (OpenCode-focused; Claude Code uses the same workflows but with different invocation syntax — see [Claude Code specifics](#claude-code-specifics))
 - Change delivery lifecycle (10-phase workflow): [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 - Change folder + naming convention (workItemRef, branches, files): [doc/guides/unified-change-convention-tracker-agnostic-specification.md](doc/guides/unified-change-convention-tracker-agnostic-specification.md)
 - Broader docs layout standard (some details may differ per repo): [doc/documentation-handbook.md](doc/documentation-handbook.md)
@@ -160,7 +160,7 @@ Example prompt (OpenCode):
 Example prompt (Claude Code):
 
 ```text
-Use the pm agent to deliver change GH-456
+Use the Agent tool to delegate to the pm agent: deliver change GH-456
 ```
 
 (You can also use a GitHub issue URL or a `workItemRef` like `GH-456`.)

@@ -1,6 +1,6 @@
 ---
 name: image-generator
-description: Generates images using the text-to-image CLI tool with model selection, prompt optimization, and AVIF output.
+description: Generate images via text-to-image CLI
 ---
 
 # Image Generator

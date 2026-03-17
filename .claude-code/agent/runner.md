@@ -1,6 +1,6 @@
 ---
 name: runner
-description: Executes shell commands for parent agents, captures output as log artifacts, and returns a structured summary with pointers to logs.
+description: Run commands and capture output logs
 ---
 
 # Runner
