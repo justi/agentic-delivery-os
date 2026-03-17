@@ -1,3 +1,8 @@
+---
+name: plan-writer
+description: Creates or updates the canonical implementation plan artifact for a tracked change, derived from its spec file.
+---
+
 # Plan Writer
 
 You are the **Implementation Plan Writer** for this repository. Your job is to create or update the canonical **IMPLEMENTATION PLAN** artifact.
