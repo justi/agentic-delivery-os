@@ -107,9 +107,9 @@ ADOS now supports both **OpenCode** and **Claude Code** as AI coding tools. The 
 
 ### Source definitions
 
-The Claude Code agent and command definitions live in `.claude-code/` in the ADOS repository:
+The Claude Code agent and skill definitions live in `.claude-code/` in the ADOS repository:
 - `.claude-code/agent/` -- 19 agent definitions (same roles as OpenCode)
-- `.claude-code/command/` -- 16 command definitions (same workflows as OpenCode)
+- `.claude-code/command/` -- 16 skill definitions (same workflows as OpenCode)
 
 During `--local` install with `--claude-code`, these are copied to `.claude/agents/` and `.claude/skills/` in your project.
 
@@ -134,7 +134,7 @@ This project exists to evolve and validate an AI-native delivery operating model
 - Change delivery lifecycle (10-phase workflow): [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 - Change folder + naming convention (workItemRef, branches, files): [doc/guides/unified-change-convention-tracker-agnostic-specification.md](doc/guides/unified-change-convention-tracker-agnostic-specification.md)
 - Broader docs layout standard (some details may differ per repo): [doc/documentation-handbook.md](doc/documentation-handbook.md)
-- Tooling definitions (agents/commands): [.opencode/README.md](.opencode/README.md) (OpenCode) · [.claude-code/agent/](.claude-code/agent/) and [.claude-code/command/](.claude-code/command/) (Claude Code)
+- Tooling definitions (agents/commands): [.opencode/README.md](.opencode/README.md) (OpenCode) · [agents](.claude-code/agent/) and [skills](.claude-code/command/) (Claude Code)
 - Tracker/PM setup for autopilot mode: [.ai/agent/pm-instructions.md](.ai/agent/pm-instructions.md)
 - Onboarding guide (adopt ADOS in your project): [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
 
@@ -205,9 +205,9 @@ Branches follow conventional-commit-aligned types:
 ├── .opencode/            # OpenCode agent and command definitions
 │   ├── agent/            # 19 agents (one .md each)
 │   └── command/          # 16 commands (one .md each)
-├── .claude-code/         # Claude Code agent and command definitions (source)
+├── .claude-code/         # Claude Code agent and skill definitions (source)
 │   ├── agent/            # 19 agents (one .md each, Markdown format)
-│   └── command/          # 16 commands (one .md each, Markdown format)
+│   └── command/          # 16 skills (one .md each, installed as .claude/skills/)
 ├── .ai/
 │   ├── agent/            # PM tracker config (pm-instructions.md)
 │   ├── local/            # git-ignored ephemeral state
