@@ -22,7 +22,7 @@ Turn AI from "chat assistance" into a repeatable, auditable delivery system:
 
 ticket -> spec -> plan -> test plan -> code -> [/review](.opencode/command/review.md) -> [/sync-docs](.opencode/command/sync-docs.md) -> [/check](.opencode/command/check.md) -> [/pr](.opencode/command/pr.md) -> release
 
-This repo is a practical reference implementation of a spec-driven workflow using OpenCode:
+This repo is a practical reference implementation of a spec-driven workflow using [OpenCode](https://opencode.ai) or [Claude Code](https://claude.com/claude-code):
 
 - Artifacts are first-class (versioned in Git), not trapped in chats.
 - Deterministic quality gates define "done".
@@ -130,11 +130,11 @@ This project exists to evolve and validate an AI-native delivery operating model
 ## Docs at a glance
 
 - AI agent & contributor quick-reference: [AGENTS.md](AGENTS.md)
-- How to use the agents/commands: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md)
+- How to use the agents/commands: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md) (applies to both OpenCode and Claude Code)
 - Change delivery lifecycle (10-phase workflow): [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 - Change folder + naming convention (workItemRef, branches, files): [doc/guides/unified-change-convention-tracker-agnostic-specification.md](doc/guides/unified-change-convention-tracker-agnostic-specification.md)
 - Broader docs layout standard (some details may differ per repo): [doc/documentation-handbook.md](doc/documentation-handbook.md)
-- Tooling definitions (agents/commands): [.opencode/README.md](.opencode/README.md)
+- Tooling definitions (agents/commands): [.opencode/README.md](.opencode/README.md) (OpenCode) · [.claude-code/](.claude-code/) (Claude Code)
 - Tracker/PM setup for autopilot mode: [.ai/agent/pm-instructions.md](.ai/agent/pm-instructions.md)
 - Onboarding guide (adopt ADOS in your project): [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
 
@@ -233,10 +233,15 @@ Branches follow conventional-commit-aligned types:
 
 Open-source. See [LICENSE](LICENSE).
 
-## Author
+## Authors
 
 Maintained by Juliusz Ćwiąkalski. If you find this useful, follow me or drop by my homepage (blog + newsletter):
 
 - LinkedIn: [@juliusz-cwiakalski](https://www.linkedin.com/in/juliusz-cwiakalski/)
 - X: [@cwiakalski](https://x.com/cwiakalski)
 - Website (blog + newsletter): https://www.cwiakalski.com
+
+**Justyna Wojtczak** — Claude Code support
+
+- GitHub: [@justi](https://github.com/justi)
+- Website: https://justynawojtczak.com
