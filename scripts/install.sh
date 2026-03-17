@@ -449,23 +449,22 @@ install_claude_code_local() {
       local skill_dir="${skills_base}/${cmd_name}"
       ensure_dir "${skill_dir}" "skills/${cmd_name}"
 
-      # Extract first meaningful line as description
+      # Extract first meaningful line as description and escape double quotes for YAML
       local desc
       desc="$(grep -m1 -E '^[A-Z].*\.' "${cmd_file}" 2>/dev/null | head -c 100 || echo "ADOS skill")"
+      desc="${desc//\"/\\\"}"
 
-      # Create SKILL.md with frontmatter
-      local skill_file="${skill_dir}/SKILL.md"
-      if [[ ! -f "${skill_file}" ]] || [[ "${FORCE}" == "true" ]]; then
-        {
-          printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
-          cat "${cmd_file}"
-        } > "${skill_file}"
-        log_info "add    skills/${cmd_name}/SKILL.md"
-        ((_added++)) || true
-      else
-        log_debug "skip   skills/${cmd_name}/SKILL.md (exists)"
-        ((_unchanged++)) || true
-      fi
+      # Generate SKILL.md to a temp file, then use copy_updatable_file for
+      # consistent DRY_RUN, diff, and idempotent update behaviour
+      local tmp_skill
+      tmp_skill="$(mktemp)"
+      {
+        printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
+        cat "${cmd_file}"
+      } > "${tmp_skill}"
+
+      copy_updatable_file "${tmp_skill}" "${skill_dir}/SKILL.md" "skills/${cmd_name}/SKILL.md"
+      rm -f "${tmp_skill}"
     done
   else
     log_warn "Claude Code command source not found: ${cc_command_src}"
