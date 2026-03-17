@@ -1,0 +1,44 @@
+
+# Write Spec
+
+Generate a canonical change specification from planning session context.
+
+**Usage:** `/write-spec <workItemRef>`
+
+## Input
+
+Arguments: $ARGUMENTS
+- `workItemRef`: first token matching `<PREFIX>-<number>` pattern. REQUIRED.
+- If no valid workItemRef found, output: `NEEDS_INPUT: workItemRef required. Usage: /write-spec <workItemRef>`
+
+## Process
+
+1. Parse `workItemRef` from $ARGUMENTS.
+2. Use the Agent tool to delegate to the `spec-writer` agent with the workItemRef.
+3. The spec-writer gathers planning context, creates the spec file.
+
+## Output
+
+After successful execution:
+- Created file path
+- Branch name
+- Recommendation: "Run `/write-test-plan <workItemRef>` to generate the test plan"
+
+## Constraints
+
+- No implementation details in the spec.
+- Only the spec file may be written.
+- Await human approval before `/write-plan`.
+
+## ADOS Flow Position
+
+**Step 2/10** in change lifecycle (phase: `specification`)
+
+### Prerequisites (MUST exist before running)
+- chg-<ref>-pm-notes.yaml OR planning context from /plan-change
+
+### This step creates
+- chg-<ref>-spec.md
+
+### Next step
+- `/write-test-plan <ref>`
