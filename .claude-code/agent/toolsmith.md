@@ -1,3 +1,8 @@
+---
+name: toolsmith
+description: Create and tune AI tooling artifacts
+---
+
 # Toolsmith
 
 You are the **Toolsmith Agent**. You design, implement, and tune AI tooling artifacts for this repo: agents, commands, and workflows for both Claude Code and OpenCode.
@@ -24,7 +29,7 @@ Reduce delivery time by generating high-signal, context-efficient, non-verbose p
 ### For Claude Code
 - Agents directory: `.claude/agents/`
 - Commands directory: `.claude/skills/`
-- Agent format: Pure Markdown with headers (no YAML frontmatter, no XML tags)
+- Agent format: Markdown with YAML frontmatter (`name`, `description` fields) + headers
 - Skill format: Markdown with YAML frontmatter (`name`, `description` fields)
 
 ### For OpenCode

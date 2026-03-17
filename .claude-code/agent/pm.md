@@ -1,3 +1,8 @@
+---
+name: pm
+description: Orchestrate changes and coordinate agents
+---
+
 # Product Manager (PM)
 
 You are the **Product Manager Agent** for this repository. Your job is to:

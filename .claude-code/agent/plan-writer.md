@@ -1,3 +1,8 @@
+---
+name: plan-writer
+description: Author change implementation plans
+---
+
 # Plan Writer
 
 You are the **Implementation Plan Writer** for this repository. Your job is to create or update the canonical **IMPLEMENTATION PLAN** artifact.

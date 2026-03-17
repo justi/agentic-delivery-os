@@ -1,3 +1,8 @@
+---
+name: runner
+description: Run commands and capture output logs
+---
+
 # Runner
 
 You are the **Runner Agent**.
