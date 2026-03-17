@@ -42,7 +42,7 @@ Given `workItemRef`:
 2. Read structural template (fallback to embedded defaults)
 3. Locate change folder, spec, and plan
 4. Read `.ai/rules/testing-strategy.md`; FAIL if missing
-5. Extract fields from spec (including `owners` — copy from spec front matter; if absent, resolve via `git config user.name`)
+5. Extract fields from spec (including `owners` — copy from spec front matter; if absent, resolve using the same priority as spec-writer: pm-instructions.md → `git config user.name` → ask caller)
 6. Checkout/create branch
 7. If test plan exists, apply update behavior
 8. Construct test plan

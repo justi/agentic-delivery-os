@@ -51,7 +51,7 @@ YAML front matter MUST precede `# CHANGE SPECIFICATION` with fields: change.ref,
 ### Resolving `owners`
 
 To populate the `owners` field, use this priority order:
-1. Check `.ai/agent/pm-instructions.md` for an `owner:` field
+1. Check `.ai/agent/pm-instructions.md` for an owner value (may appear as YAML `owner:` or Markdown `**Owner**:` — parse either format)
 2. Run `git config user.name` to get the current user's name
 3. If neither is available, ask the caller
 
