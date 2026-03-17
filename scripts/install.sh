@@ -459,7 +459,9 @@ install_claude_code_local() {
 
       # Extract first meaningful line as description and escape double quotes for YAML
       local desc
-      desc="$(grep -m1 -E '^[A-Z].*\.' "${cmd_file}" 2>/dev/null | head -c 100 || echo "ADOS skill")"
+      desc="$(grep -m1 -E '^[A-Z].*\.' "${cmd_file}" 2>/dev/null || true)"
+      desc="${desc:0:100}"
+      [[ -z "${desc}" ]] && desc="ADOS skill"
       desc="${desc//\"/\\\"}"
 
       # Generate SKILL.md to a project-local temp file, then use
