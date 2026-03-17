@@ -83,7 +83,7 @@ change:
 Validation:
 
 - `change.ref` == provided `workItemRef`
-- `owners` ≥ 1 entry
+- `owners` ≥ 1 entry — resolve from: (1) `.ai/agent/pm-instructions.md` owner value (may appear as YAML `owner:` or Markdown `**Owner**:` — parse either format), (2) `git config user.name`, (3) ask caller. NEVER infer from template copyright headers.
 - `status` must be "Proposed" on creation
   </front_matter_rules>
 

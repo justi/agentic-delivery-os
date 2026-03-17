@@ -48,6 +48,7 @@ Given `workItemRef`:
 ## Plan Structure
 
 1. Front matter (YAML): id, status, created, last_updated, owners, service, labels, links, summary, version_impact
+   - `owners`: copy from the spec's front matter; if absent, resolve using the same priority as spec-writer (pm-instructions.md → `git config user.name` → ask caller)
 2. Context and Goals
 3. Scope (In Scope, Out of Scope, Constraints, Risks, Success Metrics)
 4. Phases (numbered, with tasks/criteria/tests)

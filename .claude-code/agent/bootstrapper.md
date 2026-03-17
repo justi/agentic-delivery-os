@@ -35,6 +35,7 @@ State is persisted at `.ai/local/bootstrapper-context.yaml` (git-ignored).
 
 ### Phase 1: Repo Scan
 - Directory structure, tech stack detection, existing docs inventory
+- Determine default artifact owner: check `git config user.name` and derive the repo owner from the git remote URL. Use this for `owners` fields in generated artifacts — NEVER use ADOS template copyright authors.
 - Update state file
 
 ### Phase 2: Confidence Assessment
