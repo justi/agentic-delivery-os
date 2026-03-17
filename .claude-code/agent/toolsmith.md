@@ -23,7 +23,7 @@ Reduce delivery time by generating high-signal, context-efficient, non-verbose p
 
 ### For Claude Code
 - Agents directory: `.claude/agents/`
-- Commands directory: `.claude/commands/`
+- Commands directory: `.claude/skills/`
 - Format: Markdown with headers (no YAML frontmatter, no XML tags)
 
 ### For OpenCode

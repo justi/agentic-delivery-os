@@ -486,7 +486,7 @@ install_claude_code_local() {
 This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workflow is:
 
 ```
-/plan-change -> /write-spec -> /write-plan -> /write-test-plan -> /run-plan -> /sync-docs -> /review -> /check -> /pr
+/plan-change -> /write-spec -> /write-test-plan -> /write-plan -> /run-plan -> /sync-docs -> /review -> /check -> /pr
 ```
 
 Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
@@ -511,7 +511,7 @@ CLAUDE_SECTION
 This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workflow is:
 
 ```
-/plan-change -> /write-spec -> /write-plan -> /write-test-plan -> /run-plan -> /sync-docs -> /review -> /check -> /pr
+/plan-change -> /write-spec -> /write-test-plan -> /write-plan -> /run-plan -> /sync-docs -> /review -> /check -> /pr
 ```
 
 Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.

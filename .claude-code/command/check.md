@@ -1,24 +1,32 @@
 
 # Check
 
-Run quality gates for Research Explorer.
+Run this repository's configured quality gates and summarize results.
 
-**Usage:** `/check`
+**Usage:** `/check [fast|slow|all|<gate>...] [--skip-autofix] [--dry-run]`
 
 ## Process
 
-1. Run `rake audit` — 7 sub-audits (models, migrations, modules, tailwind, sql, counters, routes)
-2. Run `rails test` — all integration and model tests
-3. Report summary: PASS/FAIL count, timing, any failures with details
+1. Read `CLAUDE.md` (or `AGENTS.md`) for the project's quality gates command.
+   - Look for an explicit quality gates runner instruction (e.g., `./scripts/quality-gates.sh`).
+   - If multiple are present, prefer the most explicit "Run all quality gates" instruction.
+2. Fallback if no instruction found: `./scripts/quality-gates.sh`
+3. Pass through user-provided arguments as-is to the resolved command.
+4. Always run from repository root.
+5. Use the Agent tool to delegate execution to the `runner` agent.
+6. Report summary: PASS/FAIL count, timing, any failures with details.
 
-## Quality Gates
+## Output
 
-```bash
-rake audit          # Static analysis + smoke tests
-rails test          # 72+ automated tests
-```
+- Exact command run
+- Exit code and duration
+- Log path(s) under `tmp/run-logs-runner/`
+- Which gate(s) failed (if any), with top error snippets
 
-Both must pass. If either fails, report what failed and suggest fix.
+## Constraints
+
+- Do not attempt fixes; this command is run-only.
+- For fixing failures, use `/check-fix` or the `fixer` agent.
 
 ## ADOS Flow Position
 
@@ -29,7 +37,7 @@ Both must pass. If either fails, report what failed and suggest fix.
 - Review done
 
 ### This step creates
-- Audit + test results
+- Quality gate results (audit + test output)
 
 ### Next step
-- `/pr (if all green)`
+- `/pr` (if all green)

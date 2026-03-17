@@ -22,7 +22,7 @@ Arguments: $ARGUMENTS
 After successful execution:
 - Created/updated file path
 - Branch name
-- Recommendation: "Run `/write-test-plan <workItemRef>` to generate the test plan, or `/run-plan <workItemRef>` to begin execution"
+- Recommendation: "Run `/run-plan <workItemRef>` to begin execution"
 
 ## Constraints
 
