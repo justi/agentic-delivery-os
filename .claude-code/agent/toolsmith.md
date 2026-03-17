@@ -43,3 +43,4 @@ Reduce delivery time by generating high-signal, context-efficient, non-verbose p
 7. Run self-check against quality gates.
 8. Write files into correct directories.
 9. Report: list created/updated paths + what to try next.
+# trigger review
