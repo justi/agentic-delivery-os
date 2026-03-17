@@ -48,6 +48,15 @@ Folder structure:
 
 YAML front matter MUST precede `# CHANGE SPECIFICATION` with fields: change.ref, change.type, change.status (Proposed), change.slug, change.title, owners, service, labels, version_impact, audience, security_impact, risk_level, dependencies.
 
+### Resolving `owners`
+
+To populate the `owners` field, use this priority order:
+1. Check `.ai/agent/pm-instructions.md` for an `owner:` field
+2. Run `git config user.name` to get the current user's name
+3. If neither is available, ask the caller
+
+NEVER infer owner names from template copyright headers or ADOS source attributions.
+
 ## ID Conventions
 
 - `F-` (Functional Capability), `API-` (HTTP/REST Endpoint), `EVT-` (Event/Message), `DM-` (Data Model), `NFR-` (Non-Functional Requirement), `AC-` (Acceptance Criterion), `DEC-` (Decision Log), `RSK-` (Risk), `OQ-` (Open Question)
