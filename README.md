@@ -22,7 +22,7 @@ Turn AI from "chat assistance" into a repeatable, auditable delivery system:
 
 ticket -> spec -> plan -> test plan -> code -> [/review](.opencode/command/review.md) -> [/sync-docs](.opencode/command/sync-docs.md) -> [/check](.opencode/command/check.md) -> [/pr](.opencode/command/pr.md) -> release
 
-This repo is a practical reference implementation of a spec-driven workflow using [OpenCode](https://opencode.ai) or [Claude Code](https://claude.com/claude-code) (links below point to `.opencode/` as the canonical definitions; Claude Code equivalents live in `.claude-code/`):
+This repo is a practical reference implementation of a spec-driven workflow using [OpenCode](https://opencode.ai) or [Claude Code](https://claude.com/claude-code). OpenCode definitions live in `.opencode/`, Claude Code equivalents in `.claude-code/`; both are linked where applicable:
 
 - Artifacts are first-class (versioned in Git), not trapped in chats.
 - Deterministic quality gates define "done".
@@ -109,7 +109,7 @@ ADOS now supports both **OpenCode** and **Claude Code** as AI coding tools. The 
 
 The Claude Code agent and skill definitions live in `.claude-code/` in the ADOS repository:
 - `.claude-code/agent/` -- 19 agent definitions (same roles as OpenCode)
-- `.claude-code/command/` -- 16 skill definitions (same workflows as OpenCode)
+- `.claude-code/command/` -- 16 skill definitions (source dir is named `command/` for parity with OpenCode; the installer converts them to `.claude/skills/<name>/SKILL.md`)
 
 During `--local` install with `--claude-code`, these are copied to `.claude/agents/` and `.claude/skills/` in your project.
 
@@ -134,7 +134,7 @@ This project exists to evolve and validate an AI-native delivery operating model
 - Change delivery lifecycle (10-phase workflow): [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 - Change folder + naming convention (workItemRef, branches, files): [doc/guides/unified-change-convention-tracker-agnostic-specification.md](doc/guides/unified-change-convention-tracker-agnostic-specification.md)
 - Broader docs layout standard (some details may differ per repo): [doc/documentation-handbook.md](doc/documentation-handbook.md)
-- Tooling definitions (agents/commands): [.opencode/README.md](.opencode/README.md) (OpenCode) · [agents](.claude-code/agent/) and [skills](.claude-code/command/) (Claude Code)
+- Tooling definitions: [.opencode/README.md](.opencode/README.md) (OpenCode agents/commands) · [agents](.claude-code/agent/) and [skills](.claude-code/command/) (Claude Code)
 - Tracker/PM setup for autopilot mode: [.ai/agent/pm-instructions.md](.ai/agent/pm-instructions.md)
 - Onboarding guide (adopt ADOS in your project): [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
 
