@@ -671,7 +671,8 @@ resolve_source_dir() {
     local script_dir
     script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
     local candidate="${script_dir}/.."
-    if [[ -f "${candidate}/AGENTS.md" && -d "${candidate}/.opencode/agent" ]]; then
+    if [[ -f "${candidate}/AGENTS.md" && -d "${candidate}/.opencode/agent" ]] \
+       || [[ -f "${candidate}/AGENTS.md" && -d "${candidate}/.claude-code/agent" ]]; then
       printf '%s' "$(cd "${candidate}" && pwd -P)"
       return 0
     fi
@@ -845,9 +846,10 @@ do_local_install() {
       log_info "  1. Open this project in Claude Code"
       log_info "  2. Run /bootstrap to complete setup with AI-guided configuration"
       log_info "     The bootstrapper will detect your tracker, generate PM instructions,"
-      log_info "     and customize AGENTS.md for your project."
+      log_info "     and enrich CLAUDE.md with project context."
       log_info "  Agents installed to: .claude/agents/"
       log_info "  Commands installed to: .claude/skills/"
+      log_info "  Note: CLAUDE.md is the single bootstrap file (no AGENTS.md needed)."
     else
       log_info "  1. Open this project in OpenCode (https://opencode.ai)"
       log_info "  2. Run /bootstrap to complete setup with AI-guided configuration"

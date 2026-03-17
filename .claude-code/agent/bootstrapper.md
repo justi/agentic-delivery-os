@@ -42,7 +42,8 @@ State is persisted at `.ai/local/bootstrapper-context.yaml` (git-ignored).
 - Never record secrets or credentials
 
 ### Phase 4: Draft Generation
-- Mandatory: AGENTS.md, `.ai/agent/pm-instructions.md`, `doc/documentation-handbook.md`
+- Mandatory: Enrich `CLAUDE.md` with project context (tech stack, agents, skills, conventions, repo structure, key references), `.ai/agent/pm-instructions.md`, `doc/documentation-handbook.md`
+- Note: In Claude Code projects, `CLAUDE.md` is the single bootstrap file. Do NOT create a separate `AGENTS.md` — all project context goes into `CLAUDE.md`.
 - Recommended: Feature specs, overview docs
 - Use templates from `doc/templates/`
 
