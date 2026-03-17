@@ -10,7 +10,7 @@ Run this repository's configured quality gates and summarize results.
 1. Read `CLAUDE.md` (or `AGENTS.md`) for the project's quality gates command.
    - Look for an explicit quality gates runner instruction (e.g., `./scripts/quality-gates.sh`).
    - If multiple are present, prefer the most explicit "Run all quality gates" instruction.
-2. Fallback if no instruction found: `./scripts/quality-gates.sh`
+2. If no quality gates command is found, report an error and instruct the user to define one in `CLAUDE.md` or `AGENTS.md`.
 3. Pass through user-provided arguments as-is to the resolved command.
 4. Always run from repository root.
 5. Use the Agent tool to delegate execution to the `runner` agent.

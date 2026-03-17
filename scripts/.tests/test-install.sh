@@ -181,6 +181,13 @@ create_mock_ados_source() {
   printf '# Change Spec Template\n' > "${base}/doc/templates/change-spec-template.md"
   printf '# Feature Spec Template\n' > "${base}/doc/templates/feature-spec-template.md"
 
+  # Claude Code agent files
+  mkdir -p "${base}/.claude-code/agent" "${base}/.claude-code/command"
+  printf '# pm agent (Claude Code)\n' > "${base}/.claude-code/agent/pm.md"
+  printf '# coder agent (Claude Code)\n' > "${base}/.claude-code/agent/coder.md"
+  printf 'Run quality gates for the project.\n# check command\n' > "${base}/.claude-code/command/check.md"
+  printf 'Generate a plan.\n# write-plan command\n' > "${base}/.claude-code/command/write-plan.md"
+
   printf '%s' "${base}"
 }
 
@@ -671,7 +678,7 @@ test_version_flag() {
   stdout="$("${SCRIPT_DIR}/install.sh" --version 2>&1)" || exit_code=$?
   assert_exit_code 0 "${exit_code}" "Version should succeed"
   assert_contains "${stdout}" "ados-install" "Should show app name"
-  assert_contains "${stdout}" "2.0.0" "Should show version"
+  assert_contains "${stdout}" "3.0.0" "Should show version"
 }
 
 test_unknown_option() {
@@ -928,6 +935,182 @@ test_auto_fetch_skips_explicit_source() {
 }
 
 # ============================================================================
+# UNIT TESTS — detect_ai_tool
+# ============================================================================
+
+test_detect_ai_tool_flag_claude_code() {
+  AI_TOOL="claude-code"
+  detect_ai_tool
+  assert_eq "claude-code" "${AI_TOOL}" "Should keep flag value"
+  AI_TOOL=""
+}
+
+test_detect_ai_tool_flag_opencode() {
+  AI_TOOL="opencode"
+  detect_ai_tool
+  assert_eq "opencode" "${AI_TOOL}" "Should keep flag value"
+  AI_TOOL=""
+}
+
+test_detect_ai_tool_auto_claude() {
+  local project_dir="${_test_tmpdir}/project-claude"
+  mkdir -p "${project_dir}/.claude"
+  (
+    cd "${project_dir}"
+    AI_TOOL=""
+    detect_ai_tool
+    assert_eq "claude-code" "${AI_TOOL}" "Should auto-detect Claude Code"
+  )
+}
+
+test_detect_ai_tool_auto_opencode() {
+  local project_dir="${_test_tmpdir}/project-oc"
+  mkdir -p "${project_dir}/.opencode"
+  (
+    cd "${project_dir}"
+    AI_TOOL=""
+    detect_ai_tool
+    assert_eq "opencode" "${AI_TOOL}" "Should auto-detect OpenCode"
+  )
+}
+
+test_detect_ai_tool_non_interactive_neither() {
+  local project_dir="${_test_tmpdir}/project-neither"
+  mkdir -p "${project_dir}"
+  # detect_ai_tool checks [[ -t 0 ]] — redirect stdin from /dev/null to simulate non-interactive
+  (
+    cd "${project_dir}"
+    AI_TOOL=""
+    detect_ai_tool < /dev/null
+    assert_eq "opencode" "${AI_TOOL}" "Should default to opencode in non-interactive mode"
+  )
+}
+
+# ============================================================================
+# INTEGRATION TESTS — Claude Code local install
+# ============================================================================
+
+test_claude_code_local_installs_agents() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false AI_TOOL="claude-code"
+    reset_counters
+    install_claude_code_local "${source_dir}"
+  )
+
+  assert_file_exists "${project_dir}/.claude/agents/pm.md" "pm agent should be installed"
+  assert_file_exists "${project_dir}/.claude/agents/coder.md" "coder agent should be installed"
+}
+
+test_claude_code_local_installs_skills() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false AI_TOOL="claude-code"
+    reset_counters
+    install_claude_code_local "${source_dir}"
+  )
+
+  assert_file_exists "${project_dir}/.claude/skills/check/SKILL.md" "check skill should be installed"
+  assert_file_exists "${project_dir}/.claude/skills/write-plan/SKILL.md" "write-plan skill should be installed"
+
+  # Verify SKILL.md has YAML frontmatter
+  local content
+  content="$(head -1 "${project_dir}/.claude/skills/check/SKILL.md")"
+  assert_eq "---" "${content}" "SKILL.md should start with YAML frontmatter"
+}
+
+test_claude_code_local_creates_claude_md() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false AI_TOOL="claude-code"
+    reset_counters
+    install_claude_code_local "${source_dir}"
+  )
+
+  assert_file_exists "${project_dir}/CLAUDE.md" "CLAUDE.md should be created"
+  local content
+  content="$(cat "${project_dir}/CLAUDE.md")"
+  assert_contains "${content}" "ADOS Workflow" "Should contain ADOS section"
+}
+
+test_claude_code_local_appends_to_existing_claude_md() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  # Create existing CLAUDE.md
+  printf '# My Project\n\nSome existing content.\n' > "${project_dir}/CLAUDE.md"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false AI_TOOL="claude-code"
+    reset_counters
+    install_claude_code_local "${source_dir}"
+  )
+
+  local content
+  content="$(cat "${project_dir}/CLAUDE.md")"
+  assert_contains "${content}" "# My Project" "Should preserve existing content"
+  assert_contains "${content}" "ADOS Workflow" "Should append ADOS section"
+}
+
+test_claude_code_local_skips_existing_ados_section() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  printf '# My Project\n\n## ADOS Workflow\n\nAlready here.\n' > "${project_dir}/CLAUDE.md"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=false VERBOSE=false AI_TOOL="claude-code"
+    reset_counters
+    install_claude_code_local "${source_dir}"
+  )
+
+  local content
+  content="$(cat "${project_dir}/CLAUDE.md")"
+  assert_contains "${content}" "Already here." "Should not overwrite existing ADOS section"
+}
+
+test_claude_code_local_dry_run_no_files() {
+  local source_dir
+  source_dir="$(create_mock_ados_source "${_test_tmpdir}/ados-source")"
+  local project_dir
+  project_dir="$(create_mock_project "${_test_tmpdir}/project")"
+
+  (
+    cd "${project_dir}"
+    INSTALL_MODE="local" FORCE=false DRY_RUN=true VERBOSE=false AI_TOOL="claude-code"
+    reset_counters
+    install_claude_code_local "${source_dir}"
+  )
+
+  # No skill files should exist in dry-run mode
+  [[ ! -f "${project_dir}/.claude/skills/check/SKILL.md" ]] || {
+    printf '  SKILL.md should not exist in dry-run mode\n' >&2
+    return 1
+  }
+}
+
+# ============================================================================
 # RUN TESTS
 # ============================================================================
 main() {
@@ -995,6 +1178,21 @@ main() {
   # Auto-fetch tests
   run_test "auto-fetch skips with --no-fetch" test_auto_fetch_skips_with_no_fetch
   run_test "auto-fetch skips with explicit ADOS_SOURCE_DIR" test_auto_fetch_skips_explicit_source
+
+  # AI tool detection tests
+  run_test "detect_ai_tool keeps --claude-code flag" test_detect_ai_tool_flag_claude_code
+  run_test "detect_ai_tool keeps --opencode flag" test_detect_ai_tool_flag_opencode
+  run_test "detect_ai_tool auto-detects .claude/" test_detect_ai_tool_auto_claude
+  run_test "detect_ai_tool auto-detects .opencode/" test_detect_ai_tool_auto_opencode
+  run_test "detect_ai_tool defaults to opencode in non-interactive" test_detect_ai_tool_non_interactive_neither
+
+  # Claude Code local install tests
+  run_test "Claude Code local install creates agents" test_claude_code_local_installs_agents
+  run_test "Claude Code local install creates skills with frontmatter" test_claude_code_local_installs_skills
+  run_test "Claude Code local install creates CLAUDE.md" test_claude_code_local_creates_claude_md
+  run_test "Claude Code local install appends to existing CLAUDE.md" test_claude_code_local_appends_to_existing_claude_md
+  run_test "Claude Code local install skips existing ADOS section" test_claude_code_local_skips_existing_ados_section
+  run_test "Claude Code local install dry-run creates no files" test_claude_code_local_dry_run_no_files
 
   print_summary
 }

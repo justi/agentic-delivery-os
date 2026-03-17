@@ -469,7 +469,7 @@ install_claude_code_local() {
         log_info "[DRY-RUN] Would write skills/${cmd_name}/SKILL.md"
       else
         local tmp_skill
-        tmp_skill="$(mktemp)"
+        tmp_skill="$(mktemp "${TMPDIR:-/tmp}/ados-skill.XXXXXX")"
         {
           printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
           cat "${cmd_file}"
@@ -788,7 +788,7 @@ install_local_files() {
 
   # --- Project-specific files (preserve local edits) ---
   local file
-  for file in "${ADOS_PROJECT_FILES[@]}"; do
+  for file in ${ADOS_PROJECT_FILES[@]+"${ADOS_PROJECT_FILES[@]}"}; do
     copy_file_with_diff "${source_dir}/${file}" "${file}" "${file}"
   done
 
@@ -904,8 +904,9 @@ Options:
   -i, --interactive      Show diff and prompt before overwriting changed files
       --no-fetch         Skip auto-fetching latest ADOS source before local install
       --allow-non-root   Allow local install in a subdirectory (for monorepo subprojects)
-      --claude-code      Force installation for Claude Code (--local only; agents to .claude/agents/)
-      --opencode         Force installation for OpenCode (agents to .opencode/agent/)
+      --claude-code      Force Claude Code mode (--local installs to .claude/agents/ and .claude/skills/;
+                         --global updates ADOS repo only — no global agent location for Claude Code)
+      --opencode         Force OpenCode mode (skip Claude Code detection/prompt)
 
 File handling (--local mode):
   Updatable files (guides, templates, handbook) are auto-updated to match upstream.
