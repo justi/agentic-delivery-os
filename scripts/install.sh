@@ -476,7 +476,8 @@ install_claude_code_local() {
         {
           printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
           # Strip original YAML frontmatter (first --- ... --- block) to avoid duplication
-          awk '/^---$/{fm++; next} fm>=2{print}' "${cmd_file}"
+          # Only removes the opening block; later --- lines (section separators) are preserved
+          awk 'NR==1 && /^---$/{in_fm=1; next} in_fm && /^---$/{in_fm=0; next} !in_fm{print}' "${cmd_file}"
         } > "${tmp_skill}"
 
         copy_updatable_file "${tmp_skill}" "${skill_dir}/SKILL.md" "skills/${cmd_name}/SKILL.md"
