@@ -1,17 +1,32 @@
-# Commit
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/commit.md
+#
+description: Delegate a single Conventional Commit.
+agent: committer
+subtask: true
+model: anthropic/claude-sonnet-4-6
+#model: github-copilot/gpt-5-mini
+#model: github-copilot/gpt-4.1
+#model: github-copilot/grok-code-fast-1
+---
 
-Trigger the `committer` agent to create exactly one Conventional Commit.
+<purpose>Trigger the @committer agent to create exactly one Conventional Commit.</purpose>
 
-**Usage:** `/commit [intent message]`
+<inputs>
+  <optional>
+    <intent>$ARGUMENTS</intent>
+  </optional>
+</inputs>
 
-## Input
+<instructions>
+  <rule>Invoke `@committer` now.</rule>
+  <rule>Do not restate its workflow; do not add extra commentary.</rule>
+  <rule>If blocked, surface the agent's message without alteration.</rule>
+  <rule>If successful, return exactly the agent's output.</rule>
+</instructions>
 
-Arguments: $ARGUMENTS (optional commit intent hint)
-
-## Process
-
-1. Use the Agent tool to delegate to the `committer` agent immediately.
-2. Pass $ARGUMENTS as the commit intent hint.
-3. Do not restate the committer's workflow; do not add extra commentary.
-4. If blocked, surface the agent's message without alteration.
-5. If successful, return exactly the agent's output.
+<intent>
+$ARGUMENTS
+</intent>
