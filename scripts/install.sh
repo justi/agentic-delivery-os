@@ -476,7 +476,8 @@ install_claude_code_local() {
         {
           printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
           # Strip original YAML frontmatter (first --- ... --- block) to avoid duplication
-          awk 'BEGIN{fm=0; skip=0} /^---$/{fm++; if(fm<=2){skip=1; next}} {if(fm>=2 || !skip) print; skip=0}' "${cmd_file}"
+          # Only removes the opening block; later --- lines (section separators) are preserved
+          awk 'NR==1 && /^---$/{in_fm=1; next} in_fm && /^---$/{in_fm=0; next} !in_fm{print}' "${cmd_file}"
         } > "${tmp_skill}"
 
         copy_updatable_file "${tmp_skill}" "${skill_dir}/SKILL.md" "skills/${cmd_name}/SKILL.md"
@@ -497,7 +498,7 @@ install_claude_code_local() {
       else
         cat >> "${claude_md}" << 'CLAUDE_SECTION'
 
-## Development Workflow (ADOS)
+## ADOS Workflow
 
 This repository uses the **Agentic Delivery OS (ADOS)** change lifecycle. All non-trivial changes MUST follow the structured workflow.
 
@@ -547,7 +548,7 @@ CLAUDE_SECTION
       cat > "${claude_md}" << 'CLAUDE_NEW'
 # Project Instructions
 
-## Development Workflow (ADOS)
+## ADOS Workflow
 
 This repository uses the **Agentic Delivery OS (ADOS)** change lifecycle. All non-trivial changes MUST follow the structured workflow.
 
