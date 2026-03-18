@@ -457,16 +457,17 @@ install_claude_code_local() {
       local skill_dir="${skills_base}/${cmd_name}"
       ensure_dir "${skill_dir}" "skills/${cmd_name}"
 
-      # Extract first meaningful line as description and escape double quotes for YAML
+      # Extract description from YAML frontmatter or first sentence
       local desc
-      desc="$(grep -m1 -E '^[A-Z].*\.' "${cmd_file}" 2>/dev/null || true)"
+      desc="$(sed -n '/^---$/,/^---$/{ /^description:/{ s/^description: *//; s/^["'"'"']//; s/["'"'"']$//; p; q; } }' "${cmd_file}" 2>/dev/null || true)"
+      if [[ -z "${desc}" ]]; then
+        desc="$(grep -m1 -E '^[A-Z].*\.' "${cmd_file}" 2>/dev/null || true)"
+      fi
       desc="${desc:0:100}"
       [[ -z "${desc}" ]] && desc="ADOS skill"
       desc="${desc//\"/\\\"}"
 
-      # Generate SKILL.md to a project-local temp file, then use
-      # copy_updatable_file for consistent DRY_RUN, diff, and idempotent
-      # update behaviour
+      # Generate SKILL.md: new frontmatter + command body (stripping original frontmatter)
       if [[ "${DRY_RUN}" == "true" ]]; then
         log_info "[DRY-RUN] Would write skills/${cmd_name}/SKILL.md"
       else
@@ -474,7 +475,8 @@ install_claude_code_local() {
         tmp_skill="$(mktemp "${TMPDIR:-/tmp}/ados-skill.XXXXXX")"
         {
           printf -- '---\nname: %s\ndescription: "%s"\n---\n\n' "${cmd_name}" "${desc}"
-          cat "${cmd_file}"
+          # Strip original YAML frontmatter (first --- ... --- block) to avoid duplication
+          awk 'BEGIN{fm=0; skip=0} /^---$/{fm++; if(fm<=2){skip=1; next}} {if(fm>=2 || !skip) print; skip=0}' "${cmd_file}"
         } > "${tmp_skill}"
 
         copy_updatable_file "${tmp_skill}" "${skill_dir}/SKILL.md" "skills/${cmd_name}/SKILL.md"
@@ -495,18 +497,42 @@ install_claude_code_local() {
       else
         cat >> "${claude_md}" << 'CLAUDE_SECTION'
 
-## ADOS Workflow
+## Development Workflow (ADOS)
 
-This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workflow is:
+This repository uses the **Agentic Delivery OS (ADOS)** change lifecycle. All non-trivial changes MUST follow the structured workflow.
+
+### Change Lifecycle Phases
+
+| Phase | Agent | What happens |
+|-------|-------|--------------|
+| 1. clarify_scope | `@pm` | Review ticket, cross-check against system spec |
+| 2. specification | `@spec-writer` | Create `chg-<ref>-spec.md` |
+| 3. test_planning | `@test-plan-writer` | Create `chg-<ref>-test-plan.md` |
+| 4. delivery_planning | `@plan-writer` | Create `chg-<ref>-plan.md` |
+| 5. delivery | `@coder` | Execute plan phases, commit per phase |
+| 6. system_spec_update | `@doc-syncer` | Reconcile `doc/spec/**` with implementation |
+| 7. review_fix | `@reviewer` | Audit code vs spec/plan |
+| 8. quality_gates | `@runner` | Build/test/lint |
+| 9. dod_check | `@pm` | Verify all phases complete, all AC satisfied |
+| 10. pr_creation | `@pr-manager` | Create PR, assign to human reviewer, STOP |
+
+### Gate Rules
+
+- **Do NOT skip phases.** Each phase gates the next.
+- **Specs must exist before plans.** Plans must exist before implementation.
+- **All changes require:** `chg-<ref>-spec.md`, `chg-<ref>-plan.md`, `chg-<ref>-test-plan.md`
+- **System spec must be updated** (`/sync-docs`) after delivery, before review.
+- **Quality gates must pass** before PR creation.
+
+### Quick Start
 
 ```
 /plan-change -> /write-spec -> /write-test-plan -> /write-plan -> /run-plan -> /sync-docs -> /review -> /check -> /pr
 ```
 
-Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
+Or autopilot: `@pm deliver change <workItemRef>`
 
-Agents are in `.claude/agents/` and commands in `.claude/skills/`.
-Phase 9 (`dod_check`) is handled by the PM agent before `/pr`.
+Agents are in `.claude/agents/` and skills in `.claude/skills/`.
 See `doc/guides/change-lifecycle.md` for the full 10-phase lifecycle.
 CLAUDE_SECTION
         log_info "add    ADOS workflow section to ${claude_md}"
@@ -521,18 +547,24 @@ CLAUDE_SECTION
       cat > "${claude_md}" << 'CLAUDE_NEW'
 # Project Instructions
 
-## ADOS Workflow
+## Development Workflow (ADOS)
 
-This project uses Agentic Delivery OS (ADOS) for spec-driven delivery. The workflow is:
+This repository uses the **Agentic Delivery OS (ADOS)** change lifecycle. All non-trivial changes MUST follow the structured workflow.
+
+### Gate Rules
+
+- **Do NOT skip phases.** Each phase gates the next.
+- **Specs must exist before plans.** Plans must exist before implementation.
+
+### Quick Start
 
 ```
 /plan-change -> /write-spec -> /write-test-plan -> /write-plan -> /run-plan -> /sync-docs -> /review -> /check -> /pr
 ```
 
-Or use autopilot: ask the `pm` agent to deliver a change by workItemRef.
+Or autopilot: `@pm deliver change <workItemRef>`
 
-Agents are in `.claude/agents/` and commands in `.claude/skills/`.
-Phase 9 (`dod_check`) is handled by the PM agent before `/pr`.
+Agents are in `.claude/agents/` and skills in `.claude/skills/`.
 See `doc/guides/change-lifecycle.md` for the full 10-phase lifecycle.
 CLAUDE_NEW
       log_info "create ${claude_md}"

@@ -22,7 +22,7 @@ Turn AI from "chat assistance" into a repeatable, auditable delivery system:
 
 ticket -> spec -> plan -> test plan -> code -> [/review](.opencode/command/review.md) -> [/sync-docs](.opencode/command/sync-docs.md) -> [/check](.opencode/command/check.md) -> [/pr](.opencode/command/pr.md) -> release
 
-This repo is a practical reference implementation of a spec-driven workflow using [OpenCode](https://opencode.ai) or [Claude Code](https://claude.com/claude-code). OpenCode definitions live in `.opencode/`, Claude Code equivalents in `.claude-code/`; both are linked where applicable:
+This repo is a practical reference implementation of a spec-driven workflow using OpenCode:
 
 - Artifacts are first-class (versioned in Git), not trapped in chats.
 - Deterministic quality gates define "done".
@@ -100,18 +100,18 @@ ADOS now supports both **OpenCode** and **Claude Code** as AI coding tools. The 
 |--------|----------|-------------|
 | Agent location | `.opencode/agent/` | `.claude/agents/` |
 | Command location | `.opencode/command/` | `.claude/skills/` |
-| Agent format | YAML frontmatter + XML tags | YAML frontmatter (`name`, `description`) + Markdown |
+| Agent format | YAML frontmatter + XML tags | Pure Markdown (headers + sections) |
 | Delegation | `@agent-name` references | "Use the Agent tool to delegate to the `agent-name` agent" |
 | Global install | `~/.config/opencode/` | Per-project only (no global agent location) |
 | Project config | `.opencode/README.md` | `CLAUDE.md` (ADOS section added automatically) |
 
 ### Source definitions
 
-The Claude Code agent and skill definitions live in `.claude-code/` in the ADOS repository:
+The Claude Code agent and command definitions live in `.claude-code/` in the ADOS repository:
 - `.claude-code/agent/` -- 19 agent definitions (same roles as OpenCode)
-- `.claude-code/command/` -- 16 skill definitions (source dir is named `command/` for parity with OpenCode; the installer converts them to `.claude/skills/<name>/SKILL.md`)
+- `.claude-code/command/` -- 16 command definitions (same workflows as OpenCode)
 
-During `--local` install with `--claude-code`, agents are copied to `.claude/agents/` and skill source files are wrapped into `.claude/skills/<name>/SKILL.md` format.
+During `--local` install with `--claude-code`, these are copied to `.claude/agents/` and `.claude/skills/` in your project.
 
 ## Benefits
 
@@ -130,11 +130,11 @@ This project exists to evolve and validate an AI-native delivery operating model
 ## Docs at a glance
 
 - AI agent & contributor quick-reference: [AGENTS.md](AGENTS.md)
-- How to use the agents/commands: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md) (OpenCode-focused; Claude Code uses the same workflows but with different invocation syntax — see [Claude Code specifics](#claude-code-specifics))
+- How to use the agents/commands: [doc/guides/opencode-agents-and-commands-guide.md](doc/guides/opencode-agents-and-commands-guide.md)
 - Change delivery lifecycle (10-phase workflow): [doc/guides/change-lifecycle.md](doc/guides/change-lifecycle.md)
 - Change folder + naming convention (workItemRef, branches, files): [doc/guides/unified-change-convention-tracker-agnostic-specification.md](doc/guides/unified-change-convention-tracker-agnostic-specification.md)
 - Broader docs layout standard (some details may differ per repo): [doc/documentation-handbook.md](doc/documentation-handbook.md)
-- Tooling definitions: [.opencode/README.md](.opencode/README.md) (OpenCode agents/commands) · [agents](.claude-code/agent/) and [skills](.claude-code/command/) (Claude Code)
+- Tooling definitions (agents/commands): [.opencode/README.md](.opencode/README.md)
 - Tracker/PM setup for autopilot mode: [.ai/agent/pm-instructions.md](.ai/agent/pm-instructions.md)
 - Onboarding guide (adopt ADOS in your project): [doc/guides/onboarding-existing-project.md](doc/guides/onboarding-existing-project.md)
 
@@ -149,18 +149,12 @@ OpenCode tooling (see [.opencode/README.md](.opencode/README.md) for the authori
 
 ## Autopilot (PM-driven)
 
-Autopilot mode is a high-level handoff: you provide a ticket reference (or URL) and the PM agent orchestrates the full delivery loop (including /review, /sync-docs, and /check), then creates/updates a PR/MR via /pr only when it's ready for human review.
+Autopilot mode is a high-level handoff: you provide a ticket reference (or URL) and the [@pm](.opencode/agent/pm.md) agent orchestrates the full delivery loop (including [/review](.opencode/command/review.md), [/sync-docs](.opencode/command/sync-docs.md), and [/check](.opencode/command/check.md)), then creates/updates a PR/MR via [/pr](.opencode/command/pr.md) only when it's ready for human review.
 
-Example prompt (OpenCode):
+Example prompt:
 
 ```text
 @pm deliver change GH-456
-```
-
-Example prompt (Claude Code):
-
-```text
-Use the Agent tool to delegate to the pm agent: deliver change GH-456
 ```
 
 (You can also use a GitHub issue URL or a `workItemRef` like `GH-456`.)
@@ -211,9 +205,9 @@ Branches follow conventional-commit-aligned types:
 ├── .opencode/            # OpenCode agent and command definitions
 │   ├── agent/            # 19 agents (one .md each)
 │   └── command/          # 16 commands (one .md each)
-├── .claude-code/         # Claude Code agent and skill definitions (source)
+├── .claude-code/         # Claude Code agent and command definitions (source)
 │   ├── agent/            # 19 agents (one .md each, Markdown format)
-│   └── command/          # 16 skills (one .md each, installed as .claude/skills/)
+│   └── command/          # 16 commands (one .md each, Markdown format)
 ├── .ai/
 │   ├── agent/            # PM tracker config (pm-instructions.md)
 │   ├── local/            # git-ignored ephemeral state
@@ -239,15 +233,10 @@ Branches follow conventional-commit-aligned types:
 
 Open-source. See [LICENSE](LICENSE).
 
-## Authors
+## Author
 
 Maintained by Juliusz Ćwiąkalski. If you find this useful, follow me or drop by my homepage (blog + newsletter):
 
 - LinkedIn: [@juliusz-cwiakalski](https://www.linkedin.com/in/juliusz-cwiakalski/)
 - X: [@cwiakalski](https://x.com/cwiakalski)
 - Website (blog + newsletter): https://www.cwiakalski.com
-
-**Justyna Wojtczak** — Claude Code support
-
-- GitHub: [@justi](https://github.com/justi)
-- Website: https://justynawojtczak.com

@@ -1,43 +1,61 @@
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/check.md
+#
+description: Run this repo's quality gates script and summarize results via the run-logs-runner.
+agent: runner
+model: github-copilot/gpt-4.1
+#model: github-copilot/grok-code-fast-1
+---
 
-# Check
+<purpose>
+Run the repository's configured quality gates command and return a concise, high-signal summary with log pointers.
 
-Run this repository's configured quality gates and summarize results.
+This command is intended for humans to invoke directly.
+Agents should preferentially call `@runner` directly for execution/log-heavy tasks.
+</purpose>
 
-**Usage:** `/check [fast|slow|all|<gate>...] [--skip-autofix] [--dry-run]`
+<command>
+User invocation:
+  /check [fast|slow|all|<gate>...] [--skip-autofix] [--dry-run]
 
-## Process
+Examples:
+/check # default (usually all)
+/check fast
+/check slow
+/check lint test
+</command>
 
-1. Read `CLAUDE.md` (or `AGENTS.md`) for the project's quality gates command.
-   - Look for an explicit quality gates runner instruction (e.g., `./scripts/quality-gates.sh`).
+<resolution>
+Determine which quality gates command to run:
+
+1. Read `AGENTS.md` and look for an explicit quality gates runner instruction.
+   - If `AGENTS.md` includes a command like `./scripts/quality-gates.sh` (preferred) or any referenced path/command for quality gates, use that.
    - If multiple are present, prefer the most explicit "Run all quality gates" instruction.
-2. If no quality gates command is found, report an error and instruct the user to define one in `CLAUDE.md` or `AGENTS.md`.
-3. Pass through user-provided arguments as-is to the resolved command.
+
+2. Default fallback if no instruction found:
+   - `./scripts/quality-gates.sh`
+
+3. Pass through user-provided arguments (fast/slow/all/<gate>...) as-is to the resolved command.
+
 4. Always run from repository root.
-5. Use the Agent tool to delegate execution to the `runner` agent.
-6. Report summary: PASS/FAIL count, timing, any failures with details.
+   </resolution>
 
-## Output
+<behavior>
+- Delegate actual execution to `@runner` (this command uses it as its agent).
+- Ensure logs are saved under `tmp/run-logs-runner/<YYYY-MM-DD>/` and that output includes:
+  - exact command
+  - exit code
+  - duration
+  - log path(s)
+  - top error snippets and tail excerpts
+- If quality gates fail, prominently surface:
+  - which gate(s) failed
+  - pointers mentioned by `quality-gates.sh` (e.g., `tmp/playwright-report`, `tmp/playwright-report/ai-failures.jsonl`)
+</behavior>
 
-- Exact command run
-- Exit code and duration
-- Log path(s) under `tmp/run-logs-runner/`
-- Which gate(s) failed (if any), with top error snippets
-
-## Constraints
-
+<notes>
 - Do not attempt fixes; this command is run-only.
-- For fixing failures, use `/check-fix` or the `fixer` agent.
-
-## ADOS Flow Position
-
-**Step 8/10** in change lifecycle (phase: `quality_gates`)
-
-### Prerequisites (MUST exist before running)
-- Code committed
-- Review done
-
-### This step creates
-- Quality gate results (audit + test output)
-
-### Next step
-- Phase 9 (`dod_check`) is handled by the PM agent, then `/pr` (phase 10)
+- For fixing failures, use `/check-fix` (@fixer) or invoke `@fixer` directly.
+</notes>

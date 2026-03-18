@@ -1,31 +1,28 @@
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/pr.md
+#
+description: Create/update PR/MR title and description.
+agent: pr-manager
+subtask: true
+model: github-copilot/gpt-4.1
+#model: github-copilot/grok-code-fast-1
+---
 
-# PR
+<purpose>Trigger the @pr-manager agent to create/update the PR/MR for the current branch (writes `tmp/pr/<branch>/description.md`).</purpose>
 
-Trigger the `pr-manager` agent to create/update the PR/MR for the current branch.
+<inputs>
+  <optional>
+    <args>$ARGUMENTS</args>
+  </optional>
+</inputs>
 
-**Usage:** `/pr [--base <branch>] [--github|--gitlab]`
+<instructions>
+  <rule>Invoke `@pr-manager` now with the provided args.</rule>
+  <rule>Do not restate its workflow; do not add extra commentary.</rule>
+  <rule>If blocked, surface the agent's message without alteration.</rule>
+  <rule>If successful, return exactly the agent's output.</rule>
+</instructions>
 
-## Input
-
-Arguments: $ARGUMENTS
-
-## Process
-
-1. Use the Agent tool to delegate to the `pr-manager` agent immediately with the provided args.
-2. Do not restate its workflow; do not add extra commentary.
-3. If blocked, surface the agent's message without alteration.
-4. If successful, return exactly the agent's output.
-
-## ADOS Flow Position
-
-**Step 10/10** in change lifecycle (phase: `pr_creation`)
-
-### Prerequisites (MUST exist before running)
-- Quality gates passed
-- All phases complete
-
-### This step creates
-- Pull request for human review
-
-### Next step
-- `STOP — wait for human review`
+<user_input>$ARGUMENTS</user_input>
