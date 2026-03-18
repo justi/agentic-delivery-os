@@ -1,16 +1,19 @@
-# Check and Fix
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/check-fix.md
+#
+description: Execute quality gates, fix any issues found, and create a single high-quality Conventional Commit summarizing all changes made.
+agent: fixer
+subtask: true
+model: deepseek/deepseek-reasoner
+#model: github-copilot/gpt-4.1
+#model: github-copilot/grok-code-fast-1
+---
 
-Run quality gates and fix any issues found.
-
-**Usage:** `/check-fix`
-
-## Process
-
-1. Run quality gates. If the project specifies fast quality gates, execute those first.
-2. If issues are found, systematically fix them.
-3. Once fast quality gates pass, proceed to run full quality gates and fix any remaining issues.
-4. Finally, use the Agent tool to delegate to the `committer` agent to create a single high-quality Conventional Commit summarizing all changes made.
-
-## Delegation
-
-This command delegates to the `fixer` agent for the core workflow. The fixer agent will use the `runner` agent for command execution and the `committer` agent for the final commit.
+Run quality gates and make sure everything is fine.
+If you find any issues then systematically fix them.
+If project specifies fast quality gates check the first execute only those.
+Once fast quality gates are passed then proceed to run the full quality gates and fix any issues found.
+Finally, create a single high-quality Conventional Commit with a clear message summarizing all changes made to fix the
+issues by delegating entirely to the @committer agent.

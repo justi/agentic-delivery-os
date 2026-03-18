@@ -1,44 +1,67 @@
+---
+# Copyright (c) 2025-2026 Juliusz Ćwiąkalski (https://www.cwiakalski.com | https://www.linkedin.com/in/juliusz-cwiakalski/ | https://x.com/cwiakalski)
+# MIT License - see LICENSE file for full terms
+source: https://github.com/juliusz-cwiakalski/agentic-delivery-os/blob/main/.opencode/command/write-spec.md
+#
+description: Generate canonical change specification
+agent: spec-writer
+subtask: true
+---
 
-# Write Spec
+<purpose>
+Generate a COMPLETE, implementation-agnostic CHANGE SPECIFICATION from planning session context.
 
-Generate a canonical change specification from planning session context.
+User invocation: `/write-spec <workItemRef>`
 
-**Usage:** `/write-spec <workItemRef>`
+Inputs other than `workItemRef` MUST be sourced from the active planning context; NOTHING may be invented.
+Resulting spec becomes authoritative input for `/write-plan`.
+</purpose>
 
-## Input
+<inputs>
+<arguments>$ARGUMENTS</arguments>
+<parsing>
+- `workItemRef` = first token matching pattern `<PREFIX>-<number>` (e.g., `PDEV-123`, `GH-456`)
+- If no valid `workItemRef` found, output NEEDS_INPUT:
+  ```
+  NEEDS_INPUT: workItemRef required
+  Usage: /write-spec <workItemRef>
+  Example: /write-spec PDEV-123
+  ```
+</parsing>
+</inputs>
 
-Arguments: $ARGUMENTS
-- `workItemRef`: first token matching `<PREFIX>-<number>` pattern. REQUIRED.
-- If no valid workItemRef found, output: `NEEDS_INPUT: workItemRef required. Usage: /write-spec <workItemRef>`
+<discovery_rules>
+Given `workItemRef`:
 
-## Process
+1. Search for existing folder: `doc/changes/**/*--<workItemRef>--*/`
+2. If not found, create: `doc/changes/<YYYY-MM>/<YYYY-MM-DD>--<workItemRef>--<slug>/`
 
-1. Parse `workItemRef` from $ARGUMENTS.
-2. Use the Agent tool to delegate to the `spec-writer` agent with the workItemRef.
-3. The spec-writer gathers planning context, creates the spec file.
+Files:
 
-## Output
+- Spec: `chg-<workItemRef>-spec.md`
+- Branch: `<change.type>/<workItemRef>/<slug>`
+  </discovery_rules>
 
+<process>
+1. Parse `workItemRef` from $ARGUMENTS
+2. Gather planning-session context from conversation
+3. Compute slug from title (lowercase kebab-case, ≤60 chars)
+4. Locate or create change folder per <discovery_rules>
+5. Determine `change.type` from context (feat/fix/refactor/etc.)
+6. Checkout/create branch
+7. Delegate to `@spec-writer` agent (it has the full template and rules)
+8. Report: path to created spec, next step: `/write-plan <workItemRef>`
+</process>
+
+<output>
 After successful execution:
 - Created file path
 - Branch name
-- Recommendation: "Run `/write-test-plan <workItemRef>` to generate the test plan"
+- Recommendation: "Run `/write-plan <workItemRef>` to generate the implementation plan"
+</output>
 
-## Constraints
-
-- No implementation details in the spec.
-- Only the spec file may be written.
-- Await human approval before `/write-plan`.
-
-## ADOS Flow Position
-
-**Step 2/10** in change lifecycle (phase: `specification`)
-
-### Prerequisites (MUST exist before running)
-- chg-<ref>-pm-notes.yaml OR planning context from /plan-change
-
-### This step creates
-- chg-<ref>-spec.md
-
-### Next step
-- `/write-test-plan <ref>`
+<constraints>
+- No implementation details in the spec
+- Only the spec file may be written
+- Await human approval before `/write-plan`
+</constraints>
